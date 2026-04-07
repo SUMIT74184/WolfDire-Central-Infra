@@ -1,0 +1,42 @@
+# Inter-Service Communication Analysis: SocialConnection
+
+The `SocialConnection` (connection-service) utilizes a combination of synchronous and asynchronous patterns to interact with other microservices in the ecosystem.
+
+## 1. Service Discovery (Eureka)
+- **Mechanism**: The service is configured as a Eureka Client (`spring-cloud-starter-netflix-eureka-client`).
+- **Role**: It registers itself with a Eureka Server and uses it to locate other services (like `user-service`) by their logical names instead of hardcoded IP addresses.
+
+## 2. Synchronous Communication (OpenFeign)
+- **Mechanism**: Declarative REST client using Spring Cloud OpenFeign.
+- **Implementation**: [UserServiceClient.java](file:///home/sumit/IdeaProjects/SocialConnection/src/main/java/com/app/socialconnection/client/UserServiceClient.java)
+- **Usage**: Used for immediate data retrieval where a response is required to proceed (e.g., getting user profile info during a connection request).
+- **Target**: `user-service` at `/api/users/{userId}`.
+
+## 3. Asynchronous Communication (Kafka)
+- **Mechanism**: Event-driven communication using Apache Kafka.
+- **Implementation**: [KafkaProducerService.java](file:///home/sumit/IdeaProjects/SocialConnection/src/main/java/com/app/socialconnection/Service/KafkaProducerService.java)
+- **Usage**: Used for propagation of state changes where immediate consistency is not required or for triggering side effects (e.g., notifying users, updating feeds).
+- **Topics**:
+    - `connection-events`: Published when a connection is requested, accepted, or rejected.
+    - `block-events`: Published when a user blocks another.
+
+## 4. Shared State & Messaging (Redis)
+- **Mechanism**: Spring Data Redis.
+- **Role**: Likely used for distributed caching or as a fast key-value store to share state across instances or with other services that share the same Redis cluster.
+
+## 5. Security Context
+- **Mechanism**: JWT (JSON Web Tokens).
+- **Implementation**: [JwtAuthenticationFilter.java](file:///home/sumit/IdeaProjects/SocialConnection/src/main/java/com/app/socialconnection/config/JwtAuthenticationFilter.java)
+- **Role**: Ensures that inter-service calls (via Feign) carry the necessary authentication context, typically passed in the `Authorization` header.
+
+## Visual Overview (Mermaid)
+```mermaid
+graph TD
+    CS[Connection Service] -->|Registers| E[Eureka Server]
+    CS -->|Feign| US[User Service]
+    CS -->|Publishes Events| K[Kafka Broker]
+    K -->|Consumes| NS[Notification Service]
+    K -->|Consumes| FS[Feed Service]
+    CS -->|Cache/State| R[Redis]
+    CS -->|Persistence| DB[(PostgreSQL)]
+```
