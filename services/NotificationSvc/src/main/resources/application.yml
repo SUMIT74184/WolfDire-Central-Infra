@@ -1,1 +1,98 @@
-spring.application.name=NotificationSvc
+spring:
+  application:
+    name: notification-service
+  
+  datasource:
+    url: jdbc:postgresql://postgres:5432/notification_db
+    username: notification_user
+    password: notification_pass
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+  
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: redis_pass
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+  
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: notification-consumer-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: >
+          postEvent:com.reddit.notification.event.PostEvent,
+          commentEvent:com.reddit.notification.event.CommentEvent,
+          voteEvent:com.reddit.notification.event.VoteEvent,
+          moderationEvent:com.reddit.notification.event.ModerationEvent,
+          mentionEvent:com.reddit.notification.event.MentionEvent
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_PASSWORD:your-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 8087
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+
+notification:
+  batch:
+    size: 100
+    delay-seconds: 60
+  digest:
+    enabled: true
+    cron: "0 0 8 * * *"
+  channels:
+    websocket:
+      enabled: true
+    email:
+      enabled: true
+    push:
+      enabled: false
+  retention-days: 90
+  max-unread: 1000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
