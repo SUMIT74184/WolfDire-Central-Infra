@@ -18,44 +18,13 @@ import {
   LinkIcon,
   MoreHorizontal,
   ThumbsUp,
+  Loader2
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-
-const post = {
-  id: 1,
-  title: "The Future of Web Development: What to Expect in 2025",
-  content: `
-    <p>The landscape of web development is constantly evolving, and 2025 promises to bring exciting changes that will reshape how we build and interact with the web. From AI-powered development tools to new frameworks and paradigms, developers need to stay ahead of the curve to remain competitive.</p>
-    
-    <h2>The Rise of AI-Assisted Development</h2>
-    <p>Artificial intelligence is no longer just a buzzword—it's becoming an integral part of the development workflow. AI-powered code completion, automated testing, and intelligent debugging tools are revolutionizing how developers write and maintain code.</p>
-    <p>Tools like GitHub Copilot and ChatGPT have already demonstrated the potential of AI in development. In 2025, we can expect these tools to become even more sophisticated, offering context-aware suggestions and automating repetitive tasks that currently consume valuable developer time.</p>
-    
-    <h2>Server Components and the New React Paradigm</h2>
-    <p>React Server Components have fundamentally changed how we think about building React applications. By moving more logic to the server, we can create faster, more efficient applications that provide better user experiences while reducing the JavaScript payload sent to the client.</p>
-    <p>This shift towards server-side rendering with the benefits of component-based architecture is just the beginning. Expect to see more frameworks adopting similar patterns and pushing the boundaries of what's possible with modern web development.</p>
-    
-    <h2>The Edge Computing Revolution</h2>
-    <p>Edge computing is transforming how we deploy and run applications. By moving computation closer to users, we can dramatically reduce latency and improve performance. Platforms like Vercel, Cloudflare Workers, and Deno Deploy are making edge deployment more accessible than ever.</p>
-    
-    <h2>Looking Ahead</h2>
-    <p>The future of web development is bright, filled with opportunities for innovation and improvement. By staying informed about emerging trends and technologies, developers can position themselves at the forefront of this exciting evolution.</p>
-  `,
-  author: {
-    name: "Sarah Chen",
-    avatar: "/woman-developer.png",
-    bio: "Senior Frontend Developer at TechCorp. Writing about web development, React, and the future of technology.",
-    followers: 12500,
-    articles: 47,
-  },
-  category: "Technology",
-  readTime: "8 min read",
-  likes: 2453,
-  comments: 189,
-  image: "/futuristic-web-development.png",
-  date: "December 15, 2025",
-  tags: ["Web Development", "AI", "React", "JavaScript", "Future Tech"],
-}
+import { useParams } from "next/navigation"
+import { postApi } from "@/lib/api-client"
+import { useEffect } from "react"
+// Mock data removed in favor of dynamic API fetch
 
 const comments = [
   {
@@ -108,10 +77,45 @@ const relatedPosts = [
 ]
 
 export default function PostPage() {
+  const params = useParams()
+  const [post, setPost] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [isLiked, setIsLiked] = useState(false)
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [commentText, setCommentText] = useState("")
   const [isFollowing, setIsFollowing] = useState(false)
+
+  useEffect(() => {
+    async function loadPost() {
+      if (!params?.id) return;
+      try {
+        setIsLoading(true)
+        const data = await postApi.getById(params.id)
+        setPost(data)
+      } catch (err) {
+        console.error("Failed to fetch post:", err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadPost()
+  }, [params?.id])
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!post) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <h1 className="text-2xl font-bold">Post not found</h1>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen">
@@ -125,7 +129,7 @@ export default function PostPage() {
         {/* Article Header */}
         <div className="-mt-32 relative z-10">
           <Badge variant="secondary" className="mb-4">
-            {post.category}
+            {post.category || "Uncategorized"}
           </Badge>
           <h1 className="text-3xl font-bold text-foreground sm:text-4xl lg:text-5xl leading-tight text-balance">
             {post.title}
@@ -134,15 +138,15 @@ export default function PostPage() {
           <div className="mt-6 flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-3">
               <Avatar className="h-12 w-12">
-                <AvatarImage src={post.author.avatar || "/placeholder.svg"} />
-                <AvatarFallback>{post.author.name[0]}</AvatarFallback>
+                <AvatarImage src={post.author?.avatar || "/placeholder.svg"} />
+                <AvatarFallback>{post.author?.name?.[0] || '?'}</AvatarFallback>
               </Avatar>
               <div>
-                <Link href={`/author/${post.author.name}`} className="font-medium text-foreground hover:text-primary">
-                  {post.author.name}
+                <Link href={`/author/${post.author?.name}`} className="font-medium text-foreground hover:text-primary">
+                  {post.author?.name || 'Unknown Author'}
                 </Link>
                 <p className="text-sm text-muted-foreground">
-                  {post.date} · {post.readTime}
+                  {post.date || 'Recently'} · {post.readTime || '5 min read'}
                 </p>
               </div>
             </div>
@@ -157,7 +161,7 @@ export default function PostPage() {
 
           {/* Tags */}
           <div className="mt-6 flex flex-wrap gap-2">
-            {post.tags.map((tag) => (
+            {(post.tags || []).map((tag) => (
               <Link key={tag} href={`/tag/${tag.toLowerCase().replace(/\s+/g, "-")}`}>
                 <Badge variant="outline" className="hover:bg-secondary">
                   {tag}
@@ -183,11 +187,11 @@ export default function PostPage() {
               onClick={() => setIsLiked(!isLiked)}
             >
               <Heart className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
-              {post.likes + (isLiked ? 1 : 0)}
+              {(post.likes || 0) + (isLiked ? 1 : 0)}
             </Button>
             <Button variant="ghost" size="sm" className="gap-2">
               <MessageCircle className="h-5 w-5" />
-              {post.comments}
+              {post.comments || 0}
             </Button>
           </div>
           <div className="flex items-center gap-2">
@@ -238,15 +242,15 @@ export default function PostPage() {
         <Card className="mt-8 border-border">
           <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={post.author.avatar || "/placeholder.svg"} />
-              <AvatarFallback>{post.author.name[0]}</AvatarFallback>
+              <AvatarImage src={post.author?.avatar || "/placeholder.svg"} />
+              <AvatarFallback>{post.author?.name?.[0] || '?'}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-foreground">{post.author.name}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{post.author.bio}</p>
+              <h3 className="text-lg font-semibold text-foreground">{post.author?.name || 'Unknown Author'}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{post.author?.bio}</p>
               <div className="mt-2 flex gap-4 text-sm text-muted-foreground">
-                <span>{post.author.followers.toLocaleString()} followers</span>
-                <span>{post.author.articles} articles</span>
+                <span>{(post.author?.followers || 0).toLocaleString()} followers</span>
+                <span>{post.author?.articles || 0} articles</span>
               </div>
             </div>
             <Button variant={isFollowing ? "secondary" : "default"} onClick={() => setIsFollowing(!isFollowing)}>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,63 +14,32 @@ import {
   TrendingUp,
   Clock,
   Filter,
+  Loader2
 } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
-
-const feedPosts = [
-  {
-    id: 1,
-    title: "Getting Started with Machine Learning in 2025",
-    excerpt: "A comprehensive guide to ML fundamentals and best practices for beginners.",
-    category: "Technology",
-    author: { name: "Sarah Chen", avatar: "/diverse-user-avatars.png" },
-    community: "Technology",
-    date: "2h ago",
-    likes: 2400,
-    comments: 156,
-    image: "/ml-neural-network-visualization.png",
-  },
-  {
-    id: 2,
-    title: "The Future of Remote Work Culture",
-    excerpt: "Exploring hybrid models and what companies are learning about distributed teams.",
-    category: "Business",
-    author: { name: "James Wilson", avatar: "/male-developer.png" },
-    community: "Business",
-    date: "4h ago",
-    likes: 1890,
-    comments: 243,
-    image: "/modern-home-office.png",
-  },
-  {
-    id: 3,
-    title: "Design Trends That Will Matter in 2025",
-    excerpt: "Minimalism meets AI: exploring the intersection of design and technology.",
-    category: "Design",
-    author: { name: "Emma Rodriguez", avatar: "/woman-designer.png" },
-    community: "Design",
-    date: "6h ago",
-    likes: 3200,
-    comments: 412,
-    image: "/minimalist-design.png",
-  },
-  {
-    id: 4,
-    title: "5 Productivity Hacks That Actually Work",
-    excerpt: "Science-backed techniques to boost your daily output and reduce burnout.",
-    category: "Lifestyle",
-    author: { name: "Michael Brown", avatar: "/professional-man.png" },
-    community: "Lifestyle",
-    date: "8h ago",
-    likes: 4100,
-    comments: 528,
-    image: "/productivity-habits.png",
-  },
-]
+import { feedApi } from "@/lib/api-client"
 
 export default function FeedPage() {
   const [sortBy, setSortBy] = useState("latest")
+  const [posts, setPosts] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchFeed() {
+      try {
+        setIsLoading(true)
+        const response = await feedApi.getFeed()
+        const fetchedPosts = Array.isArray(response) ? response : response.content || []
+        setPosts(fetchedPosts)
+      } catch (err) {
+        console.error("Failed to fetch feed:", err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchFeed()
+  }, [sortBy])
 
   return (
     <div className="min-h-screen bg-background">
@@ -107,7 +76,16 @@ export default function FeedPage() {
 
         {/* Feed Posts */}
         <div className="space-y-2">
-          {feedPosts.map((post) => (
+          {isLoading ? (
+            <div className="py-12 flex justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="py-12 text-center text-muted-foreground">
+              <p>No posts in your feed yet.</p>
+            </div>
+          ) : (
+            posts.map((post) => (
             <Card
               key={post.id}
               className="border-border hover:border-primary/50 transition-colors overflow-hidden"
@@ -144,11 +122,11 @@ export default function FeedPage() {
                         <span className="font-semibold">c/{post.community}</span>
                         <span>Posted by</span>
                         <Avatar className="h-5 w-5">
-                          <AvatarImage src={post.author.avatar} />
-                          <AvatarFallback>{post.author.name[0]}</AvatarFallback>
+                          <AvatarImage src={post.author?.avatar} />
+                          <AvatarFallback>{post.author?.name?.[0] || '?'}</AvatarFallback>
                         </Avatar>
-                        <span>{post.author.name}</span>
-                        <span>{post.date}</span>
+                        <span>{post.author?.name || 'Unknown'}</span>
+                        <span>{post.date || 'Just now'}</span>
                       </div>
 
                       <Link href={`/post/${post.id}`}>
@@ -181,7 +159,8 @@ export default function FeedPage() {
                 </div>
               </div>
             </Card>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Load More */}

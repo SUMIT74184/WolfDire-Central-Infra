@@ -29,16 +29,15 @@
          ▼                        ▼                  ▼                          ▼
   ┌──────────────────────────────────────────────────────────────────────────────────────┐
   │                          Shared Infrastructure                                       │
-  │  ┌────────────────┐  ┌───────────────────┐  ┌────────────────┐                      │
-  │  │ PostgreSQL :5432│  │   Kafka :29092    │  │  Redis :6379   │                      │
-  │  │  auth_db        │  │  (6 topics)       │  │  (cache +      │                      │
-  │  │  post_db        │  │                   │  │   sessions)    │                      │
-  │  │  feed_db        │  └───────────────────┘  └────────────────┘                      │
+  │  ┌────────────────┐  ┌───────────────────┐  ┌────────────────┐                       │
+  │  │ PostgreSQL :5432│  │   Kafka :29092    │  │  Redis :6379   │                       │
+  │  │  auth_db        │  │  (6 topics)       │  │  (cache +      │                       │
+  │  │  post_db        │  │                   │  │   sessions)    │                       │
+  │  │  feed_db        │  └───────────────────┘  └────────────────┘                       │
   │  │  social_conn_db │                                                                  │
-  │  │  analytics_db   │  ┌───────────────────┐  ┌────────────────┐                      │
+  │  │  analytics_db   │  ┌───────────────────┐  ┌────────────────┐                       │
   │  │  notification_db│  │  MongoDB  :27017   │  │  Eureka :8761  │                      │
-  │  └────────────────┘  │  (post media)     │  │  (discovery)   │                      │
-  │                        └───────────────────┘  └────────────────┘                      │
+  │  └────────────────┘  │  (post media)     │  │  (discovery)   │                        |   │                        └───────────────────┘  └────────────────┘                      │
   └──────────────────────────────────────────────────────────────────────────────────────┘
 
   ┌──────────────┐    ┌─────────────────────┐    ┌─────────────────────┐
@@ -52,16 +51,19 @@
 
 ---
 
-## 2. Kafka Event Flow
+## 2. Kafka Event Flow (As Implemented in Code)
 
-| Producer | Topic | Consumer(s) |
-|----------|-------|-------------|
-| Auth Svc | `user-events` | Analytics, Notification |
-| Post Svc | `post-events` | Analytics, Feed, Notification, Moderation |
-| Post Svc | `comment-events` | Analytics, Notification |
-| Post Svc | `vote-events` | Analytics, Feed, Notification |
-| Social Svc | `follow-events` | Feed, Notification |
-| Moderation Svc | `moderation-events` | Notification, Analytics |
+| Service | Produces Topics | Consumes Topics |
+|---------|----------------|-----------------|
+| **Auth** | - | `tenant.created`, `auth.password-reset-requested` |
+| **Post** | `post.created`, `comment.added`, `vote.changed`, `post.flagged`, `media.uploaded`, `user.mentioned` | - |
+| **Feed** | `feed.update`, `feed.interaction` | `post.created` |
+| **Social** | `connection-events`, `block-events`, `feed.fanout` | - |
+| **Moderation**| `content-moderated`, `content-enriched`, `reputation-updated` | - |
+| **Analytics** | - | `post-events`, `comment-events`, `vote-events`, `user-events`, `moderation-events`, `view-events` |
+| **Notification**| TBD | TBD |
+
+*(Note: There is an architectural mismatch between what AnalyticsSvc consumes (`post-events`) and what PostSvc produces (`post.created`). This needs to be harmonized in Phase 4).*
 
 ---
 
@@ -71,18 +73,18 @@ These frontend pages exist but have **no API wiring** yet:
 
 | Frontend Page | Needs From Backend | Service | Status |
 |--------------|-------------------|---------|--------|
-| `/login` | `POST /api/auth/login` | Auth | ⚠️ API client exists, page not wired |
-| `/signup` | `POST /api/auth/register` | Auth | ⚠️ API client exists, page not wired |
+| `/login` | `POST /api/auth/login` | Auth | ✅ Wired to API client |
+| `/signup` | `POST /api/auth/register` | Auth | ✅ Wired to API client |
 | `/forgot-password` | No backend endpoint exists | Auth | ❌ Missing endpoint in Auth |
 | `/verify-email` | No backend endpoint exists | Auth | ❌ Missing endpoint in Auth |
-| `/feed` | `GET /api/feed` | Feed | ⚠️ API client exists, page not wired |
-| `/post/[id]` | `GET /api/posts/:id` | Post | ⚠️ API client exists, page not wired |
+| `/feed` | `GET /api/feed` | Feed | ✅ Wired to API client |
+| `/post/[id]` | `GET /api/posts/:id` | Post | ✅ Wired to API client |
 | `/write` | `POST /api/posts` | Post | ⚠️ API client exists, page not wired |
 | `/profile` | `GET /api/auth/me`, `GET /api/social/followers/:id` | Auth + Social | ⚠️ API client exists, page not wired |
 | `/explore` | `GET /api/posts?sort=trending` | Post | ⚠️ API client exists, page not wired |
 | `/communities` | Community endpoints | Post | ❌ No community endpoints in Post Svc |
 | `/community/[id]` | Community details | Post | ❌ No community endpoints in Post Svc |
-| `/dashboard` | `GET /api/analytics/dashboard` | Analytics | ⚠️ API client exists, page not wired |
+| `/dashboard` | `GET /api/analytics/dashboard` | Analytics | ✅ Wired to API client |
 | `/admin/analytics` | `GET /api/analytics/*` | Analytics | ⚠️ Endpoint exists, no page wiring |
 | `/admin/users` | `GET /api/auth/users` | Auth | ⚠️ Endpoint exists, no page wiring |
 | `/admin/moderation` | `GET /api/moderation/*` | Moderation | ⚠️ Endpoint exists (STANDBY) |

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,10 +10,13 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { SocialAuthButtons } from "@/components/social-auth-buttons"
 import { PenSquare, Eye, EyeOff, Loader2 } from "lucide-react"
+import { authApi } from "@/lib/api-client"
 
 export default function LoginPage() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -22,10 +26,19 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsLoading(false)
+    setError("")
+    try {
+      const response = await authApi.login({ email: formData.email, password: formData.password })
+      localStorage.setItem("access_token", response.accessToken)
+      localStorage.setItem("refresh_token", response.refreshToken)
+      router.push("/feed")
+    } catch (err) {
+      setError(err.message || "Invalid email or password. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
+
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">

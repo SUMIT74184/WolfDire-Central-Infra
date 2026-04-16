@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,10 +10,13 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { SocialAuthButtons } from "@/components/social-auth-buttons"
 import { PenSquare, Eye, EyeOff, Loader2, Check, X } from "lucide-react"
+import { authApi } from "@/lib/api-client"
 
 export default function SignupPage() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,8 +34,28 @@ export default function SignupPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsLoading(false)
+    setError("")
+    
+    // Split name into first and last
+    const nameParts = formData.name.trim().split(" ")
+    const firstName = nameParts[0]
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : ""
+
+    try {
+      const response = await authApi.register({
+        firstName,
+        lastName,
+        email: formData.email,
+        password: formData.password
+      })
+      localStorage.setItem("access_token", response.accessToken)
+      localStorage.setItem("refresh_token", response.refreshToken)
+      router.push("/feed")
+    } catch (err) {
+      setError(err.message || "Signup failed. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

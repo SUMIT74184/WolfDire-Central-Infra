@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Eye, Heart, MessageCircle, PenSquare, ArrowUpRight, ArrowDownRight, Users, DollarSign } from "lucide-react"
+import { Eye, Heart, MessageCircle, PenSquare, ArrowUpRight, ArrowDownRight, Users, DollarSign, Loader2 } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts"
+import { useEffect, useState } from "react"
+import { analyticsApi } from "@/lib/api-client"
 
 const stats = [
   { name: "Total Views", value: "124,892", change: "+12.5%", trend: "up", icon: Eye },
@@ -55,6 +57,37 @@ const recentActivity = [
 ]
 
 export default function DashboardPage() {
+  const [dashboardData, setDashboardData] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadDashboard() {
+      try {
+        setIsLoading(true)
+        const response = await analyticsApi.dashboard()
+        setDashboardData(response)
+      } catch (err) {
+        console.error("Failed to load dashboard:", err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadDashboard()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  const dStats = dashboardData?.stats || stats
+  const dChartData = dashboardData?.chartData || chartData
+  const dRecentArticles = dashboardData?.recentArticles || recentArticles
+  const dRecentActivity = dashboardData?.recentActivity || recentActivity
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -73,7 +106,7 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {dStats.map((stat) => (
           <Card key={stat.name} className="border-border">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -100,7 +133,7 @@ export default function DashboardPage() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
+                <AreaChart data={dChartData}>
                   <defs>
                     <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
@@ -138,7 +171,7 @@ export default function DashboardPage() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
+                <LineChart data={dChartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
@@ -177,7 +210,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentArticles.map((article) => (
+              {dRecentArticles.map((article) => (
                 <div key={article.id} className="flex items-center justify-between rounded-lg bg-muted/50 p-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -215,7 +248,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
+              {dRecentActivity.map((activity, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src="/diverse-user-avatars.png" />
