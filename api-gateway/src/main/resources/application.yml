@@ -1,0 +1,107 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      # ---------------------------------------------------------------------------
+      # Global CORS — allows the Next.js frontend (port 3000) to call the gateway
+      # ---------------------------------------------------------------------------
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+      # ---------------------------------------------------------------------------
+      # Route Table
+      # lb:// prefix uses Eureka for service discovery
+      # ---------------------------------------------------------------------------
+      routes:
+        # ── Auth Service ──────────────────────────────────────────────────────────
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RewritePath=/api/auth/(?<segment>.*), /api/auth/$\{segment}
+
+        # ── Post Service ──────────────────────────────────────────────────────────
+        - id: post-service
+          uri: lb://PostsvcWolf
+          predicates:
+            - Path=/api/posts/**
+          filters:
+            - RewritePath=/api/posts/(?<segment>.*), /api/posts/$\{segment}
+
+        # ── Feed Service ──────────────────────────────────────────────────────────
+        - id: feed-service
+          uri: lb://feed-service
+          predicates:
+            - Path=/api/feed/**
+          filters:
+            - RewritePath=/api/feed/(?<segment>.*), /api/feed/$\{segment}
+
+        # ── Social Connection Service ─────────────────────────────────────────────
+        - id: social-connection-service
+          uri: lb://SocialConnection
+          predicates:
+            - Path=/api/social/**
+          filters:
+            - RewritePath=/api/social/(?<segment>.*), /api/social/$\{segment}
+
+        # ── Analytics Service ─────────────────────────────────────────────────────
+        - id: analytics-service
+          uri: lb://analytics-service
+          predicates:
+            - Path=/api/analytics/**
+          filters:
+            - RewritePath=/api/analytics/(?<segment>.*), /api/analytics/$\{segment}
+
+        # ── Notification Service ──────────────────────────────────────────────────
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - RewritePath=/api/notifications/(?<segment>.*), /api/notifications/$\{segment}
+
+        # ── Moderation Service ────────────────────────────────────────────────────
+        - id: moderation-service
+          uri: lb://ModerationSvc
+          predicates:
+            - Path=/api/moderation/**
+          filters:
+            - RewritePath=/api/moderation/(?<segment>.*), /api/moderation/$\{segment}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always
