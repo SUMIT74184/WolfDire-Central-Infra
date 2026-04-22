@@ -51,43 +51,64 @@
 
 ---
 
-## 2. Kafka Event Flow (As Implemented in Code)
+## 2. Kafka Event Flow (Current State After Fixes)
 
 | Service | Produces Topics | Consumes Topics |
 |---------|----------------|-----------------|
-| **Auth** | - | `tenant.created`, `auth.password-reset-requested` |
-| **Post** | `post.created`, `comment.added`, `vote.changed`, `post.flagged`, `media.uploaded`, `user.mentioned` | - |
-| **Feed** | `feed.update`, `feed.interaction` | `post.created` |
-| **Social** | `connection-events`, `block-events`, `feed.fanout` | - |
-| **Moderation**| `content-moderated`, `content-enriched`, `reputation-updated` | - |
-| **Analytics** | - | `post-events`, `comment-events`, `vote-events`, `user-events`, `moderation-events`, `view-events` |
-| **Notification**| TBD | TBD |
+| **Auth** | `user.registered`, `user.login`, `user.logout`, `user.login.oauth2` | `tenant.created`, `auth.password-reset-requested` |
+| **Post** | `post.created`, `comment.added`, `vote.changed`, `user.mentioned`, `post.viewed` | `post.created` *(AIService)* |
+| **Feed** | *(none)* | `post.created`, `feed.update` |
+| **Social** | `connection-events`, `block-events`, `feed.fanout` | `post.created`, `reputation-updated` |
+| **Moderation** | `content-moderated`, `content-enriched`, `reputation-updated` | *(none)* |
+| **Analytics** | *(none)* | `post.created`, `comment.added`, `vote.changed`, `user.registered`, `content-moderated`, `post.viewed` |
+| **Notification** | *(none — sends email only)* | `comment.added`, `vote.changed`, `content-moderated`, `content-enriched`, `user.mentioned`, `post.trending` |
 
-*(Note: There is an architectural mismatch between what AnalyticsSvc consumes (`post-events`) and what PostSvc produces (`post.created`). This needs to be harmonized in Phase 4).*
+### Topic Mismatch Resolution
+
+- [x] NotificationSvc `comment.created` → fixed to `comment.added`
+- [x] NotificationSvc `vote.cast` → fixed to `vote.changed` + VoteService now publishes
+- [x] NotificationSvc `moderation.flagged`/`moderation.approved` → fixed to `content-moderated`/`content-enriched`
+- [x] NotificationSvc `user.mentioned` → PostSvc + CommentSvc now publish this event
+- [x] SocialConnection `user.reputation.updated` → fixed to `reputation-updated`
+- [x] AnalyticsSvc all 6 topics → remapped to actual producer topics
+- [ ] NotificationSvc `post.trending` → **still no producer** (future: analytics-driven trending detection)
 
 ---
 
 ## 3. Frontend → Backend Gap Analysis
 
-These frontend pages exist but have **no API wiring** yet:
+### ✅ Wired Pages (11 / 23 total pages)
 
-| Frontend Page | Needs From Backend | Service | Status |
-|--------------|-------------------|---------|--------|
-| `/login` | `POST /api/auth/login` | Auth | ✅ Wired to API client |
-| `/signup` | `POST /api/auth/register` | Auth | ✅ Wired to API client |
-| `/forgot-password` | No backend endpoint exists | Auth | ❌ Missing endpoint in Auth |
-| `/verify-email` | No backend endpoint exists | Auth | ❌ Missing endpoint in Auth |
-| `/feed` | `GET /api/feed` | Feed | ✅ Wired to API client |
-| `/post/[id]` | `GET /api/posts/:id` | Post | ✅ Wired to API client |
-| `/write` | `POST /api/posts` | Post | ⚠️ API client exists, page not wired |
-| `/profile` | `GET /api/auth/me`, `GET /api/social/followers/:id` | Auth + Social | ⚠️ API client exists, page not wired |
-| `/explore` | `GET /api/posts?sort=trending` | Post | ⚠️ API client exists, page not wired |
-| `/communities` | Community endpoints | Post | ❌ No community endpoints in Post Svc |
-| `/community/[id]` | Community details | Post | ❌ No community endpoints in Post Svc |
-| `/dashboard` | `GET /api/analytics/dashboard` | Analytics | ✅ Wired to API client |
-| `/admin/analytics` | `GET /api/analytics/*` | Analytics | ⚠️ Endpoint exists, no page wiring |
-| `/admin/users` | `GET /api/auth/users` | Auth | ⚠️ Endpoint exists, no page wiring |
-| `/admin/moderation` | `GET /api/moderation/*` | Moderation | ⚠️ Endpoint exists (STANDBY) |
+| Frontend Page | API Call | Service |
+|--------------|---------|--------|
+| `/login` | `authApi.login()` | Auth |
+| `/signup` | `authApi.register()` | Auth |
+| `/feed` | `feedApi.getFeed()` | Feed |
+| `/post/[id]` | `postApi.getById(id)` | Post |
+| `/dashboard` | `analyticsApi.dashboard()` | Analytics |
+| `/write` | `postApi.create()` | Post |
+| `/profile` | `authApi.me()` + `socialApi.followers()` + `postApi.list()` | Auth + Social + Post |
+| `/explore` | `postApi.list()` with pagination | Post |
+| `/admin/analytics` | `analyticsApi.dashboard()` | Analytics |
+| `/admin/users` | `authAdminApi.listUsers()` + `banUser()` | Auth |
+| `/admin/moderation` | `moderationApi.getFlaggedQueue()` + approve/reject | Moderation |
+
+### ❌ Remaining — No Backend Support (12 pages)
+
+| Frontend Page | Issue | Priority |
+|--------------|-------|-----------|
+| `/forgot-password` | No `POST /api/auth/forgot-password` endpoint | High |
+| `/verify-email` | No `POST /api/auth/verify-email` endpoint | High |
+| `/communities` | No community endpoints in Post/Social Svc | Medium |
+| `/community/[id]` | No community detail endpoints | Medium |
+| `/admin` | Needs role guard only | Medium |
+| `/admin/articles` | No admin article management endpoints | Medium |
+| `/about` | Static — no backend needed | — |
+| `/contact` | No contact form endpoint | Low |
+| `/pricing` | Static — no backend needed | — |
+| `/become-author` | No author role logic | Low |
+| `/admin/settings` | No settings/config endpoints | Low |
+| `/` (home) | Static — no backend needed | — |
 
 ---
 
@@ -95,17 +116,17 @@ These frontend pages exist but have **no API wiring** yet:
 
 These backend capabilities exist but have **no frontend consumer**:
 
-| Endpoint | Service | Missing Frontend |
-|----------|---------|-----------------|
-| `POST /api/auth/logout` | Auth | No logout button calls this |
-| `POST /api/auth/refresh` | Auth | No token refresh logic in frontend |
-| `GET /api/auth/validate` | Auth | No validation on route guards |
-| `GET /api/analytics/user/:id` | Analytics | No per-user analytics UI |
-| `GET /api/analytics/content/:id` | Analytics | No per-content analytics UI |
-| `GET /api/analytics/trending` | Analytics | Not surfaced on Explore page |
-| `POST /api/social/follow/:id` | Social | No follow button on profile pages |
-| Notification polling/WebSocket | Notification | No notification bell UI wiring |
-| OAuth2 Google/GitHub redirect | Auth | No "Login with Google/GitHub" buttons |
+| Endpoint | Service | Status |
+|----------|---------|--------|
+| `POST /api/auth/logout` | Auth | ✅ Sidebar logout wired |
+| `POST /api/auth/refresh` | Auth | ✅ AuthContext auto-refresh |
+| `GET /api/auth/validate` | Auth | ✅ AuthContext JWT route guards |
+| OAuth2 Google/GitHub redirect | Auth | ✅ Social auth buttons wired |
+| `GET /api/analytics/user/:id` | Analytics | ❌ No per-user analytics UI |
+| `GET /api/analytics/content/:id` | Analytics | ❌ No per-content analytics UI |
+| `GET /api/analytics/trending` | Analytics | ❌ Not surfaced on Explore page |
+| `POST /api/social/follow/:id` | Social | ❌ No follow button on profile |
+| Notification polling/WebSocket | Notification | ❌ No notification bell UI |
 
 ---
 

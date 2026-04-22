@@ -83,6 +83,13 @@ public class CommentService {
 
         publishCommentAddedEvent(comment);
 
+        // Publish mention events for each mentioned user
+        if (comment.getMentions() != null && !comment.getMentions().isEmpty()) {
+            for (String mentionedUser : comment.getMentions()) {
+                publishMentionEvent(comment, mentionedUser);
+            }
+        }
+
         return mapToResponse(comment, userId);
     }
 
@@ -168,6 +175,23 @@ public class CommentService {
         log.info("Published comment added event for comment: {}", comment.getId());
 
 
+    }
+
+    private void publishMentionEvent(Comment comment, String mentionedUser) {
+        try {
+            java.util.Map<String, Object> event = new java.util.HashMap<>();
+            event.put("commentId", comment.getId());
+            event.put("postId", comment.getPostId());
+            event.put("userId", comment.getUserId());
+            event.put("username", comment.getUsername());
+            event.put("mentionedUserId", mentionedUser);
+            event.put("contentType", "COMMENT");
+            event.put("createdAt", comment.getCreatedAt() != null ? comment.getCreatedAt().toString() : null);
+            kafkaTemplate.send("user.mentioned", mentionedUser, event);
+            log.info("Published user.mentioned event: {} mentioned in comment {}", mentionedUser, comment.getId());
+        } catch (Exception e) {
+            log.warn("Failed to publish mention event: {}", e.getMessage());
+        }
     }
 
     private CommentResponse mapToResponse(Comment comment, String userId){

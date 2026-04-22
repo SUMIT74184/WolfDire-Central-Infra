@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
@@ -45,6 +46,7 @@ const adminNavigation = [
 export function DashboardSidebar({ isAdmin = false }) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const { logout } = useAuth()
   const navigation = isAdmin ? adminNavigation : userNavigation
 
   return (
@@ -96,7 +98,7 @@ export function DashboardSidebar({ isAdmin = false }) {
                 Write Article
               </Link>
             </Button>
-            <Button variant="ghost" className="w-full justify-start gap-2 text-muted-foreground">
+            <Button variant="ghost" className="w-full justify-start gap-2 text-muted-foreground" onClick={logout}>
               <LogOut className="h-4 w-4" />
               Sign Out
             </Button>
@@ -108,7 +110,7 @@ export function DashboardSidebar({ isAdmin = false }) {
                 <PenSquare className="h-4 w-4" />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="w-full">
+            <Button variant="ghost" size="icon" className="w-full" onClick={logout}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -117,3 +119,4 @@ export function DashboardSidebar({ isAdmin = false }) {
     </aside>
   )
 }
+

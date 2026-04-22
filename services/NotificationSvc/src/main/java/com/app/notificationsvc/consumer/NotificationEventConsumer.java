@@ -15,7 +15,7 @@ public class NotificationEventConsumer {
 
     private final NotificationService notificationService;
 
-    @KafkaListener(topics = "comment.created", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "comment.added", groupId = "${spring.kafka.consumer.group-id}")
     public void consumeCommentCreated(@Payload CommentEvent event) {
         log.info("Processing comment.created event: {}", event.getCommentId());
 
@@ -26,7 +26,7 @@ public class NotificationEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "vote.cast", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "vote.changed", groupId = "${spring.kafka.consumer.group-id}")
     public void consumeVote(@Payload VoteEvent event) {
         log.info("Processing vote.cast event for target: {}", event.getTargetId());
 
@@ -35,13 +35,13 @@ public class NotificationEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "moderation.flagged", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "content-moderated", groupId = "${spring.kafka.consumer.group-id}")
     public void consumeModerationFlag(@Payload ModerationEvent event) {
         log.info("Processing moderation.flagged event: {}", event.getContentId());
         notificationService.createModerationNotification(event);
     }
 
-    @KafkaListener(topics = "moderation.approved", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "content-enriched", groupId = "${spring.kafka.consumer.group-id}")
     public void consumeModerationApproved(@Payload ModerationEvent event) {
         log.info("Processing moderation.approved event: {}", event.getContentId());
         notificationService.createApprovalNotification(event);

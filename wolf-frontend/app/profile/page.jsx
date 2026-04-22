@@ -1,7 +1,7 @@
 "use client"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { authApi, socialApi, postApi } from "@/lib/api-client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -21,52 +21,93 @@ import {
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("posts")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const userProfile = {
-    name: "Sarah Chen",
-    username: "sarahchen_tech",
+  const [userProfile, setUserProfile] = useState({
+    name: "",
+    username: "",
     avatar: "/diverse-user-avatars.png",
-    bio: "ML Engineer | Blogger | Open Source Enthusiast",
-    location: "San Francisco, CA",
-    website: "sarahchen.dev",
-    email: "sarah@example.com",
-    followers: 15200,
-    following: 543,
-    joinDate: "Joined March 2023",
-    karma: 42500,
-    posts: 256,
-  }
+    bio: "",
+    location: "",
+    website: "",
+    email: "",
+    followers: 0,
+    following: 0,
+    joinDate: "",
+    karma: 0,
+    posts: 0,
+  })
 
-  const userPosts = [
-    {
-      id: 1,
-      title: "Getting Started with Machine Learning in 2025",
-      community: "Technology",
-      likes: 2400,
-      comments: 156,
-      date: "2h ago",
-    },
-    {
-      id: 2,
-      title: "Best Practices for Data Privacy",
-      community: "Technology",
-      likes: 1890,
-      comments: 243,
-      date: "5h ago",
-    },
-    {
-      id: 3,
-      title: "Open Source Contributions That Changed My Career",
-      community: "Business",
-      likes: 3200,
-      comments: 412,
-      date: "1d ago",
-    },
-  ]
+  const [userPosts, setUserPosts] = useState([])
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        setLoading(true)
+        const me = await authApi.me()
+        const userId = me.userId || me.id || ""
+
+        let followersCount = 0
+        let followingCount = 0
+        try {
+          const followersData = await socialApi.followers(userId)
+          followersCount = Array.isArray(followersData) ? followersData.length : followersData?.count || 0
+          const followingData = await socialApi.following(userId)
+          followingCount = Array.isArray(followingData) ? followingData.length : followingData?.count || 0
+        } catch (e) {
+          console.warn("Failed to fetch social data:", e)
+        }
+
+        setUserProfile({
+          name: `${me.firstName || ""} ${me.lastName || ""}`.trim() || me.email,
+          username: me.email?.split("@")[0] || "user",
+          avatar: me.avatar || "/diverse-user-avatars.png",
+          bio: me.bio || "WolfDire member",
+          location: me.location || "",
+          website: me.website || "",
+          email: me.email || "",
+          followers: followersCount,
+          following: followingCount,
+          joinDate: me.createdAt ? `Joined ${new Date(me.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}` : "",
+          karma: me.karma || 0,
+          posts: me.postCount || 0,
+        })
+
+        // Fetch user's posts
+        try {
+          const postsData = await postApi.list(0, 10)
+          const fetchedPosts = Array.isArray(postsData) ? postsData : postsData?.content || []
+          setUserPosts(fetchedPosts.map(p => ({
+            id: p.id,
+            title: p.title || "Untitled",
+            community: p.subredditName || "General",
+            likes: p.upvotes || 0,
+            comments: p.commentCount || 0,
+            date: p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "",
+          })))
+        } catch (e) {
+          console.warn("Failed to fetch posts:", e)
+        }
+
+      } catch (err) {
+        setError(err.message || "Failed to load profile")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProfile()
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-4xl px-4 py-6">
+        {loading ? (
+          <div className="py-20 text-center text-muted-foreground">Loading profile...</div>
+        ) : error ? (
+          <div className="py-20 text-center text-red-500">{error}</div>
+        ) : (
+          <>
         {/* Header Banner */}
         <div className="mb-6 h-32 rounded-lg bg-gradient-to-r from-primary to-accent" />
 
@@ -197,6 +238,8 @@ export default function ProfilePage() {
             )}
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
     </div>
   )

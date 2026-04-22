@@ -1,13 +1,33 @@
 "use client"
-
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { analyticsApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
 import { TrendingUp, Users, Eye, MessageSquare, Download } from "lucide-react"
 
 export default function AdminAnalyticsPage() {
-  const growthData = [
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [dashboardData, setDashboardData] = useState(null)
+
+  useEffect(() => {
+    async function fetchAnalytics() {
+      try {
+        setLoading(true)
+        const data = await analyticsApi.dashboard()
+        setDashboardData(data)
+      } catch (err) {
+        setError(err.message || "Failed to load analytics")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAnalytics()
+  }, [])
+
+  const growthData = dashboardData?.growthData || [
     { month: "Jan", users: 12400, posts: 2400, views: 24000 },
     { month: "Feb", users: 18900, posts: 3200, views: 38000 },
     { month: "Mar", users: 22100, posts: 4500, views: 52000 },
@@ -62,6 +82,9 @@ export default function AdminAnalyticsPage() {
       icon: TrendingUp,
     },
   ]
+
+  if (loading) return <div className="py-20 text-center text-muted-foreground">Loading analytics...</div>
+  if (error) return <div className="py-20 text-center text-red-500">{error}</div>
 
   return (
     <div className="space-y-6">

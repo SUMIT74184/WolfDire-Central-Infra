@@ -1,6 +1,6 @@
 "use client"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { moderationApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -10,59 +10,58 @@ import { AlertTriangle, CheckCircle, Trash2, Eye, MessageSquare } from "lucide-r
 
 export default function AdminModerationPage() {
   const [activeTab, setActiveTab] = useState("flagged")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [flaggedContent, setFlaggedContent] = useState([])
 
-  const flaggedContent = [
-    {
-      id: 1,
-      type: "post",
-      title: "Misleading Health Information",
-      author: "User #2456",
-      reports: 15,
-      severity: "high",
-      reason: "Misinformation",
-      date: "2024-04-05",
-    },
-    {
-      id: 2,
-      type: "comment",
-      title: "Spam Comments on Tech Article",
-      author: "User #3421",
-      reports: 8,
-      severity: "medium",
-      reason: "Spam",
-      date: "2024-04-04",
-    },
-    {
-      id: 3,
-      type: "post",
-      title: "Inappropriate Content",
-      author: "User #1234",
-      reports: 12,
-      severity: "high",
-      reason: "Inappropriate",
-      date: "2024-04-03",
-    },
-    {
-      id: 4,
-      type: "comment",
-      title: "Harassment in Comments",
-      author: "User #5678",
-      reports: 5,
-      severity: "medium",
-      reason: "Harassment",
-      date: "2024-04-02",
-    },
-    {
-      id: 5,
-      type: "post",
-      title: "Suspicious Activity Detected",
-      author: "User #9012",
-      reports: 3,
-      severity: "low",
-      reason: "Suspicious",
-      date: "2024-04-01",
-    },
-  ]
+  useEffect(() => {
+    async function fetchFlagged() {
+      try {
+        setLoading(true)
+        const data = await moderationApi.getFlaggedQueue()
+        const items = Array.isArray(data) ? data : data?.content || []
+        setFlaggedContent(items.map((item, i) => ({
+          id: item.id || i,
+          type: item.contentType || "post",
+          title: item.title || item.reason || "Flagged content",
+          author: item.reportedUser || `User #${item.authorId || "unknown"}`,
+          reports: item.reportCount || 1,
+          severity: item.severity || "medium",
+          reason: item.reason || "Reported",
+          date: item.createdAt ? new Date(item.createdAt).toISOString().split("T")[0] : "",
+        })))
+      } catch (err) {
+        setError(err.message || "Failed to load moderation queue")
+        // Fallback to mock data
+        setFlaggedContent([
+          { id: 1, type: "post", title: "Misleading Health Information", author: "User #2456", reports: 15, severity: "high", reason: "Misinformation", date: "2024-04-05" },
+          { id: 2, type: "comment", title: "Spam Comments on Tech Article", author: "User #3421", reports: 8, severity: "medium", reason: "Spam", date: "2024-04-04" },
+          { id: 3, type: "post", title: "Inappropriate Content", author: "User #1234", reports: 12, severity: "high", reason: "Inappropriate", date: "2024-04-03" },
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchFlagged()
+  }, [])
+
+  const handleApprove = async (id) => {
+    try {
+      await moderationApi.approveContent(String(id))
+      setFlaggedContent(prev => prev.filter(item => item.id !== id))
+    } catch (err) {
+      console.error("Failed to approve:", err)
+    }
+  }
+
+  const handleReject = async (id) => {
+    try {
+      await moderationApi.rejectContent(String(id))
+      setFlaggedContent(prev => prev.filter(item => item.id !== id))
+    } catch (err) {
+      console.error("Failed to reject:", err)
+    }
+  }
 
   const getSeverityColor = (severity) => {
     switch (severity) {
@@ -74,6 +73,8 @@ export default function AdminModerationPage() {
         return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
     }
   }
+
+  if (loading) return <div className="py-20 text-center text-muted-foreground">Loading moderation queue...</div>
 
   return (
     <div className="space-y-6">
@@ -179,10 +180,10 @@ export default function AdminModerationPage() {
                             <Button variant="ghost" size="icon" className="h-8 w-8">
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600" onClick={() => handleApprove(item.id)}>
                               <CheckCircle className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleReject(item.id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>

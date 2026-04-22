@@ -42,20 +42,27 @@ function FacebookIcon({ className }) {
 }
 
 export function SocialAuthButtons({ isLoading }) {
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8090"
+
+  const handleOAuth2Login = (provider) => {
+    window.location.href = `${apiBase}/oauth2/authorization/${provider}`
+  }
+
   return (
     <div className="grid gap-3">
-      <Button type="button" variant="outline" className="w-full gap-3 bg-transparent" disabled={isLoading}>
+      <Button type="button" variant="outline" className="w-full gap-3 bg-transparent" disabled={isLoading} onClick={() => handleOAuth2Login("google")}>
         <GoogleIcon className="h-5 w-5" />
         Continue with Google
       </Button>
-      <Button type="button" variant="outline" className="w-full gap-3 bg-transparent" disabled={isLoading}>
+      <Button type="button" variant="outline" className="w-full gap-3 bg-transparent" disabled={isLoading} onClick={() => handleOAuth2Login("github")}>
         <GitHubIcon className="h-5 w-5" />
         Continue with GitHub
       </Button>
-      <Button type="button" variant="outline" className="w-full gap-3 bg-transparent" disabled={isLoading}>
+      <Button type="button" variant="outline" className="w-full gap-3 bg-transparent" disabled={isLoading} onClick={() => handleOAuth2Login("facebook")}>
         <FacebookIcon className="h-5 w-5" />
         Continue with Facebook
       </Button>
     </div>
   )
 }
+

@@ -7,6 +7,7 @@ import org.app.postsvcwolf.repository.CommentRepository;
 import org.app.postsvcwolf.repository.PostRepository;
 import org.app.postsvcwolf.repository.VoteRepository;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ public class VoteService {
     private final VoteRepository voteRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
 
     @Transactional
@@ -85,6 +87,7 @@ public class VoteService {
             }
         }
         log.info("Created {} vote for {} {}",voteType,targetType,targetId);
+        publishVoteEvent(userId, targetId, targetType, voteType, "CREATED");
     }
 
     private  void updateVote(Vote vote, Vote.VoteType newVoteType){
@@ -120,7 +123,7 @@ public class VoteService {
         log.info("Updated vote from {} to {} for {} {}",
                 oldVoteType,newVoteType,vote.getTargetType(),vote.getTargetType()
                 );
-
+        publishVoteEvent(vote.getUserId(), vote.getTargetId(), vote.getTargetType(), newVoteType, "UPDATED");
     }
 
 
@@ -144,5 +147,23 @@ public class VoteService {
 
             log.info("Removed {} vote for {} {}",
                     vote.getVoteType(), vote.getTargetType(), vote.getTargetId());
+            publishVoteEvent(vote.getUserId(), vote.getTargetId(), vote.getTargetType(), vote.getVoteType(), "REMOVED");
         }
+
+    private void publishVoteEvent(String userId, String targetId, Vote.TargetType targetType,
+                                  Vote.VoteType voteType, String action) {
+        try {
+            java.util.Map<String, Object> event = new java.util.HashMap<>();
+            event.put("userId", userId);
+            event.put("targetId", targetId);
+            event.put("targetType", targetType.name());
+            event.put("voteType", voteType.name());
+            event.put("action", action);
+            event.put("voteValue", voteType == Vote.VoteType.UPVOTE ? 1 : -1);
+            kafkaTemplate.send("vote.changed", targetId, event);
+            log.info("Published vote.changed event: {} {} for {} {}", action, voteType, targetType, targetId);
+        } catch (Exception e) {
+            log.warn("Failed to publish vote event: {}", e.getMessage());
+        }
+    }
 }

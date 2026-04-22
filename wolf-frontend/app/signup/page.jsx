@@ -11,9 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { SocialAuthButtons } from "@/components/social-auth-buttons"
 import { PenSquare, Eye, EyeOff, Loader2, Check, X } from "lucide-react"
 import { authApi } from "@/lib/api-client"
+import { useAuth } from "@/lib/auth-context"
 
 export default function SignupPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -50,7 +52,12 @@ export default function SignupPage() {
       })
       localStorage.setItem("access_token", response.accessToken)
       localStorage.setItem("refresh_token", response.refreshToken)
-      router.push("/feed")
+      login(response.accessToken, response.refreshToken)
+
+      // Redirect admin users to admin panel
+      const roles = response.roles || []
+      const isAdminUser = roles.some(r => r === "ADMIN" || r === "SUPER_ADMIN" || r === "TENANT_ADMIN")
+      router.push(isAdminUser ? "/admin" : "/feed")
     } catch (err) {
       setError(err.message || "Signup failed. Please try again.")
     } finally {

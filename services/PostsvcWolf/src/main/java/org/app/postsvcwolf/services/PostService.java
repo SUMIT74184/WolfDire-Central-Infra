@@ -74,6 +74,13 @@ public class PostService {
 
         publishPostCreatedEvent(post);
 
+        // Publish mention events for each mentioned user
+        if (post.getMentions() != null && !post.getMentions().isEmpty()) {
+            for (String mentionedUser : post.getMentions()) {
+                publishMentionEvent(post, mentionedUser);
+            }
+        }
+
         return mapToResponse(post, userId);
 
     }
@@ -121,6 +128,7 @@ public class PostService {
     @Transactional
     public void incrementViewCount(String postId){
         postRepository.incrementViewCount(postId);
+        publishViewEvent(postId);
     }
 
     @Cacheable(value = "feed", key = "#subredditId + '_' + #pageable.pageNumber")
@@ -240,6 +248,34 @@ public class PostService {
         kafkaTemplate.send("post.created", post.getId(), event);
         log.info("Published post created event for post: {}", post.getId());
 
+    }
+
+    private void publishMentionEvent(Post post, String mentionedUser) {
+        try {
+            java.util.Map<String, Object> event = new java.util.HashMap<>();
+            event.put("postId", post.getId());
+            event.put("userId", post.getUserId());
+            event.put("username", post.getUsername());
+            event.put("mentionedUserId", mentionedUser);
+            event.put("contentType", "POST");
+            event.put("createdAt", post.getCreatedAt() != null ? post.getCreatedAt().toString() : null);
+            kafkaTemplate.send("user.mentioned", mentionedUser, event);
+            log.info("Published user.mentioned event: {} mentioned in post {}", mentionedUser, post.getId());
+        } catch (Exception e) {
+            log.warn("Failed to publish mention event: {}", e.getMessage());
+        }
+    }
+
+    private void publishViewEvent(String postId) {
+        try {
+            java.util.Map<String, Object> event = new java.util.HashMap<>();
+            event.put("postId", postId);
+            event.put("eventType", "VIEW");
+            event.put("timestamp", java.time.LocalDateTime.now().toString());
+            kafkaTemplate.send("post.viewed", postId, event);
+        } catch (Exception e) {
+            log.warn("Failed to publish view event: {}", e.getMessage());
+        }
     }
 
     private PostResponse mapToResponse(Post post,String userId){

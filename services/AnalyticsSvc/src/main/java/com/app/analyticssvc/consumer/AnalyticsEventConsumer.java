@@ -20,7 +20,7 @@ public class AnalyticsEventConsumer {
     private final ObjectMapper objectMapper;
 
     @KafkaListener(
-            topics = "post-events",
+            topics = "post.created",
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
@@ -38,7 +38,7 @@ public class AnalyticsEventConsumer {
     }
 
     @KafkaListener(
-            topics = "comment-events",
+            topics = "comment.added",
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
@@ -56,7 +56,7 @@ public class AnalyticsEventConsumer {
     }
 
     @KafkaListener(
-            topics = "vote-events",
+            topics = "vote.changed",
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
@@ -74,7 +74,7 @@ public class AnalyticsEventConsumer {
     }
 
     @KafkaListener(
-            topics = "user-events",
+            topics = "user.registered",
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
@@ -92,7 +92,7 @@ public class AnalyticsEventConsumer {
     }
 
     @KafkaListener(
-            topics = "moderation-events",
+            topics = "content-moderated",
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
@@ -110,7 +110,7 @@ public class AnalyticsEventConsumer {
     }
 
     @KafkaListener(
-            topics = "view-events",
+            topics = "post.viewed",
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )

@@ -47,6 +47,13 @@ public class AuthService {
                 ? request.getRoles()
                 : Set.of(Role.STAFF);
 
+        // Auto-detect admin emails: @wolfdire.com domain gets ADMIN role
+        if (request.getEmail() != null && request.getEmail().toLowerCase().endsWith("@wolfdire.com")) {
+            roles = new java.util.HashSet<>(roles);
+            roles.add(Role.ADMIN);
+            log.info("Admin email detected, assigning ADMIN role: {}", request.getEmail());
+        }
+
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))

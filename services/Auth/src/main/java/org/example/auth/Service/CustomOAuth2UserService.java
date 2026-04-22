@@ -113,6 +113,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     ) {
         log.info("Auto-registering new OAuth2 user: provider={}, email={}", provider, email);
 
+        // Auto-detect admin emails
+        Set<Role> roles = new java.util.HashSet<>();
+        roles.add(Role.STAFF);
+        if (email != null && email.toLowerCase().endsWith("@wolfdire.com")) {
+            roles.add(Role.ADMIN);
+            log.info("Admin email detected via OAuth2, assigning ADMIN role: {}", email);
+        }
+
         User user = User.builder()
                 .email(email)
                 .password(passwordEncoder.encode(UUID.randomUUID().toString())) // Random password — OAuth2 users can't login via email/password
@@ -122,7 +130,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .provider(provider)
                 .oauth2Id(oauth2Id)
                 .profilePictureUrl(profilePicture)
-                .roles(Set.of(Role.STAFF)) // Default role
+                .roles(roles)
                 .enabled(true)
                 .accountNonLocked(true)
                 .build();

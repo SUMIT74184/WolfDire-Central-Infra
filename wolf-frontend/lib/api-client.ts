@@ -171,3 +171,32 @@ export const notificationApi = {
   list: () => apiClient.get("/api/notifications"),
   markRead: (id: string) => apiClient.patch(`/api/notifications/${id}/read`),
 };
+
+// ── Moderation Service helpers ────────────────────────────────────────────────
+
+export const moderationApi = {
+  getFlaggedQueue: (page = 0, size = 20) =>
+    apiClient.get(`/api/moderation/flagged?page=${page}&size=${size}`),
+
+  getContentDetail: (id: string) =>
+    apiClient.get(`/api/moderation/content/${id}`),
+
+  approveContent: (id: string) =>
+    apiClient.post(`/api/moderation/content/${id}/approve`),
+
+  rejectContent: (id: string) =>
+    apiClient.post(`/api/moderation/content/${id}/reject`),
+};
+
+// ── Admin Auth helpers ────────────────────────────────────────────────────────
+
+export const authAdminApi = {
+  listUsers: (page = 0, size = 20) =>
+    apiClient.get(`/api/auth/users?page=${page}&size=${size}`),
+
+  banUser: (userId: string) =>
+    apiClient.post(`/api/auth/users/${userId}/ban`),
+
+  unbanUser: (userId: string) =>
+    apiClient.post(`/api/auth/users/${userId}/unban`),
+};

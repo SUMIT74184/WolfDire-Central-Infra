@@ -51,7 +51,7 @@ public class FeedEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "user.reputation.updated", groupId = "connection-service-reputation-group")
+    @KafkaListener(topics = "reputation-updated", groupId = "connection-service-reputation-group")
     public void handleReputationUpdate(Map<String, Object> event) {
         try {
             Long userId = ((Number) event.get("userId")).longValue();

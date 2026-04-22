@@ -1,7 +1,8 @@
 "use client"
-
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { postApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -35,6 +36,32 @@ export default function WritePage() {
   const [tags, setTags] = useState([])
   const [tagInput, setTagInput] = useState("")
   const [coverImage, setCoverImage] = useState(null)
+  const [isPublishing, setIsPublishing] = useState(false)
+  const [error, setError] = useState(null)
+  const router = useRouter()
+
+  const handlePublish = async () => {
+    if (!title.trim() || !content.trim()) {
+      setError("Title and content are required")
+      return
+    }
+    setIsPublishing(true)
+    setError(null)
+    try {
+      await postApi.create({
+        title,
+        content,
+        subredditName: category || "General",
+        type: "TEXT",
+        hashtags: tags,
+      })
+      router.push("/feed")
+    } catch (err) {
+      setError(err.message || "Failed to publish post")
+    } finally {
+      setIsPublishing(false)
+    }
+  }
 
   const handleAddTag = (e) => {
     if (e.key === "Enter" && tagInput.trim() && tags.length < 5) {
@@ -87,9 +114,9 @@ export default function WritePage() {
               <Eye className="h-4 w-4" />
               Preview
             </Button>
-            <Button size="sm" className="gap-2">
+            <Button size="sm" className="gap-2" onClick={handlePublish} disabled={isPublishing}>
               <Send className="h-4 w-4" />
-              Publish
+              {isPublishing ? "Publishing..." : "Publish"}
             </Button>
           </div>
         </div>
@@ -131,6 +158,10 @@ export default function WritePage() {
           onChange={(e) => setTitle(e.target.value)}
           className="border-0 bg-transparent text-4xl font-bold placeholder:text-muted-foreground/50 focus-visible:ring-0 px-0"
         />
+
+        {error && (
+          <p className="mt-2 text-sm text-red-500">{error}</p>
+        )}
 
         {/* Category & Tags */}
         <div className="mt-6 flex flex-wrap items-center gap-4">

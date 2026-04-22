@@ -1,6 +1,6 @@
 "use client"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { authAdminApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,59 +11,48 @@ import { Search, Mail, MessageSquare, Ban, Shield, Trash2 } from "lucide-react"
 
 export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [users, setUsers] = useState([])
 
-  const users = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      email: "sarah@example.com",
-      avatar: "/female-engineer-working.png",
-      role: "author",
-      status: "active",
-      joinDate: "2024-01-15",
-      posts: 124,
-    },
-    {
-      id: 2,
-      name: "Mike Chen",
-      email: "mike@example.com",
-      avatar: "/male-developer.png",
-      role: "moderator",
-      status: "active",
-      joinDate: "2024-01-10",
-      posts: 89,
-    },
-    {
-      id: 3,
-      name: "Emma Davis",
-      email: "emma@example.com",
-      avatar: "/woman-designer.png",
-      role: "author",
-      status: "active",
-      joinDate: "2024-02-20",
-      posts: 45,
-    },
-    {
-      id: 4,
-      name: "Alex Rivera",
-      email: "alex@example.com",
-      avatar: "/professional-interior-designer.png",
-      role: "reader",
-      status: "inactive",
-      joinDate: "2024-03-05",
-      posts: 12,
-    },
-    {
-      id: 5,
-      name: "John Smith",
-      email: "john@example.com",
-      avatar: "/tech-professional.png",
-      role: "author",
-      status: "banned",
-      joinDate: "2024-01-01",
-      posts: 67,
-    },
-  ]
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        setLoading(true)
+        const data = await authAdminApi.listUsers(0, 50)
+        const fetchedUsers = Array.isArray(data) ? data : data?.content || []
+        setUsers(fetchedUsers.map((u, i) => ({
+          id: u.id || u.userId || i,
+          name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email,
+          email: u.email || "",
+          avatar: u.avatar || "/diverse-user-avatars.png",
+          role: u.role || "reader",
+          status: u.banned ? "banned" : u.active !== false ? "active" : "inactive",
+          joinDate: u.createdAt ? new Date(u.createdAt).toISOString().split("T")[0] : "",
+          posts: u.postCount || 0,
+        })))
+      } catch (err) {
+        setError(err.message || "Failed to load users")
+        // Fallback to mock data if API not ready
+        setUsers([
+          { id: 1, name: "Sarah Johnson", email: "sarah@example.com", avatar: "/female-engineer-working.png", role: "author", status: "active", joinDate: "2024-01-15", posts: 124 },
+          { id: 2, name: "Mike Chen", email: "mike@example.com", avatar: "/male-developer.png", role: "moderator", status: "active", joinDate: "2024-01-10", posts: 89 },
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchUsers()
+  }, [])
+
+  const handleBanUser = async (userId) => {
+    try {
+      await authAdminApi.banUser(userId)
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: "banned" } : u))
+    } catch (err) {
+      console.error("Failed to ban user:", err)
+    }
+  }
 
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -80,6 +69,8 @@ export default function AdminUsersPage() {
         return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
     }
   }
+
+  if (loading) return <div className="py-20 text-center text-muted-foreground">Loading users...</div>
 
   return (
     <div className="space-y-6">
@@ -190,7 +181,7 @@ export default function AdminUsersPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8">
                           <Shield className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleBanUser(user.id)}>
                           <Ban className="h-4 w-4" />
                         </Button>
                       </div>

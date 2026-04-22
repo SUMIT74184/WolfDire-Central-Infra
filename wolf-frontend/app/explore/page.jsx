@@ -1,7 +1,7 @@
 "use client"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { postApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -93,6 +93,41 @@ export default function ExplorePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [sortBy, setSortBy] = useState("trending")
+  const [posts, setPosts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [page, setPage] = useState(0)
+
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        setLoading(true)
+        const response = await postApi.list(page, 20)
+        const fetchedPosts = Array.isArray(response) ? response : response?.content || []
+        setPosts(fetchedPosts.map((p, i) => ({
+          id: p.id || i,
+          title: p.title || "Untitled",
+          excerpt: p.content ? p.content.substring(0, 150) + "..." : "",
+          author: {
+            name: p.username || "Unknown",
+            avatar: "/diverse-user-avatars.png",
+            role: "Member",
+          },
+          category: p.subredditName || "General",
+          readTime: `${Math.max(1, Math.ceil((p.content?.length || 0) / 1000))} min read`,
+          likes: p.upvotes || p.score || 0,
+          comments: p.commentCount || 0,
+          image: p.mediaUrl || p.thumbnailUrl || "/placeholder.svg",
+          date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+        })))
+      } catch (err) {
+        setError(err.message || "Failed to load posts")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchPosts()
+  }, [page])
 
   const filteredPosts = posts.filter((post) => {
     const matchesSearch =
@@ -146,79 +181,12 @@ export default function ExplorePage() {
           ))}
         </div>
 
-        {/* Reddit-style Posts */}
-        <div className="space-y-2">
-          {filteredPosts.map((post) => (
-            <Card key={post.id} className="border-border hover:border-primary/50 transition-colors overflow-hidden">
-              <div className="flex">
-                {/* Voting Sidebar - Reddit style */}
-                <div className="flex w-12 flex-col items-center justify-start bg-muted py-2">
-                  <button className="rounded hover:bg-secondary p-1 transition-colors">
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                  <span className="py-1 text-xs font-medium text-foreground">{Math.floor(post.likes / 100)}</span>
-                  <button className="rounded hover:bg-secondary p-1 transition-colors">
-                    <TrendingUp className="h-4 w-4 text-muted-foreground rotate-180" />
-                  </button>
-                </div>
-
-                {/* Post Content */}
-                <div className="flex-1 p-4">
-                  <div className="flex gap-3">
-                    {/* Post image thumbnail */}
-                    <div className="hidden sm:block">
-                      <img
-                        src={post.image || "/placeholder.svg"}
-                        alt={post.title}
-                        className="h-20 w-20 rounded object-cover"
-                      />
-                    </div>
-
-                    {/* Post info */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                        <span className="font-semibold">c/{post.category}</span>
-                        <span>Posted by</span>
-                        <Avatar className="h-5 w-5">
-                          <AvatarImage src={post.author.avatar || "/placeholder.svg"} />
-                          <AvatarFallback>{post.author.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <span>{post.author.name}</span>
-                        <span>{post.date}</span>
-                      </div>
-
-                      <Link href={`/post/${post.id}`}>
-                        <h3 className="text-base font-bold text-foreground hover:text-primary transition-colors mb-2">
-                          {post.title}
-                        </h3>
-                      </Link>
-
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{post.excerpt}</p>
-
-                      {/* Post actions */}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <button className="flex items-center gap-1 hover:bg-secondary rounded px-2 py-1 transition-colors">
-                          <MessageCircle className="h-4 w-4" />
-                          <span>{post.comments}</span>
-                        </button>
-                        <button className="flex items-center gap-1 hover:bg-secondary rounded px-2 py-1 transition-colors">
-                          <BookmarkPlus className="h-4 w-4" />
-                          <span>Save</span>
-                        </button>
-                        <button className="flex items-center gap-1 hover:bg-secondary rounded px-2 py-1 transition-colors">
-                          <Heart className="h-4 w-4" />
-                          <span>Share</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {filteredPosts.length === 0 && (
+        {/* Content */}
+        {loading ? (
+          <div className="py-20 text-center text-muted-foreground">Loading posts...</div>
+        ) : error ? (
+          <div className="py-20 text-center text-red-500">{error}</div>
+        ) : filteredPosts.length === 0 ? (
           <div className="py-20 text-center">
             <p className="text-muted-foreground">No posts found matching your criteria.</p>
             <Button
@@ -231,17 +199,87 @@ export default function ExplorePage() {
               Clear filters
             </Button>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Reddit-style Posts */}
+            <div className="space-y-2">
+              {filteredPosts.map((post) => (
+                <Card key={post.id} className="border-border hover:border-primary/50 transition-colors overflow-hidden">
+                  <div className="flex">
+                    {/* Voting Sidebar */}
+                    <div className="flex w-12 flex-col items-center justify-start bg-muted py-2">
+                      <button className="rounded hover:bg-secondary p-1 transition-colors">
+                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                      <span className="py-1 text-xs font-medium text-foreground">{Math.floor(post.likes / 100)}</span>
+                      <button className="rounded hover:bg-secondary p-1 transition-colors">
+                        <TrendingUp className="h-4 w-4 text-muted-foreground rotate-180" />
+                      </button>
+                    </div>
 
-        {/* Load More */}
-        {filteredPosts.length > 0 && (
-          <div className="mt-8 text-center">
-            <Button variant="outline" className="rounded-full bg-transparent">
-              Load More Posts
-            </Button>
-          </div>
+                    {/* Post Content */}
+                    <div className="flex-1 p-4">
+                      <div className="flex gap-3">
+                        <div className="hidden sm:block">
+                          <img
+                            src={post.image || "/placeholder.svg"}
+                            alt={post.title}
+                            className="h-20 w-20 rounded object-cover"
+                          />
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                            <span className="font-semibold">c/{post.category}</span>
+                            <span>Posted by</span>
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={post.author.avatar || "/placeholder.svg"} />
+                              <AvatarFallback>{post.author.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <span>{post.author.name}</span>
+                            <span>{post.date}</span>
+                          </div>
+
+                          <Link href={`/post/${post.id}`}>
+                            <h3 className="text-base font-bold text-foreground hover:text-primary transition-colors mb-2">
+                              {post.title}
+                            </h3>
+                          </Link>
+
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{post.excerpt}</p>
+
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <button className="flex items-center gap-1 hover:bg-secondary rounded px-2 py-1 transition-colors">
+                              <MessageCircle className="h-4 w-4" />
+                              <span>{post.comments}</span>
+                            </button>
+                            <button className="flex items-center gap-1 hover:bg-secondary rounded px-2 py-1 transition-colors">
+                              <BookmarkPlus className="h-4 w-4" />
+                              <span>Save</span>
+                            </button>
+                            <button className="flex items-center gap-1 hover:bg-secondary rounded px-2 py-1 transition-colors">
+                              <Heart className="h-4 w-4" />
+                              <span>Share</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Load More */}
+            <div className="mt-8 text-center">
+              <Button variant="outline" className="rounded-full bg-transparent" onClick={() => setPage(p => p + 1)}>
+                Load More Posts
+              </Button>
+            </div>
+          </>
         )}
       </div>
     </div>
   )
 }
+

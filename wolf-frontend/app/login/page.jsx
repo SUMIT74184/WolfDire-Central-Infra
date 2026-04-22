@@ -11,9 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { SocialAuthButtons } from "@/components/social-auth-buttons"
 import { PenSquare, Eye, EyeOff, Loader2 } from "lucide-react"
 import { authApi } from "@/lib/api-client"
+import { useAuth } from "@/lib/auth-context"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -29,9 +31,12 @@ export default function LoginPage() {
     setError("")
     try {
       const response = await authApi.login({ email: formData.email, password: formData.password })
-      localStorage.setItem("access_token", response.accessToken)
-      localStorage.setItem("refresh_token", response.refreshToken)
-      router.push("/feed")
+      login(response.accessToken, response.refreshToken)
+
+      // Redirect admin users to admin panel
+      const roles = response.roles || []
+      const isAdmin = roles.some(r => r === "ADMIN" || r === "SUPER_ADMIN" || r === "TENANT_ADMIN")
+      router.push(isAdmin ? "/admin" : "/feed")
     } catch (err) {
       setError(err.message || "Invalid email or password. Please try again.")
     } finally {
