@@ -6,6 +6,7 @@ import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sun, Moon, Menu, X, Search, PenSquare, ChevronDown } from "lucide-react"
+import NotificationDropdown from "./NotificationDropdown"
 
 export function Navbar() {
   const { theme, setTheme } = useTheme()
@@ -69,6 +70,8 @@ export function Navbar() {
               <Search className="h-5 w-5" />
             </Button>
 
+            <NotificationDropdown />
+            
             {/* Theme toggle */}
             <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
               {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}

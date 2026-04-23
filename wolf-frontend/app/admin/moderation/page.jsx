@@ -1,5 +1,6 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { moderationApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,58 +11,40 @@ import { AlertTriangle, CheckCircle, Trash2, Eye, MessageSquare } from "lucide-r
 
 export default function AdminModerationPage() {
   const [activeTab, setActiveTab] = useState("flagged")
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [flaggedContent, setFlaggedContent] = useState([])
+  const queryClient = useQueryClient()
+  const { data, isLoading: loading, error } = useQuery({
+    queryKey: ['flaggedQueue'],
+    queryFn: () => moderationApi.getFlaggedQueue(),
+  })
 
-  useEffect(() => {
-    async function fetchFlagged() {
-      try {
-        setLoading(true)
-        const data = await moderationApi.getFlaggedQueue()
-        const items = Array.isArray(data) ? data : data?.content || []
-        setFlaggedContent(items.map((item, i) => ({
-          id: item.id || i,
-          type: item.contentType || "post",
-          title: item.title || item.reason || "Flagged content",
-          author: item.reportedUser || `User #${item.authorId || "unknown"}`,
-          reports: item.reportCount || 1,
-          severity: item.severity || "medium",
-          reason: item.reason || "Reported",
-          date: item.createdAt ? new Date(item.createdAt).toISOString().split("T")[0] : "",
-        })))
-      } catch (err) {
-        setError(err.message || "Failed to load moderation queue")
-        // Fallback to mock data
-        setFlaggedContent([
-          { id: 1, type: "post", title: "Misleading Health Information", author: "User #2456", reports: 15, severity: "high", reason: "Misinformation", date: "2024-04-05" },
-          { id: 2, type: "comment", title: "Spam Comments on Tech Article", author: "User #3421", reports: 8, severity: "medium", reason: "Spam", date: "2024-04-04" },
-          { id: 3, type: "post", title: "Inappropriate Content", author: "User #1234", reports: 12, severity: "high", reason: "Inappropriate", date: "2024-04-03" },
-        ])
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchFlagged()
-  }, [])
+  const fetchedItems = data ? (Array.isArray(data) ? data : data.content || []) : []
+  const flaggedContent = fetchedItems.map((item, i) => ({
+    id: item.id || i,
+    type: item.contentType || "post",
+    title: item.title || item.reason || "Flagged content",
+    author: item.reportedUser || `User #${item.authorId || "unknown"}`,
+    reports: item.reportCount || 1,
+    severity: item.severity || "medium",
+    reason: item.reason || "Reported",
+    date: item.createdAt ? new Date(item.createdAt).toISOString().split("T")[0] : "",
+  }))
 
-  const handleApprove = async (id) => {
-    try {
-      await moderationApi.approveContent(String(id))
-      setFlaggedContent(prev => prev.filter(item => item.id !== id))
-    } catch (err) {
-      console.error("Failed to approve:", err)
+  const approveMutation = useMutation({
+    mutationFn: (id) => moderationApi.approveContent(String(id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['flaggedQueue'] })
     }
-  }
+  })
 
-  const handleReject = async (id) => {
-    try {
-      await moderationApi.rejectContent(String(id))
-      setFlaggedContent(prev => prev.filter(item => item.id !== id))
-    } catch (err) {
-      console.error("Failed to reject:", err)
+  const rejectMutation = useMutation({
+    mutationFn: (id) => moderationApi.rejectContent(String(id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['flaggedQueue'] })
     }
-  }
+  })
+
+  const handleApprove = (id) => approveMutation.mutate(id)
+  const handleReject = (id) => rejectMutation.mutate(id)
 
   const getSeverityColor = (severity) => {
     switch (severity) {

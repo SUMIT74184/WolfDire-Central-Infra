@@ -1,5 +1,6 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { authAdminApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,47 +12,33 @@ import { Search, Mail, MessageSquare, Ban, Shield, Trash2 } from "lucide-react"
 
 export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [users, setUsers] = useState([])
+  const queryClient = useQueryClient()
+  const { data, isLoading: loading, error } = useQuery({
+    queryKey: ['adminUsers'],
+    queryFn: () => authAdminApi.listUsers(0, 50),
+  })
 
-  useEffect(() => {
-    async function fetchUsers() {
-      try {
-        setLoading(true)
-        const data = await authAdminApi.listUsers(0, 50)
-        const fetchedUsers = Array.isArray(data) ? data : data?.content || []
-        setUsers(fetchedUsers.map((u, i) => ({
-          id: u.id || u.userId || i,
-          name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email,
-          email: u.email || "",
-          avatar: u.avatar || "/diverse-user-avatars.png",
-          role: u.role || "reader",
-          status: u.banned ? "banned" : u.active !== false ? "active" : "inactive",
-          joinDate: u.createdAt ? new Date(u.createdAt).toISOString().split("T")[0] : "",
-          posts: u.postCount || 0,
-        })))
-      } catch (err) {
-        setError(err.message || "Failed to load users")
-        // Fallback to mock data if API not ready
-        setUsers([
-          { id: 1, name: "Sarah Johnson", email: "sarah@example.com", avatar: "/female-engineer-working.png", role: "author", status: "active", joinDate: "2024-01-15", posts: 124 },
-          { id: 2, name: "Mike Chen", email: "mike@example.com", avatar: "/male-developer.png", role: "moderator", status: "active", joinDate: "2024-01-10", posts: 89 },
-        ])
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchUsers()
-  }, [])
+  const fetchedData = data ? (Array.isArray(data) ? data : data.content || []) : []
+  const users = fetchedData.map((u, i) => ({
+    id: u.id || u.userId || i,
+    name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email,
+    email: u.email || "",
+    avatar: u.avatar || "/diverse-user-avatars.png",
+    role: u.role || "reader",
+    status: u.banned ? "banned" : u.active !== false ? "active" : "inactive",
+    joinDate: u.createdAt ? new Date(u.createdAt).toISOString().split("T")[0] : "",
+    posts: u.postCount || 0,
+  }))
 
-  const handleBanUser = async (userId) => {
-    try {
-      await authAdminApi.banUser(userId)
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: "banned" } : u))
-    } catch (err) {
-      console.error("Failed to ban user:", err)
+  const banMutation = useMutation({
+    mutationFn: (userId) => authAdminApi.banUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
     }
+  })
+
+  const handleBanUser = (userId) => {
+    banMutation.mutate(userId)
   }
 
   const filteredUsers = users.filter((user) =>

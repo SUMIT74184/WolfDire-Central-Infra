@@ -1,7 +1,8 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
-import { authApi, socialApi, postApi } from "@/lib/api-client"
+import { authApi, socialApi, postApi, analyticsApi } from "@/lib/api-client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -17,87 +18,73 @@ import {
   MessageCircle,
   Bookmark,
   TrendingUp,
+  Activity
 } from "lucide-react"
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("posts")
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
-  const [userProfile, setUserProfile] = useState({
-    name: "",
-    username: "",
-    avatar: "/diverse-user-avatars.png",
-    bio: "",
-    location: "",
-    website: "",
-    email: "",
-    followers: 0,
-    following: 0,
-    joinDate: "",
-    karma: 0,
-    posts: 0,
+  const { data: me, isLoading: meLoading, error: meError } = useQuery({
+    queryKey: ['me'],
+    queryFn: authApi.me,
   })
 
-  const [userPosts, setUserPosts] = useState([])
+  const userId = me?.userId || me?.id || ""
 
-  useEffect(() => {
-    async function fetchProfile() {
-      try {
-        setLoading(true)
-        const me = await authApi.me()
-        const userId = me.userId || me.id || ""
+  const { data: followersData } = useQuery({
+    queryKey: ['followers', userId],
+    queryFn: () => socialApi.followers(userId),
+    enabled: !!userId,
+  })
 
-        let followersCount = 0
-        let followingCount = 0
-        try {
-          const followersData = await socialApi.followers(userId)
-          followersCount = Array.isArray(followersData) ? followersData.length : followersData?.count || 0
-          const followingData = await socialApi.following(userId)
-          followingCount = Array.isArray(followingData) ? followingData.length : followingData?.count || 0
-        } catch (e) {
-          console.warn("Failed to fetch social data:", e)
-        }
+  const { data: followingData } = useQuery({
+    queryKey: ['following', userId],
+    queryFn: () => socialApi.following(userId),
+    enabled: !!userId,
+  })
 
-        setUserProfile({
-          name: `${me.firstName || ""} ${me.lastName || ""}`.trim() || me.email,
-          username: me.email?.split("@")[0] || "user",
-          avatar: me.avatar || "/diverse-user-avatars.png",
-          bio: me.bio || "WolfDire member",
-          location: me.location || "",
-          website: me.website || "",
-          email: me.email || "",
-          followers: followersCount,
-          following: followingCount,
-          joinDate: me.createdAt ? `Joined ${new Date(me.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}` : "",
-          karma: me.karma || 0,
-          posts: me.postCount || 0,
-        })
+  const { data: analytics } = useQuery({
+    queryKey: ['analytics', userId],
+    queryFn: () => {
+      const now = new Date()
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(now.getDate() - 30)
+      return analyticsApi.user(userId, thirtyDaysAgo.toISOString(), now.toISOString())
+    },
+    enabled: !!userId,
+  })
 
-        // Fetch user's posts
-        try {
-          const postsData = await postApi.list(0, 10)
-          const fetchedPosts = Array.isArray(postsData) ? postsData : postsData?.content || []
-          setUserPosts(fetchedPosts.map(p => ({
-            id: p.id,
-            title: p.title || "Untitled",
-            community: p.subredditName || "General",
-            likes: p.upvotes || 0,
-            comments: p.commentCount || 0,
-            date: p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "",
-          })))
-        } catch (e) {
-          console.warn("Failed to fetch posts:", e)
-        }
+  const { data: postsData } = useQuery({
+    queryKey: ['posts'],
+    queryFn: () => postApi.list(0, 10),
+  })
 
-      } catch (err) {
-        setError(err.message || "Failed to load profile")
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchProfile()
-  }, [])
+  const userProfile = {
+    name: me ? (`${me.firstName || ""} ${me.lastName || ""}`.trim() || me.email) : "",
+    username: me ? (me.email?.split("@")[0] || "user") : "user",
+    avatar: me?.avatar || "/diverse-user-avatars.png",
+    bio: me?.bio || "WolfDire member",
+    location: me?.location || "",
+    website: me?.website || "",
+    email: me?.email || "",
+    followers: followersData ? (Array.isArray(followersData) ? followersData.length : followersData.count || 0) : 0,
+    following: followingData ? (Array.isArray(followingData) ? followingData.length : followingData.count || 0) : 0,
+    joinDate: me?.createdAt ? `Joined ${new Date(me.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}` : "",
+    karma: me?.karma || 0,
+    posts: me?.postCount || 0,
+  }
+
+  const userPosts = postsData ? (Array.isArray(postsData) ? postsData : postsData.content || []).map(p => ({
+    id: p.id,
+    title: p.title || "Untitled",
+    community: p.subredditName || "General",
+    likes: p.upvotes || 0,
+    comments: p.commentCount || 0,
+    date: p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "",
+  })) : []
+
+  const loading = meLoading
+  const error = meError ? meError.message || "Failed to load profile" : null
 
   return (
     <div className="min-h-screen bg-background">
@@ -189,6 +176,7 @@ export default function ProfilePage() {
                 <TabsTrigger value="posts">Posts</TabsTrigger>
                 <TabsTrigger value="saved">Saved</TabsTrigger>
                 <TabsTrigger value="communities">Communities</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
               </TabsList>
             </Tabs>
           </CardHeader>
@@ -234,6 +222,29 @@ export default function ProfilePage() {
               <div className="text-center py-8 text-muted-foreground">
                 <TrendingUp className="mx-auto mb-2 h-8 w-8 opacity-50" />
                 <p>Join communities to see them here</p>
+              </div>
+            )}
+            
+            {activeTab === "analytics" && (
+              <div className="py-8">
+                <h3 className="text-lg font-semibold mb-4">Your 30-Day Activity</h3>
+                {analytics ? (
+                  <div className="grid grid-cols-2 gap-4">
+                     <div className="rounded-lg border border-border p-4">
+                        <span className="text-xs text-muted-foreground block">Profile Views</span>
+                        <span className="text-xl font-bold">{analytics.totalViews || 0}</span>
+                     </div>
+                     <div className="rounded-lg border border-border p-4">
+                        <span className="text-xs text-muted-foreground block">Content Interactions</span>
+                        <span className="text-xl font-bold">{analytics.totalInteractions || 0}</span>
+                     </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground">
+                     <Activity className="mx-auto mb-2 h-8 w-8 opacity-50" />
+                     <p>Analytics unavailable at this time</p>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

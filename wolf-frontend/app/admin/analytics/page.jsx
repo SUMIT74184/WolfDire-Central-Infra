@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { analyticsApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
@@ -8,51 +8,14 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { TrendingUp, Users, Eye, MessageSquare, Download } from "lucide-react"
 
 export default function AdminAnalyticsPage() {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [dashboardData, setDashboardData] = useState(null)
+  const { data: dashboardData, isLoading: loading, error } = useQuery({
+    queryKey: ['adminAnalytics'],
+    queryFn: () => analyticsApi.dashboard(),
+  })
 
-  useEffect(() => {
-    async function fetchAnalytics() {
-      try {
-        setLoading(true)
-        const data = await analyticsApi.dashboard()
-        setDashboardData(data)
-      } catch (err) {
-        setError(err.message || "Failed to load analytics")
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchAnalytics()
-  }, [])
-
-  const growthData = dashboardData?.growthData || [
-    { month: "Jan", users: 12400, posts: 2400, views: 24000 },
-    { month: "Feb", users: 18900, posts: 3200, views: 38000 },
-    { month: "Mar", users: 22100, posts: 4500, views: 52000 },
-    { month: "Apr", users: 28900, posts: 5900, views: 78000 },
-    { month: "May", users: 35450, posts: 7200, views: 98000 },
-    { month: "Jun", users: 42300, posts: 8900, views: 124000 },
-  ]
-
-  const dailyStats = [
-    { day: "Mon", visitors: 4200, engagement: 240, posts: 120 },
-    { day: "Tue", visitors: 5100, engagement: 320, posts: 145 },
-    { day: "Wed", visitors: 4800, engagement: 280, posts: 135 },
-    { day: "Thu", visitors: 6200, engagement: 390, posts: 165 },
-    { day: "Fri", visitors: 7100, engagement: 420, posts: 189 },
-    { day: "Sat", visitors: 5900, engagement: 350, posts: 156 },
-    { day: "Sun", visitors: 4400, engagement: 260, posts: 125 },
-  ]
-
-  const topCommunities = [
-    { name: "Technology", value: 18500 },
-    { name: "Design", value: 12300 },
-    { name: "Business", value: 9800 },
-    { name: "Lifestyle", value: 7400 },
-    { name: "Other", value: 4200 },
-  ]
+  const growthData = dashboardData?.growthData || []
+  const dailyStats = dashboardData?.dailyStats || []
+  const topCommunities = dashboardData?.topCommunities || []
 
   const COLORS = ["#6366f1", "#8b5cf6", "#d946ef", "#ec4899", "#f43f5e"]
 

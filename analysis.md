@@ -122,11 +122,11 @@ These backend capabilities exist but have **no frontend consumer**:
 | `POST /api/auth/refresh` | Auth | ✅ AuthContext auto-refresh |
 | `GET /api/auth/validate` | Auth | ✅ AuthContext JWT route guards |
 | OAuth2 Google/GitHub redirect | Auth | ✅ Social auth buttons wired |
-| `GET /api/analytics/user/:id` | Analytics | ❌ No per-user analytics UI |
+| `GET /api/analytics/user/:id` | Analytics | ✅ Surfaced in profile analytics tab |
 | `GET /api/analytics/content/:id` | Analytics | ❌ No per-content analytics UI |
 | `GET /api/analytics/trending` | Analytics | ❌ Not surfaced on Explore page |
 | `POST /api/social/follow/:id` | Social | ❌ No follow button on profile |
-| Notification polling/WebSocket | Notification | ❌ No notification bell UI |
+| Notification polling/WebSocket | Notification | ✅ Notification bell UI wired with polling |
 
 ---
 
@@ -137,7 +137,7 @@ These backend capabilities exist but have **no frontend consumer**:
 | Password reset | `POST /api/auth/forgot-password` | High (Phase 3) |
 | Email verification | `POST /api/auth/verify-email?token=` | High (Phase 3) |
 | Communities | `GET/POST /api/posts/communities` | Medium (Phase 5) |
-| Threaded comments | `GET /api/posts/:id/comments` with pagination | High (Phase 5) |
+| Threaded comments | `GET /api/posts/:id/comments` with pagination | ✅ Done (Phase 5) |
 
 ---
 
@@ -161,3 +161,19 @@ These backend capabilities exist but have **no frontend consumer**:
 | Redis | 6379 | Cache + Sessions |
 | Kafka | 29092 (internal) / 9092 (host) | — |
 | Zookeeper | 2181 | — |
+
+---
+
+## 7. Phase 6: Frontend State & Data Fetching (React Query)
+
+**Objective**: Replace `useEffect`/`useState` pattern with `@tanstack/react-query` to ensure automated caching, robust background fetching, and simplified global state synchronization for dynamic data. Remove leftover static stubs.
+
+### Migration Status (Pending)
+- [ ] **Setup**: Configure `QueryClientProvider` globally in `app/layout.jsx`
+- [ ] **Profile (`/profile`)**: Refactor user info, social stats, post lists, and personal analytics to parallel `useQuery` hooks.
+- [ ] **Feed (`/feed`)**: Migrate to use `useQuery` / `useInfiniteQuery`.
+- [ ] **Post Detail (`/post/[id]`)**: Migrate post data + comments, and use `useMutation` for likes/comments.
+- [ ] **Explore (`/explore`)**: Migrate post list fetching.
+- [ ] **Analytics Dashboard (`/dashboard`)**: Migrate to `useQuery`.
+- [ ] **Notifications**: Implement polling via React Query `refetchInterval` instead of custom interval logic.
+- [ ] **Admin Panels (`/admin/*`)**: Refactor lists and moderation mutations leveraging query invalidations.

@@ -140,6 +140,27 @@ export const postApi = {
   delete: (id: string) => apiClient.delete(`/api/posts/${id}`),
 };
 
+// ── Comment Service helpers ───────────────────────────────────────────────────
+
+export const commentApi = {
+  getPostComments: (postId: string, page = 0, size = 50) =>
+    apiClient.get(`/api/comments/post/${postId}?page=${page}&size=${size}`),
+
+  create: (data: unknown) => apiClient.post("/api/comments", data),
+
+  getReplies: (commentId: string) =>
+    apiClient.get(`/api/comments/${commentId}/replies`),
+
+  update: (commentId: string, content: string) =>
+    apiClient.put(`/api/comments/${commentId}?content=${encodeURIComponent(content)}`),
+
+  delete: (commentId: string) => apiClient.delete(`/api/comments/${commentId}`),
+
+  upvote: (commentId: string) => apiClient.post(`/api/comments/${commentId}/upvote`),
+
+  downvote: (commentId: string) => apiClient.post(`/api/comments/${commentId}/downvote`),
+};
+
 // ── Feed Service helpers ──────────────────────────────────────────────────────
 
 export const feedApi = {
@@ -168,8 +189,17 @@ export const analyticsApi = {
 // ── Notification Service helpers ──────────────────────────────────────────────
 
 export const notificationApi = {
-  list: () => apiClient.get("/api/notifications"),
-  markRead: (id: string) => apiClient.patch(`/api/notifications/${id}/read`),
+  listByUser: (userId: string, page = 0, size = 20, unreadOnly = false) => 
+    apiClient.get(`/api/notifications/user/${userId}?page=${page}&size=${size}${unreadOnly ? '&unreadOnly=true' : ''}`),
+    
+  getUnreadCount: (userId: string) => 
+    apiClient.get(`/api/notifications/user/${userId}/unread-count`),
+    
+  markRead: (userId: string, notificationIds: number[]) => 
+    apiClient.post(`/api/notifications/mark-read`, { userId, notificationIds }),
+    
+  markAllRead: (userId: string) => 
+    apiClient.post(`/api/notifications/user/${userId}/mark-all-read`),
 };
 
 // ── Moderation Service helpers ────────────────────────────────────────────────

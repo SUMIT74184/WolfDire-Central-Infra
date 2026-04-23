@@ -7,73 +7,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Eye, Heart, MessageCircle, PenSquare, ArrowUpRight, ArrowDownRight, Users, DollarSign, Loader2 } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts"
-import { useEffect, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { analyticsApi } from "@/lib/api-client"
 
-const stats = [
-  { name: "Total Views", value: "124,892", change: "+12.5%", trend: "up", icon: Eye },
-  { name: "Total Likes", value: "8,432", change: "+8.2%", trend: "up", icon: Heart },
-  { name: "Followers", value: "2,891", change: "+15.3%", trend: "up", icon: Users },
-  { name: "Earnings", value: "$3,240", change: "-2.1%", trend: "down", icon: DollarSign },
-]
 
-const chartData = [
-  { name: "Mon", views: 4000, likes: 240 },
-  { name: "Tue", views: 3000, likes: 198 },
-  { name: "Wed", views: 5000, likes: 320 },
-  { name: "Thu", views: 2780, likes: 189 },
-  { name: "Fri", views: 1890, likes: 140 },
-  { name: "Sat", views: 6390, likes: 410 },
-  { name: "Sun", views: 3490, likes: 230 },
-]
-
-const recentArticles = [
-  {
-    id: 1,
-    title: "The Future of Web Development",
-    status: "published",
-    views: 2453,
-    likes: 189,
-    comments: 45,
-    date: "Dec 15",
-  },
-  {
-    id: 2,
-    title: "Understanding Machine Learning",
-    status: "published",
-    views: 1876,
-    likes: 142,
-    comments: 32,
-    date: "Dec 14",
-  },
-  { id: 3, title: "Building Sustainable Habits", status: "draft", views: 0, likes: 0, comments: 0, date: "Dec 13" },
-]
-
-const recentActivity = [
-  { type: "like", user: "Sarah Chen", article: "The Future of Web Development", time: "2 min ago" },
-  { type: "comment", user: "Marcus Johnson", article: "Understanding Machine Learning", time: "15 min ago" },
-  { type: "follow", user: "Emma Williams", time: "1 hour ago" },
-  { type: "like", user: "David Park", article: "The Future of Web Development", time: "2 hours ago" },
-]
 
 export default function DashboardPage() {
-  const [dashboardData, setDashboardData] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    async function loadDashboard() {
-      try {
-        setIsLoading(true)
-        const response = await analyticsApi.dashboard()
-        setDashboardData(response)
-      } catch (err) {
-        console.error("Failed to load dashboard:", err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    loadDashboard()
-  }, [])
+  const { data: dashboardData, isLoading } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: () => analyticsApi.dashboard(),
+  })
 
   if (isLoading) {
     return (
@@ -83,10 +26,10 @@ export default function DashboardPage() {
     )
   }
 
-  const dStats = dashboardData?.stats || stats
-  const dChartData = dashboardData?.chartData || chartData
-  const dRecentArticles = dashboardData?.recentArticles || recentArticles
-  const dRecentActivity = dashboardData?.recentActivity || recentActivity
+  const dStats = dashboardData?.stats || []
+  const dChartData = dashboardData?.chartData || []
+  const dRecentArticles = dashboardData?.recentArticles || []
+  const dRecentActivity = dashboardData?.recentActivity || []
 
   return (
     <div className="space-y-6">

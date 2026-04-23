@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -23,83 +24,35 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useParams } from "next/navigation"
 import { postApi } from "@/lib/api-client"
-import { useEffect } from "react"
+import CommentSection from "@/components/CommentSection"
 // Mock data removed in favor of dynamic API fetch
 
-const comments = [
-  {
-    id: 1,
-    author: { name: "Alex Rivera", avatar: "/male-developer.png" },
-    content:
-      "Great article! I'm particularly excited about the AI-assisted development tools. They've already transformed my workflow.",
-    date: "2 hours ago",
-    likes: 45,
-  },
-  {
-    id: 2,
-    author: { name: "Jordan Lee", avatar: "/female-engineer-working.png" },
-    content:
-      "The section on Server Components really resonated with me. We've been migrating our app and the performance gains are incredible.",
-    date: "4 hours ago",
-    likes: 32,
-  },
-  {
-    id: 3,
-    author: { name: "Taylor Kim", avatar: "/tech-professional.png" },
-    content: "Would love to see a follow-up article diving deeper into edge computing patterns!",
-    date: "6 hours ago",
-    likes: 18,
-  },
-]
 
-const relatedPosts = [
-  {
-    id: 2,
-    title: "Understanding Machine Learning: A Beginner's Guide",
-    author: "David Park",
-    readTime: "12 min read",
-    image: "/machine-learning-concept.png",
-  },
-  {
-    id: 3,
-    title: "The Art of Minimalist Design in Modern Applications",
-    author: "Emma Williams",
-    readTime: "6 min read",
-    image: "/minimalist-design.png",
-  },
-  {
-    id: 4,
-    title: "Building Sustainable Habits for Long-term Success",
-    author: "Marcus Johnson",
-    readTime: "5 min read",
-    image: "/productivity-habits.png",
-  },
-]
 
 export default function PostPage() {
   const params = useParams()
-  const [post, setPost] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isLiked, setIsLiked] = useState(false)
-  const [isBookmarked, setIsBookmarked] = useState(false)
-  const [commentText, setCommentText] = useState("")
-  const [isFollowing, setIsFollowing] = useState(false)
+  const postId = params?.id
 
-  useEffect(() => {
-    async function loadPost() {
-      if (!params?.id) return;
-      try {
-        setIsLoading(true)
-        const data = await postApi.getById(params.id)
-        setPost(data)
-      } catch (err) {
-        console.error("Failed to fetch post:", err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    loadPost()
-  }, [params?.id])
+  const { data: post, isLoading } = useQuery({
+    queryKey: ['post', postId],
+    queryFn: () => postApi.getById(postId),
+    enabled: !!postId,
+  })
+
+  const { data: relatedData } = useQuery({
+    queryKey: ['posts', 'related'],
+    queryFn: () => postApi.list(0, 3),
+  })
+
+  // get dynamically fetched related posts based on recent posts
+  const dynamicRelatedPosts = relatedData ? (Array.isArray(relatedData) ? relatedData : relatedData.content || []) : []
+  const displayRelatedPosts = dynamicRelatedPosts.map(p => ({
+    id: p.id,
+    title: p.title || "Untitled",
+    author: p.author?.name || "Unknown",
+    readTime: "5 min read",
+    image: p.image || "/placeholder.svg",
+  }))
 
   if (isLoading) {
     return (
@@ -260,60 +213,13 @@ export default function PostPage() {
         </Card>
 
         {/* Comments Section */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-foreground">Comments ({comments.length})</h2>
-
-          {/* Comment Form */}
-          <div className="mt-6 flex gap-4">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src="/diverse-user-avatars.png" />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <Textarea
-                placeholder="Add a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="min-h-[100px]"
-              />
-              <div className="mt-2 flex justify-end">
-                <Button disabled={!commentText.trim()}>Post Comment</Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Comments List */}
-          <div className="mt-8 space-y-6">
-            {comments.map((comment) => (
-              <div key={comment.id} className="flex gap-4">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={comment.author.avatar || "/placeholder.svg"} />
-                  <AvatarFallback>{comment.author.name[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-foreground">{comment.author.name}</span>
-                    <span className="text-sm text-muted-foreground">{comment.date}</span>
-                  </div>
-                  <p className="mt-1 text-foreground">{comment.content}</p>
-                  <div className="mt-2 flex items-center gap-4">
-                    <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-                      <ThumbsUp className="h-4 w-4" />
-                      {comment.likes}
-                    </button>
-                    <button className="text-sm text-muted-foreground hover:text-foreground">Reply</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <CommentSection postId={post.id} />
 
         {/* Related Posts */}
         <div className="mt-16 mb-12">
           <h2 className="text-2xl font-bold text-foreground">Related Articles</h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-3">
-            {relatedPosts.map((relatedPost) => (
+            {displayRelatedPosts.map((relatedPost) => (
               <Link key={relatedPost.id} href={`/post/${relatedPost.id}`}>
                 <Card className="group overflow-hidden border-border">
                   <div className="aspect-[16/10] overflow-hidden">

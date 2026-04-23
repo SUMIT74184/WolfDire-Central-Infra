@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -22,24 +23,13 @@ import { feedApi } from "@/lib/api-client"
 
 export default function FeedPage() {
   const [sortBy, setSortBy] = useState("latest")
-  const [posts, setPosts] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    async function fetchFeed() {
-      try {
-        setIsLoading(true)
-        const response = await feedApi.getFeed()
-        const fetchedPosts = Array.isArray(response) ? response : response.content || []
-        setPosts(fetchedPosts)
-      } catch (err) {
-        console.error("Failed to fetch feed:", err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchFeed()
-  }, [sortBy])
+  const { data, isLoading } = useQuery({
+    queryKey: ['feed', sortBy],
+    queryFn: () => feedApi.getFeed(),
+  })
+
+  const posts = data ? (Array.isArray(data) ? data : data.content || []) : []
 
   return (
     <div className="min-h-screen bg-background">

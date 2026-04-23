@@ -40,7 +40,7 @@ public class CommentController {
         public ResponseEntity<Page<CommentResponse>> getPostComments(
                 @PathVariable String postId,
                 @RequestParam(defaultValue = "0") int page,
-                @RequestParam(defaultValue = "20") int size,
+                @RequestParam(defaultValue = "50") int size,
                 HttpServletRequest httpRequest
         ){
 

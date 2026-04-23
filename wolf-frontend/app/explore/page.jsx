@@ -1,5 +1,6 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { postApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
@@ -12,122 +13,41 @@ import { Search, Heart, MessageCircle, BookmarkPlus, TrendingUp, Clock, Filter }
 
 const categories = ["All", "Technology", "Design", "Productivity", "Business", "Lifestyle", "Science", "Health"]
 
-const posts = [
-  {
-    id: 1,
-    title: "The Future of Web Development: What to Expect in 2025",
-    excerpt:
-      "Explore the upcoming trends in web development, from AI-powered tools to new frameworks that will shape how we build.",
-    author: { name: "Sarah Chen", avatar: "/woman-developer.png", role: "Senior Developer" },
-    category: "Technology",
-    readTime: "8 min read",
-    likes: 2453,
-    comments: 189,
-    image: "/futuristic-web-development.png",
-    date: "Dec 15, 2025",
-  },
-  {
-    id: 2,
-    title: "Building Sustainable Habits for Long-term Success",
-    excerpt: "Learn the science-backed strategies for creating habits that stick and transform your productivity.",
-    author: { name: "Marcus Johnson", avatar: "/professional-man.png", role: "Life Coach" },
-    category: "Productivity",
-    readTime: "5 min read",
-    likes: 1876,
-    comments: 95,
-    image: "/productivity-habits.png",
-    date: "Dec 14, 2025",
-  },
-  {
-    id: 3,
-    title: "The Art of Minimalist Design in Modern Applications",
-    excerpt: "Discover how less can be more when it comes to creating beautiful, user-friendly interfaces.",
-    author: { name: "Emma Williams", avatar: "/woman-designer.png", role: "UX Designer" },
-    category: "Design",
-    readTime: "6 min read",
-    likes: 1543,
-    comments: 67,
-    image: "/minimalist-design.png",
-    date: "Dec 13, 2025",
-  },
-  {
-    id: 4,
-    title: "Understanding Machine Learning: A Beginner's Guide",
-    excerpt: "Demystifying AI and machine learning concepts for developers who want to get started in the field.",
-    author: { name: "David Park", avatar: "/asian-male-data-scientist.jpg", role: "ML Engineer" },
-    category: "Technology",
-    readTime: "12 min read",
-    likes: 3241,
-    comments: 234,
-    image: "/ml-neural-network-visualization.png",
-    date: "Dec 12, 2025",
-  },
-  {
-    id: 5,
-    title: "Remote Work: Building a Productive Home Office",
-    excerpt:
-      "Essential tips and setups for creating an environment that boosts your productivity while working from home.",
-    author: { name: "Lisa Thompson", avatar: "/professional-interior-designer.png", role: "Interior Designer" },
-    category: "Lifestyle",
-    readTime: "7 min read",
-    likes: 892,
-    comments: 45,
-    image: "/modern-home-office.png",
-    date: "Dec 11, 2025",
-  },
-  {
-    id: 6,
-    title: "The Psychology of Color in Brand Design",
-    excerpt: "How colors influence perception and emotion in branding, and how to use them effectively.",
-    author: { name: "Michael Ross", avatar: "/creative-director-male.jpg", role: "Creative Director" },
-    category: "Design",
-    readTime: "9 min read",
-    likes: 1234,
-    comments: 78,
-    image: "/color-psychology-brand-design.jpg",
-    date: "Dec 10, 2025",
-  },
-]
 
 export default function ExplorePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [sortBy, setSortBy] = useState("trending")
-  const [posts, setPosts] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [page, setPage] = useState(0)
 
-  useEffect(() => {
-    async function fetchPosts() {
-      try {
-        setLoading(true)
-        const response = await postApi.list(page, 20)
-        const fetchedPosts = Array.isArray(response) ? response : response?.content || []
-        setPosts(fetchedPosts.map((p, i) => ({
-          id: p.id || i,
-          title: p.title || "Untitled",
-          excerpt: p.content ? p.content.substring(0, 150) + "..." : "",
-          author: {
-            name: p.username || "Unknown",
-            avatar: "/diverse-user-avatars.png",
-            role: "Member",
-          },
-          category: p.subredditName || "General",
-          readTime: `${Math.max(1, Math.ceil((p.content?.length || 0) / 1000))} min read`,
-          likes: p.upvotes || p.score || 0,
-          comments: p.commentCount || 0,
-          image: p.mediaUrl || p.thumbnailUrl || "/placeholder.svg",
-          date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
-        })))
-      } catch (err) {
-        setError(err.message || "Failed to load posts")
-      } finally {
-        setLoading(false)
+  const { data, isLoading: loading, fetchNextPage, hasNextPage, isFetchingNextPage, error } = useInfiniteQuery({
+    queryKey: ['explore-posts', sortBy],
+    queryFn: ({ pageParam = 0 }) => postApi.list(pageParam, 20),
+    getNextPageParam: (lastPage, allPages) => {
+      if (Array.isArray(lastPage)) {
+        return lastPage.length === 20 ? allPages.length : undefined
       }
+      return !lastPage?.last ? allPages.length : undefined
     }
-    fetchPosts()
-  }, [page])
+  })
+
+  const fetchedPostsRaw = data ? data.pages.flatMap(page => Array.isArray(page) ? page : page?.content || []) : []
+  
+  const posts = fetchedPostsRaw.map((p, i) => ({
+    id: p.id || i,
+    title: p.title || "Untitled",
+    excerpt: p.content ? p.content.substring(0, 150) + "..." : "",
+    author: {
+      name: p.username || "Unknown",
+      avatar: "/diverse-user-avatars.png",
+      role: "Member",
+    },
+    category: p.subredditName || "General",
+    readTime: `${Math.max(1, Math.ceil((p.content?.length || 0) / 1000))} min read`,
+    likes: p.upvotes || p.score || 0,
+    comments: p.commentCount || 0,
+    image: p.mediaUrl || p.thumbnailUrl || "/placeholder.svg",
+    date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+  }))
 
   const filteredPosts = posts.filter((post) => {
     const matchesSearch =
@@ -271,11 +191,13 @@ export default function ExplorePage() {
             </div>
 
             {/* Load More */}
-            <div className="mt-8 text-center">
-              <Button variant="outline" className="rounded-full bg-transparent" onClick={() => setPage(p => p + 1)}>
-                Load More Posts
-              </Button>
-            </div>
+            {hasNextPage && (
+              <div className="mt-8 text-center">
+                <Button variant="outline" className="rounded-full bg-transparent" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                  {isFetchingNextPage ? "Loading..." : "Load More Posts"}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>

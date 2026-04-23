@@ -1,5 +1,6 @@
 import { Inter, Merriweather } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Providers } from "./providers"
 import { AuthProvider } from "@/lib/auth-context"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -24,13 +25,15 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} ${merriweather.variable} font-sans antialiased`}>
         <ThemeProvider defaultTheme="dark" storageKey="wolfdire-theme">
-          <AuthProvider>
-            <div className="flex min-h-screen flex-col">
-              <Navbar />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-          </AuthProvider>
+          <Providers>
+            <AuthProvider>
+              <div className="flex min-h-screen flex-col">
+                <Navbar />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+            </AuthProvider>
+          </Providers>
         </ThemeProvider>
       </body>
     </html>
