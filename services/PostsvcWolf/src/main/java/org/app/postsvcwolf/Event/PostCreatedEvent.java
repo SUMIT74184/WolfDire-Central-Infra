@@ -16,8 +16,8 @@ public class PostCreatedEvent {
     private String content;
     private String userId;
     private String username;
-    private String subredditId;
-    private String subredditName;
+    private String communityId;
+    private String communityName;
     private Post.PostType type;
     private String mediaUrl;
     private Set<String> mentions;

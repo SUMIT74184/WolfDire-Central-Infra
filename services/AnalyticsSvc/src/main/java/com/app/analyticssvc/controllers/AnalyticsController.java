@@ -31,9 +31,9 @@ public class AnalyticsController {
         return ResponseEntity.ok(queryService.getContentAnalytics(contentId, contentType));
     }
 
-    @GetMapping("/subreddit/{subredditId}")
-    public ResponseEntity<AnalyticsResponse> getSubredditAnalytics(@PathVariable String subredditId) {
-        return ResponseEntity.ok(queryService.getSubredditAnalytics(subredditId));
+    @GetMapping("/community/{communityId}")
+    public ResponseEntity<AnalyticsResponse> getCommunityAnalytics(@PathVariable String communityId) {
+        return ResponseEntity.ok(queryService.getCommunityAnalytics(communityId));
     }
 
     @GetMapping("/trending")

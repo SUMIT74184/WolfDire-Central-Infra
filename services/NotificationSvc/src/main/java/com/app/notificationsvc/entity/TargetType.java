@@ -4,5 +4,5 @@ public enum TargetType {
     POST,
     COMMENT,
     USER,
-    SUBREDDIT
+    COMMUNITY
 }

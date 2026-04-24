@@ -32,7 +32,7 @@ public class UserAnalytics {
     private Integer downvotesReceived;
     private Integer sessionsCount;
     private Long totalSessionDuration;
-    private Integer uniqueSubredditsVisited;
+    private Integer uniqueCommunitiesVisited;
     private Double engagementScore;
     private Double trustScore;
 }

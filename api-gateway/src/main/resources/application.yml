@@ -63,6 +63,14 @@ spring:
           filters:
             - RewritePath=/api/social/(?<segment>.*), /api/social/$\{segment}
 
+        # ── Communities API (Routed to SocialConnection) ──────────────────────────
+        - id: communities-api
+          uri: lb://SocialConnection
+          predicates:
+            - Path=/api/communities/**
+          filters:
+            - RewritePath=/api/communities/(?<segment>.*), /api/communities/$\{segment}
+
         # ── Analytics Service ─────────────────────────────────────────────────────
         - id: analytics-service
           uri: lb://analytics-service

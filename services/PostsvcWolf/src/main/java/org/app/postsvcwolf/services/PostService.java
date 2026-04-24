@@ -9,6 +9,7 @@ import org.app.postsvcwolf.Entity.Vote;
 import org.app.postsvcwolf.Event.PostCreatedEvent;
 import org.app.postsvcwolf.repository.PostRepository;
 import org.app.postsvcwolf.repository.VoteRepository;
+import org.app.postsvcwolf.client.SocialConnectionClient;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -17,8 +18,10 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import org.springframework.data.redis.core.RedisTemplate;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -32,6 +35,8 @@ public class PostService {
     private final PostRepository postRepository;
     private final VoteRepository voteRepository;
     private final MediaService mediaService;
+    private final SocialConnectionClient socialConnectionClient;
+    private final RedisTemplate<String, String> redisTemplate;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -43,6 +48,19 @@ public class PostService {
     public PostResponse createPost(CreatePostRequest request, String userId, String username) {
         validatePostLimit(userId);
 
+        String cacheKey = "community_valid_" + request.getCommunityId();
+        Boolean isValid = redisTemplate.hasKey(cacheKey);
+        
+        if (Boolean.FALSE.equals(isValid)) {
+            try {
+                socialConnectionClient.getCommunityById(request.getCommunityId());
+                redisTemplate.opsForValue().set(cacheKey, "valid", Duration.ofHours(24));
+            } catch (Exception e) {
+                log.error("Failed to validate community existence for ID: {}", request.getCommunityId(), e);
+                throw new RuntimeException("Community does not exist or validation failed");
+            }
+        }
+
         Set<String> mentions = extractMentions(request.getContent());
 
         Post post = Post.builder()
@@ -50,8 +68,8 @@ public class PostService {
                 .content(request.getContent())
                 .userId(userId)
                 .username(username)
-                .subredditId(request.getSubredditId())
-                .subredditName(request.getSubredditName())
+                .communityId(request.getCommunityId())
+                .communityName(request.getCommunityName())
                 .type(request.getType())
                 .mentions(mentions)
                 .isNsfw(request.getIsNsfw() != null ? request.getIsNsfw() : false)
@@ -88,7 +106,7 @@ public class PostService {
     @Transactional
     @CacheEvict(value = {"posts", "feed", "trending", "hot"}, allEntries = true)
     public PostResponse repost(String originalPostId, String userId, String username,
-                               String subredditId, String subredditName) {
+                               String communityId, String communityName) {
 
         Post originalPost = postRepository.findActive(originalPostId)
                 .orElseThrow(() -> new RuntimeException("Original post not found"));
@@ -98,8 +116,8 @@ public class PostService {
                 .content(originalPost.getContent())
                 .userId(userId)
                 .username(username)
-                .subredditId(subredditId)
-                .subredditName(subredditName)
+                .communityId(communityId)
+                .communityName(communityName)
                 .type(originalPost.getType())
                 .mediaUrl(originalPost.getMediaUrl())
                 .thumbnailUrl(originalPost.getThumbnailUrl())
@@ -131,9 +149,9 @@ public class PostService {
         publishViewEvent(postId);
     }
 
-    @Cacheable(value = "feed", key = "#subredditId + '_' + #pageable.pageNumber")
-    public Page<PostResponse> getSubredditPosts(String subredditId, Pageable pageable, String userId) {
-        Page<Post> posts = postRepository.findBySubreddit(subredditId, pageable);
+    @Cacheable(value = "feed", key = "#communityId + '_' + #pageable.pageNumber")
+    public Page<PostResponse> getCommunityPosts(String communityId, Pageable pageable, String userId) {
+        Page<Post> posts = postRepository.findByCommunity(communityId, pageable);
         return posts.map(post -> mapToResponse(post, userId));
     }
 
@@ -144,9 +162,9 @@ public class PostService {
         return posts.map(post -> mapToResponse(post,userId));
     }
 
-    @Cacheable(value = "hot", key = "#subredditId + '_' + #pageable.pageNumber")
-    public Page<PostResponse> getHotPosts(String subredditId, Pageable pageable, String userId) {
-        Page<Post> posts = postRepository.findHot(subredditId, pageable);
+    @Cacheable(value = "hot", key = "#communityId + '_' + #pageable.pageNumber")
+    public Page<PostResponse> getHotPosts(String communityId, Pageable pageable, String userId) {
+        Page<Post> posts = postRepository.findHot(communityId, pageable);
         return posts.map(post -> mapToResponse(post, userId));
 
     }
@@ -237,8 +255,8 @@ public class PostService {
                 .content(post.getContent())
                 .userId(post.getUserId())
                 .username(post.getUsername())
-                .subredditId(post.getSubredditId())
-                .subredditName(post.getSubredditName())
+                .communityId(post.getCommunityId())
+                .communityName(post.getCommunityName())
                 .type(post.getType())
                 .mediaUrl(post.getMediaUrl())
                 .mentions(post.getMentions())
@@ -293,8 +311,8 @@ public class PostService {
                 .content(post.getContent())
                 .userId(post.getUserId())
                 .username(post.getUsername())
-                .subredditId(post.getSubredditId())
-                .subredditName(post.getSubredditName())
+                .communityId(post.getCommunityId())
+                .communityName(post.getCommunityName())
                 .type(post.getType())
                 .mediaUrl(post.getMediaUrl())
                 .thumbnailUrl(post.getThumbnailUrl())

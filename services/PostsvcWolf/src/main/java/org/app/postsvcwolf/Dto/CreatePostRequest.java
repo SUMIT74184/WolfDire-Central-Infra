@@ -20,11 +20,11 @@ public class CreatePostRequest {
 
     private String content;
 
-    @NotBlank(message = "Subreddit ID is required")
-    private String subredditId;
+    @NotBlank(message = "Community ID is required")
+    private String communityId;
 
-    @NotBlank(message = "Subreddit name is required")
-    private String subredditName;
+    @NotBlank(message = "Community name is required")
+    private String communityName;
 
     @NotNull(message = "Post type is required")
     private Post.PostType type;

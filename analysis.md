@@ -93,14 +93,14 @@
 | `/admin/users` | `authAdminApi.listUsers()` + `banUser()` | Auth |
 | `/admin/moderation` | `moderationApi.getFlaggedQueue()` + approve/reject | Moderation |
 
-### ❌ Remaining — No Backend Support (12 pages)
+### ❌ Remaining — No Backend Support (10 pages)
 
 | Frontend Page | Issue | Priority |
 |--------------|-------|-----------|
-| `/forgot-password` | No `POST /api/auth/forgot-password` endpoint | High |
-| `/verify-email` | No `POST /api/auth/verify-email` endpoint | High |
-| `/communities` | No community endpoints in Post/Social Svc | Medium |
-| `/community/[id]` | No community detail endpoints | Medium |
+| `/forgot-password` | ✅ Endpoint added, needs UI wiring | High |
+| `/verify-email` | ✅ Endpoint added, needs UI wiring | High |
+| `/communities` | ✅ Backend implemented, needs UI wiring | Medium |
+| `/community/[id]` | ✅ Backend implemented, needs UI wiring | Medium |
 | `/admin` | Needs role guard only | Medium |
 | `/admin/articles` | No admin article management endpoints | Medium |
 | `/about` | Static — no backend needed | — |
@@ -134,9 +134,9 @@ These backend capabilities exist but have **no frontend consumer**:
 
 | Feature | Missing Endpoint | Priority |
 |---------|-----------------|----------|
-| Password reset | `POST /api/auth/forgot-password` | High (Phase 3) |
-| Email verification | `POST /api/auth/verify-email?token=` | High (Phase 3) |
-| Communities | `GET/POST /api/posts/communities` | Medium (Phase 5) |
+| Password reset | `POST /api/auth/forgot-password` | ✅ Done (Phase 3) |
+| Email verification | `POST /api/auth/verify-email?token=` | ✅ Done (Phase 3) |
+| Communities | `GET/POST /api/communities` | ✅ Done (Phase 5) |
 | Threaded comments | `GET /api/posts/:id/comments` with pagination | ✅ Done (Phase 5) |
 
 ---
@@ -179,3 +179,16 @@ These backend capabilities exist but have **no frontend consumer**:
 - [x] **Admin Panels (`/admin/*`)**: Refactor lists and moderation mutations leveraging query invalidations.
 
 > **Conclusion (Phases 4, 5, & 6)**: The frontend has successfully been fully dynamically wired. Caching and state synchronization are managed entirely by React Query (`useQuery`, `useMutation`), eliminating all local state fetching effects (`useEffect`). Hardcoded components and static data arrays have been replaced with real backend connections. Microservices via the API gateway are actively consumed and properly propagating via Kafka.
+
+
+```
+1. Data Integrity & ValidationIn your "Proposed Changes" for PostsvcWolf, you mentioned trusting the frontend ID for speed. While acceptable for a MVP, this is a common source of "Orphaned Posts" (posts pointing to a community that doesn't exist).Refinement: Implement a Cache-Aside or Synchronous Validation pattern.The Logic: When PostsvcWolf receives a communityId, it should check its local cache. If missing, it performs a quick Feign call to SocialConnection to verify the ID exists.Why? If a community is deleted in SocialConnection, PostsvcWolf needs to know what to do with the existing posts (cascade delete or archive).
+
+2. Managing the memberCount DenormalizationYou included memberCount (Long) in your Community entity. This is great for performance (so you don't have to COUNT(*) the follow table every time), but it introduces a state synchronization requirement.The Logic: You must update the CommunityService or use a JPA Entity Listener / Database Trigger.The Flow: 1. User hits POST /api/communities/follow.2. CommunityFollowController records the follow.
+
+3. Crucial Step: The Community entity's memberCount must be incremented in the same transaction (or via an async event).3. Improved API Gateway RoutingYou suggested routing /api/communities/** to SocialConnection.Recommendation: Stick to the /api/communities/** path rather than nesting it under /api/social/communities.Reasoning: It makes the API cleaner for the frontend and treats "Community" as a top-level resource. Just ensure your Gateway configuration explicitly maps the specific path to the SocialConnection load balancer.
+
+4. Refined Entity ConsiderationsSince you are creating the Community entity from scratch, consider adding these two fields for better UX and SEO:FieldTypeReasonslugString (Unique)Allows URLs like /c/tech-news instead of /c/123-456.isArchivedBooleanBetter than deleting communities; allows you to keep old posts readable but non-interactive.
+
+5. Potential Technical Debt: Naming InconsistencyThe fact that PostsvcWolf uses subredditId while your new entity uses communityId is a "Leaky Abstraction" from whatever inspired the code.Suggestion: If you have the time, use a @Alias or simply rename the field in PostsvcWolf to communityId. Having two different names for the exact same ID across services will inevitably confuse new developers joining the project later.
+```

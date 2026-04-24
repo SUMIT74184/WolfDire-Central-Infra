@@ -119,6 +119,30 @@ public class AuthService {
         return buildAuthResponse(user, newAccessToken, newRefreshToken);
     }
 
+    public void forgotPassword(AuthDto.ForgotPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User with this email not found"));
+        log.info("Password reset requested for email: {}", request.getEmail());
+        publishEvent("auth.password-reset-requested", String.format(
+                "{\"userId\":\"%s\",\"email\":\"%s\"}", user.getId(), user.getEmail()
+        ));
+    }
+
+    public void verifyEmail(String token) {
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("Verification token is required");
+        }
+        try {
+            String email = jwtUtil.extractEmail(token);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            
+            log.info("Email verified successfully for user: {}", email);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid or expired verification token", e);
+        }
+    }
+
     /**
      * Logout: blacklist token in Redis AND evict the user from the "users" cache.
      *

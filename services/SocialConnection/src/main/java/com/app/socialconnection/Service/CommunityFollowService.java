@@ -3,6 +3,7 @@ package com.app.socialconnection.Service;
 import com.app.socialconnection.Dto.ConnectionDTO;
 import com.app.socialconnection.Entity.CommunityFollower;
 import com.app.socialconnection.Repository.CommunityFollowerRepository;
+import com.app.socialconnection.Repository.CommunityRepository;
 import com.app.socialconnection.exception.DuplicateResourceException;
 import com.app.socialconnection.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 🎓 LEARNING: Community Follow Service
  *
- * This handles the "join/follow a community" feature (like Reddit's r/subreddit).
+ * This handles the "join/follow a community" feature (like Reddit's
+ * r/subreddit).
  * It's separate from ConnectionService because communities ≠ users.
  *
  * Note the @Transactional(readOnly = true) on read methods:
@@ -31,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommunityFollowService {
 
     private final CommunityFollowerRepository communityFollowerRepository;
+    private final CommunityRepository communityRepository;
 
     /**
      * Follow a community.
@@ -51,6 +54,7 @@ public class CommunityFollowService {
                 .build();
 
         follower = communityFollowerRepository.save(follower);
+        communityRepository.incrementMemberCount(communityId);
         log.info("User {} followed community {}", userId, communityId);
         return follower;
     }
@@ -66,6 +70,7 @@ public class CommunityFollowService {
                 .orElseThrow(() -> new ResourceNotFoundException("You are not following this community"));
 
         communityFollowerRepository.delete(follower);
+        communityRepository.decrementMemberCount(communityId);
         log.info("User {} unfollowed community {}", userId, communityId);
     }
 

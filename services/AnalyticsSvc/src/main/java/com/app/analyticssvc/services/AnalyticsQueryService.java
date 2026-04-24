@@ -18,7 +18,7 @@ public class AnalyticsQueryService {
 
     private final UserAnalyticsRepository userAnalyticsRepository;
     private final ContentAnalyticsRepository contentAnalyticsRepository;
-    private final SubredditAnalyticsRepository subredditAnalyticsRepository;
+    private final CommunityAnalyticsRepository communityAnalyticsRepository;
     private final TrendingTopicRepository trendingTopicRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -49,16 +49,16 @@ public class AnalyticsQueryService {
         return new AnalyticsResponse("success", data);
     }
 
-    public AnalyticsResponse getSubredditAnalytics(String subredditId) {
+    public AnalyticsResponse getCommunityAnalytics(String communityId) {
         LocalDateTime weekAgo = LocalDateTime.now().minusDays(7);
-        List<SubredditAnalytics> analytics = subredditAnalyticsRepository
+        List<CommunityAnalytics> analytics = communityAnalyticsRepository
                 .findAll()
                 .stream()
-                .filter(a -> a.getSubredditId().equals(subredditId) && a.getDate().isAfter(weekAgo))
+                .filter(a -> a.getCommunityId().equals(communityId) && a.getDate().isAfter(weekAgo))
                 .toList();
 
         Map<String, Object> data = new HashMap<>();
-        data.put("subredditId", subredditId);
+        data.put("communityId", communityId);
         data.put("analytics", analytics);
 
         return new AnalyticsResponse("success", data);

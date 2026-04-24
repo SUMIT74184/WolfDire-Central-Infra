@@ -7,19 +7,19 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "subreddit_analytics", indexes = {
-        @Index(name = "idx_subreddit_date", columnList = "subredditId,date")
+@Table(name = "community_analytics", indexes = {
+        @Index(name = "idx_community_date", columnList = "communityId,date")
 })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SubredditAnalytics {
+public class CommunityAnalytics {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String subredditId;
+    private String communityId;
 
     @Column(nullable = false)
     private LocalDateTime date;

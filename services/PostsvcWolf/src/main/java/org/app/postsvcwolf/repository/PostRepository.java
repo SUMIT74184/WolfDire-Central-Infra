@@ -18,10 +18,10 @@ import java.util.Optional;
 @Repository
 public interface PostRepository extends JpaRepository<Post,String> {
 
-    @Query("SELECT p FROM Post p WHERE p.subredditId = :subredditId " +
+    @Query("SELECT p FROM Post p WHERE p.communityId = :communityId " +
             "AND p.isRemoved = false AND p.isSpam = false " +
             "ORDER BY p.createdAt DESC")
-    Page<Post> findBySubreddit(@Param("subredditId") String subredditId, Pageable pageable);
+    Page<Post> findByCommunity(@Param("communityId") String communityId, Pageable pageable);
 
 
     //finding the users
@@ -35,10 +35,10 @@ public interface PostRepository extends JpaRepository<Post,String> {
             "AND p.createdAt >= :since ORDER BY p.score DESC, p.createdAt DESC")
     Page<Post> findTrending(@Param("since") LocalDateTime since, Pageable pageable);
 
-    @Query("SELECT p FROM Post p WHERE p.subredditId = :subredditId " +
+    @Query("SELECT p FROM Post p WHERE p.communityId = :communityId " +
             "AND p.isRemoved = false AND p.isSpam = false " +
             "ORDER BY p.score DESC, p.createdAt DESC")
-    Page<Post> findHot(@Param("subredditId") String subredditId, Pageable pageable);
+    Page<Post> findHot(@Param("communityId") String communityId, Pageable pageable);
 
 
 

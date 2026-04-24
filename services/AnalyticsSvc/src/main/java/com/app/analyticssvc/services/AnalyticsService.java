@@ -22,7 +22,7 @@ public class AnalyticsService {
     private final EventLogRepository eventLogRepository;
     private final UserAnalyticsRepository userAnalyticsRepository;
     private final ContentAnalyticsRepository contentAnalyticsRepository;
-    private final SubredditAnalyticsRepository subredditAnalyticsRepository;
+    private final CommunityAnalyticsRepository communityAnalyticsRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Async
@@ -33,7 +33,7 @@ public class AnalyticsService {
 
         updateUserAnalytics(event.getUserId(), "POST_CREATED");
         updateContentAnalytics(event.getPostId(), "POST");
-        updateSubredditAnalytics(event.getSubredditId());
+        updateCommunityAnalytics(event.getCommunityId());
 
         incrementRedisCounter("posts:today", 1);
         incrementRedisCounter("user:" + event.getUserId() + ":posts", 1);
@@ -161,19 +161,19 @@ public class AnalyticsService {
         contentAnalyticsRepository.save(analytics);
     }
 
-    private void updateSubredditAnalytics(String subredditId) {
+    private void updateCommunityAnalytics(String communityId) {
         LocalDateTime today = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS);
-        SubredditAnalytics analytics = subredditAnalyticsRepository.findBySubredditIdAndDate(subredditId, today);
+        CommunityAnalytics analytics = communityAnalyticsRepository.findByCommunityIdAndDate(communityId, today);
 
         if (analytics == null) {
-            analytics = new SubredditAnalytics();
-            analytics.setSubredditId(subredditId);
+            analytics = new CommunityAnalytics();
+            analytics.setCommunityId(communityId);
             analytics.setDate(today);
             analytics.setPostsCreated(0);
         }
 
         analytics.setPostsCreated(analytics.getPostsCreated() + 1);
-        subredditAnalyticsRepository.save(analytics);
+        communityAnalyticsRepository.save(analytics);
     }
 
     private void incrementRedisCounter(String key, long delta) {

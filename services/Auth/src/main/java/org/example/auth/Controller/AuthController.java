@@ -48,6 +48,24 @@ public class AuthController {
         AuthDto.AuthResponse response = authService.refreshToken(request);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody AuthDto.ForgotPasswordRequest request) {
+        log.info("Forgot password request for email: {}", request.getEmail());
+        authService.forgotPassword(request);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "If an account with that email exists, a password reset link has been sent.");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<Map<String, String>> verifyEmail(@RequestParam String token) {
+        log.info("Verify email request received");
+        authService.verifyEmail(token);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Email successfully verified.");
+        return ResponseEntity.ok(response);
+    }
     /* *
      * Logout: Blacklist current access token + delete refresh token.
      *

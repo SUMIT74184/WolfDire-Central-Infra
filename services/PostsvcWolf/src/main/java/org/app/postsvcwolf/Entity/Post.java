@@ -38,11 +38,11 @@ public class Post {
     @Column(name = "username", nullable = false)
     private String username;
 
-    @Column(name = "subreddit_id", nullable = false)
-    private String subredditId;
+    @Column(name = "community_id", nullable = false)
+    private String communityId;
 
-    @Column(name = "subreddit_name", nullable = false)
-    private String subredditName;
+    @Column(name = "community_name", nullable = false)
+    private String communityName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

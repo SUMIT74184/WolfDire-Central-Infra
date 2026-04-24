@@ -13,7 +13,7 @@ public class PostEvent {
     private String eventType;
     private Long postId;
     private Long userId;
-    private String subredditId;
+    private String communityId;
     private String action;
     private LocalDateTime timestamp;
     private String metadata;
