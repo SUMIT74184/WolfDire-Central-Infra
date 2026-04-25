@@ -66,6 +66,15 @@ public class AuthController {
         response.put("message", "Email successfully verified.");
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody AuthDto.ResetPasswordRequest request) {
+        log.info("Reset password request received");
+        authService.resetPassword(request);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Password successfully reset.");
+        return ResponseEntity.ok(response);
+    }
     /* *
      * Logout: Blacklist current access token + delete refresh token.
      *

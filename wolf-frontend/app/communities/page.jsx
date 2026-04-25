@@ -2,95 +2,73 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { communityApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, Users, TrendingUp, Plus, CheckCircle } from "lucide-react"
-
-const communities = [
-  {
-    id: 1,
-    name: "Tech Enthusiasts",
-    description:
-      "A community for developers, engineers, and tech lovers to share knowledge and discuss the latest trends.",
-    members: 45200,
-    posts: 12450,
-    image: "/vibrant-tech-community.png",
-    tags: ["Programming", "Web Dev", "AI/ML"],
-    isJoined: true,
-    trending: true,
-  },
-  {
-    id: 2,
-    name: "Creative Writers",
-    description: "Share your stories, get feedback, and connect with fellow writers passionate about the craft.",
-    members: 32100,
-    posts: 8920,
-    image: "/writing-community.jpg",
-    tags: ["Fiction", "Poetry", "Non-Fiction"],
-    isJoined: false,
-    trending: true,
-  },
-  {
-    id: 3,
-    name: "Startup Founders",
-    description: "A hub for entrepreneurs to share experiences, seek advice, and collaborate on ventures.",
-    members: 28900,
-    posts: 6540,
-    image: "/vibrant-startup-community.png",
-    tags: ["Business", "Funding", "Growth"],
-    isJoined: false,
-    trending: false,
-  },
-  {
-    id: 4,
-    name: "Design Hub",
-    description: "Explore design trends, share portfolios, and discuss UX/UI with fellow designers.",
-    members: 25600,
-    posts: 7890,
-    image: "/vibrant-design-community.png",
-    tags: ["UI/UX", "Branding", "Typography"],
-    isJoined: true,
-    trending: true,
-  },
-  {
-    id: 5,
-    name: "Data Science Guild",
-    description: "Dive into data analysis, machine learning, and statistics with experts and enthusiasts.",
-    members: 19800,
-    posts: 4560,
-    image: "/data-science-community.png",
-    tags: ["Analytics", "Python", "Statistics"],
-    isJoined: false,
-    trending: false,
-  },
-  {
-    id: 6,
-    name: "Mindful Living",
-    description: "Explore wellness, productivity, and personal growth with a supportive community.",
-    members: 22400,
-    posts: 5670,
-    image: "/wellness-community.png",
-    tags: ["Wellness", "Mindfulness", "Health"],
-    isJoined: false,
-    trending: false,
-  },
-]
-
-const categories = ["All", "Technology", "Writing", "Business", "Design", "Science", "Lifestyle"]
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Search, Users, TrendingUp, Plus, CheckCircle, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 export default function CommunitiesPage() {
+  const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [filter, setFilter] = useState("all")
-  const [joinedCommunities, setJoinedCommunities] = useState(communities.filter((c) => c.isJoined).map((c) => c.id))
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [formData, setFormData] = useState({ name: "", description: "" })
+
+  const { data: rawCommunities, isLoading } = useQuery({
+    queryKey: ["communities"],
+    queryFn: () => communityApi.list(0, 50).then((res) => res.content || res),
+  })
+
+  // Normalize API data structure
+  const communities = (Array.isArray(rawCommunities) ? rawCommunities : []).map(c => ({
+    id: c.id,
+    name: c.name || "Unknown",
+    description: c.description || "No description",
+    members: c.memberCount || 0,
+    posts: 0,
+    image: "/vibrant-tech-community.png",
+    tags: [],
+    isJoined: false, // Could track actual connection
+    trending: false,
+  }))
+
+  const [joinedCommunities, setJoinedCommunities] = useState([])
+
+  const createMutation = useMutation({
+    mutationFn: communityApi.create,
+    onSuccess: () => {
+      toast.success("Community created successfully!")
+      setIsDialogOpen(false)
+      setFormData({ name: "", description: "" })
+      queryClient.invalidateQueries({ queryKey: ["communities"] })
+    },
+    onError: (err) => {
+      toast.error(err?.message || "Failed to create community")
+    },
+  })
+
+  const followMutation = useMutation({
+    mutationFn: communityApi.follow,
+    onSuccess: (_, communityId) => {
+      setJoinedCommunities((prev) => 
+        prev.includes(communityId) ? prev.filter((id) => id !== communityId) : [...prev, communityId]
+      )
+      toast.success("Follow updated successfully!")
+      // optionally trigger refetch: queryClient.invalidateQueries({ queryKey: ["communities"] })
+    },
+    onError: (err) => toast.error(err?.message || "Could not join community")
+  })
 
   const handleJoinToggle = (communityId) => {
-    setJoinedCommunities((prev) =>
-      prev.includes(communityId) ? prev.filter((id) => id !== communityId) : [...prev, communityId],
-    )
+    followMutation.mutate(communityId)
   }
 
   const filteredCommunities = communities.filter((community) => {
@@ -114,10 +92,48 @@ export default function CommunitiesPage() {
               <h1 className="text-3xl font-bold text-foreground sm:text-4xl">Communities</h1>
               <p className="mt-2 text-muted-foreground">Join communities that match your interests</p>
             </div>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create Community
-            </Button>
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create Community
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create a new Community</DialogTitle>
+                  <DialogDescription>
+                    Build a space for people to share and connect.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Name</label>
+                    <Input
+                      placeholder="e.g. Technology"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Description</label>
+                    <Textarea
+                      placeholder="What is this community about?"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+                  </div>
+                  <Button
+                    className="w-full"
+                    disabled={createMutation.isPending || !formData.name}
+                    onClick={() => createMutation.mutate(formData)}
+                  >
+                    {createMutation.isPending ? "Creating..." : "Create"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {/* Search & Filters */}
@@ -163,8 +179,13 @@ export default function CommunitiesPage() {
 
       {/* Communities Grid */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredCommunities.map((community) => (
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredCommunities.map((community) => (
             <Card key={community.id} className="flex flex-col border-border overflow-hidden">
               <div className="relative h-32 overflow-hidden">
                 <img
@@ -208,6 +229,7 @@ export default function CommunitiesPage() {
                   variant={joinedCommunities.includes(community.id) ? "secondary" : "default"}
                   size="sm"
                   onClick={() => handleJoinToggle(community.id)}
+                  disabled={followMutation.isPending}
                 >
                   {joinedCommunities.includes(community.id) ? "Joined" : "Join"}
                 </Button>
@@ -215,8 +237,9 @@ export default function CommunitiesPage() {
             </Card>
           ))}
         </div>
+        )}
 
-        {filteredCommunities.length === 0 && (
+        {!isLoading && filteredCommunities.length === 0 && (
           <div className="py-20 text-center">
             <Users className="mx-auto h-12 w-12 text-muted-foreground" />
             <p className="mt-4 text-muted-foreground">No communities found matching your criteria.</p>

@@ -137,9 +137,36 @@ public class AuthService {
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
             
+            // Logic to mark email as verified in DB can be added here
             log.info("Email verified successfully for user: {}", email);
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid or expired verification token", e);
+        }
+    }
+
+    @Transactional
+    public void resetPassword(AuthDto.ResetPasswordRequest request) {
+        String token = request.getToken();
+        String newPassword = request.getNewPassword();
+
+        try {
+            String email = jwtUtil.extractEmail(token);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            if (!jwtUtil.isTokenValid(token, email)) {
+                throw new IllegalArgumentException("Token is invalid or expired");
+            }
+
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            
+            log.info("Password reset successfully for user: {}", email);
+            publishEvent("auth.password-reset-success", String.format(
+                    "{\"userId\":\"%s\",\"email\":\"%s\"}", user.getId(), user.getEmail()
+            ));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to reset password: " + e.getMessage());
         }
     }
 

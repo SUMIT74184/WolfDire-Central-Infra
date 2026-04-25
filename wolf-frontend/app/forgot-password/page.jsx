@@ -2,23 +2,33 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useMutation } from "@tanstack/react-query"
+import { authApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PenSquare, Loader2, ArrowLeft, CheckCircle, Mail } from "lucide-react"
+import { toast } from "sonner"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+
+  const mutation = useMutation({
+    mutationFn: authApi.forgotPassword,
+    onSuccess: () => {
+      setIsSubmitted(true)
+      toast.success("Reset link sent!")
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Failed to send reset link")
+    }
+  })
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsLoading(false)
-    setIsSubmitted(true)
+    mutation.mutate({ email })
   }
 
   if (isSubmitted) {
@@ -95,12 +105,12 @@ export default function ForgotPasswordPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  disabled={isLoading}
+                  disabled={mutation.isPending}
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
+              <Button type="submit" className="w-full" disabled={mutation.isPending}>
+                {mutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Sending...

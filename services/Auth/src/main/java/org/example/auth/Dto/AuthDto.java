@@ -100,4 +100,16 @@ public class AuthDto {
         @Email(message = "Please provide a valid email")
         private String email;
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ResetPasswordRequest {
+        @NotBlank(message = "Token is required")
+        private String token;
+
+        @NotBlank(message = "New password is required")
+        @Size(min = 8, message = "Password must be at least 8 characters")
+        private String newPassword;
+    }
 }

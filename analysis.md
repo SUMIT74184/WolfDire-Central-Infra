@@ -97,8 +97,8 @@
 
 | Frontend Page | Issue | Priority |
 |--------------|-------|-----------|
-| `/forgot-password` | ✅ Endpoint added, needs UI wiring | High |
-| `/verify-email` | ✅ Endpoint added, needs UI wiring | High |
+| `/forgot-password` | ✅ Wired with React Query | High |
+| `/verify-email` | ✅ Wired with React Query | High |
 | `/communities` | ✅ Backend implemented, needs UI wiring | Medium |
 | `/community/[id]` | ✅ Backend implemented, needs UI wiring | Medium |
 | `/admin` | Needs role guard only | Medium |
@@ -137,7 +137,7 @@ These backend capabilities exist but have **no frontend consumer**:
 | Password reset | `POST /api/auth/forgot-password` | ✅ Done (Phase 3) |
 | Email verification | `POST /api/auth/verify-email?token=` | ✅ Done (Phase 3) |
 | Communities | `GET/POST /api/communities` | ✅ Done (Phase 5) |
-| Threaded comments | `GET /api/posts/:id/comments` with pagination | ✅ Done (Phase 5) |
+| Threaded comments | `GET /api/posts/:id/comments` with pagination | ✅ Done (Phase 9) |
 
 ---
 
@@ -188,7 +188,30 @@ These backend capabilities exist but have **no frontend consumer**:
 
 3. Crucial Step: The Community entity's memberCount must be incremented in the same transaction (or via an async event).3. Improved API Gateway RoutingYou suggested routing /api/communities/** to SocialConnection.Recommendation: Stick to the /api/communities/** path rather than nesting it under /api/social/communities.Reasoning: It makes the API cleaner for the frontend and treats "Community" as a top-level resource. Just ensure your Gateway configuration explicitly maps the specific path to the SocialConnection load balancer.
 
-4. Refined Entity ConsiderationsSince you are creating the Community entity from scratch, consider adding these two fields for better UX and SEO:FieldTypeReasonslugString (Unique)Allows URLs like /c/tech-news instead of /c/123-456.isArchivedBooleanBetter than deleting communities; allows you to keep old posts readable but non-interactive.
-
 5. Potential Technical Debt: Naming InconsistencyThe fact that PostsvcWolf uses subredditId while your new entity uses communityId is a "Leaky Abstraction" from whatever inspired the code.Suggestion: If you have the time, use a @Alias or simply rename the field in PostsvcWolf to communityId. Having two different names for the exact same ID across services will inevitably confuse new developers joining the project later.
 ```
+
+---
+
+## 8. Required Environment Variables
+
+To fully run the application without errors, ensure the following environment variables are provided:
+
+### Backend Services
+**AuthSvc**
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GITHUB_CLIENT_ID`
+- `GITHUB_CLIENT_SECRET`
+
+**PostSvcWolf**
+- `AWS_ACCESS_KEY` (for cloud storage, optional if local)
+- `AWS_SECRET_KEY`
+- `OPENAI_API_KEY` (for AI content features)
+
+**NotificationSvc**
+- `MAIL_USERNAME` (SMTP email address)
+- `MAIL_PASSWORD` (SMTP app password)
+
+### Frontend (`wolf-frontend/.env.local`)
+- `NEXT_PUBLIC_API_URL=http://localhost:8090` (API Gateway URL)

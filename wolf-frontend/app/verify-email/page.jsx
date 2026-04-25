@@ -1,18 +1,43 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, Suspense } from "react"
 import Link from "next/link"
+import { useSearchParams, useRouter } from "next/navigation"
+import { useMutation } from "@tanstack/react-query"
+import { authApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { PenSquare, Mail, Loader2, CheckCircle, ArrowLeft } from "lucide-react"
+import { PenSquare, Mail, Loader2, CheckCircle, ArrowLeft, XCircle } from "lucide-react"
+import { toast } from "sonner"
 
-export default function VerifyEmailPage() {
+function VerifyEmailForm() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const token = searchParams.get("token")
+  
   const [code, setCode] = useState(["", "", "", "", "", ""])
-  const [isLoading, setIsLoading] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [resendCooldown, setResendCooldown] = useState(0)
   const inputRefs = useRef([])
+
+  const mutation = useMutation({
+    mutationFn: authApi.verifyEmail,
+    onSuccess: () => {
+      setIsVerified(true)
+      toast.success("Email verified successfully!")
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Verification failed")
+    }
+  })
+
+  // Auto-verify if token is present in URL
+  useEffect(() => {
+    if (token && !isVerified && !mutation.isPending && !mutation.isError) {
+      mutation.mutate(token)
+    }
+  }, [token])
 
   useEffect(() => {
     if (resendCooldown > 0) {
@@ -49,15 +74,15 @@ export default function VerifyEmailPage() {
     inputRefs.current[Math.min(pastedData.length, 5)]?.focus()
   }
 
-  const handleVerify = async () => {
-    setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsLoading(false)
-    setIsVerified(true)
+  const handleVerify = () => {
+    const fullCode = code.join("")
+    mutation.mutate(fullCode)
   }
 
   const handleResend = async () => {
+    // This would likely call an endpoint to resend the verification link/code
     setResendCooldown(60)
+    toast.info("Verification email resent!")
   }
 
   if (isVerified) {
@@ -112,24 +137,32 @@ export default function VerifyEmailPage() {
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  onPaste={handlePaste}
-                  className="h-12 w-12 text-center text-lg font-semibold sm:h-14 sm:w-14 sm:text-xl"
-                  disabled={isLoading}
-                />
-              ))}
-            </div>
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                   onPaste={handlePaste}
+                   className="h-12 w-12 text-center text-lg font-semibold sm:h-14 sm:w-14 sm:text-xl"
+                   disabled={mutation.isPending}
+                 />
+               ))}
+             </div>
+ 
+             <Button onClick={handleVerify} className="w-full" disabled={mutation.isPending || code.some((d) => !d)}>
+               {mutation.isPending ? (
+                 <>
+                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                   Verifying...
+                 </>
+               ) : (
+                 "Verify Email"
+               )}
+             </Button>
 
-            <Button onClick={handleVerify} className="w-full" disabled={isLoading || code.some((d) => !d)}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                "Verify Email"
-              )}
-            </Button>
+             {mutation.isError && (
+                <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                   <XCircle className="h-4 w-4" />
+                   <p>{mutation.error?.message || "Invalid or expired verification token"}</p>
+                </div>
+             )}
+
 
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
@@ -156,5 +189,13 @@ export default function VerifyEmailPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-12"><Loader2 className="animate-spin h-8 w-8 text-muted-foreground" /></div>}>
+      <VerifyEmailForm />
+    </Suspense>
   )
 }

@@ -108,6 +108,15 @@ export interface RegisterRequest {
   password: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
 export const authApi = {
   login: (data: LoginRequest) =>
     apiClient.post<AuthResponse>("/api/auth/login", data),
@@ -123,6 +132,15 @@ export const authApi = {
   me: () => apiClient.get<Record<string, unknown>>("/api/auth/me"),
 
   validate: () => apiClient.get("/api/auth/validate"),
+
+  forgotPassword: (data: ForgotPasswordRequest) =>
+    apiClient.post<{ message: string }>("/api/auth/forgot-password", data),
+
+  resetPassword: (data: ResetPasswordRequest) =>
+    apiClient.post<{ message: string }>("/api/auth/reset-password", data),
+
+  verifyEmail: (token: string) =>
+    apiClient.post<{ message: string }>(`/api/auth/verify-email?token=${encodeURIComponent(token)}`),
 };
 
 // ── Post Service helpers ──────────────────────────────────────────────────────
@@ -138,6 +156,9 @@ export const postApi = {
   update: (id: string, data: unknown) => apiClient.put(`/api/posts/${id}`, data),
 
   delete: (id: string) => apiClient.delete(`/api/posts/${id}`),
+
+  getCommunityPosts: (communityId: string, page = 0, size = 20) =>
+    apiClient.get(`/api/posts/community/${communityId}?page=${page}&size=${size}`),
 };
 
 // ── Comment Service helpers ───────────────────────────────────────────────────
@@ -229,4 +250,23 @@ export const authAdminApi = {
 
   unbanUser: (userId: string) =>
     apiClient.post(`/api/auth/users/${userId}/unban`),
+};
+
+// ── Community Service helpers ─────────────────────────────────────────────────
+
+export const communityApi = {
+  list: (page = 0, size = 20) =>
+    apiClient.get(`/api/communities?page=${page}&size=${size}`),
+
+  getById: (id: string) =>
+    apiClient.get(`/api/communities/${id}`),
+
+  getBySlug: (slug: string) =>
+    apiClient.get(`/api/communities/slug/${slug}`),
+
+  create: (data: unknown) =>
+    apiClient.post("/api/communities", data),
+    
+  follow: (communityId: string) =>
+    apiClient.post(`/api/communities/follow`, { communityId }),
 };
