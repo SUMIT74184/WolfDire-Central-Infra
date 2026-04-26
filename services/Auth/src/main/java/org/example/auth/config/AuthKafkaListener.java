@@ -108,6 +108,62 @@ public class AuthKafkaListener {
         // For now just acknowledge
         ack.acknowledge();
     }
+
+    /**
+     * Listen for post.created events to increment user's post count.
+     */
+    @KafkaListener(
+            topics = "post.created",
+            groupId = "auth-service-group",
+            containerFactory = "kafkaListenerContainerFactory"
+    )
+    public void handlePostCreated(ConsumerRecord<String, String> record, Acknowledgment ack) {
+        log.info("Received post.created event for post: {}", record.key());
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(record.value());
+            String userId = root.path("userId").asText();
+
+            if (userId != null && !userId.isBlank()) {
+                userRepository.findById(userId).ifPresent(user -> {
+                    user.setPostCount(user.getPostCount() + 1);
+                    userRepository.save(user);
+                    log.info("Incremented postCount for user: {}", userId);
+                });
+            }
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Error processing post.created event: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Listen for post.deleted events to decrement user's post count.
+     */
+    @KafkaListener(
+            topics = "post.deleted",
+            groupId = "auth-service-group",
+            containerFactory = "kafkaListenerContainerFactory"
+    )
+    public void handlePostDeleted(ConsumerRecord<String, String> record, Acknowledgment ack) {
+        log.info("Received post.deleted event for post: {}", record.key());
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(record.value());
+            String userId = root.path("userId").asText();
+
+            if (userId != null && !userId.isBlank()) {
+                userRepository.findById(userId).ifPresent(user -> {
+                    user.setPostCount(Math.max(0, user.getPostCount() - 1));
+                    userRepository.save(user);
+                    log.info("Decremented postCount for user: {}", userId);
+                });
+            }
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Error processing post.deleted event: {}", e.getMessage());
+        }
+    }
 }
 
 

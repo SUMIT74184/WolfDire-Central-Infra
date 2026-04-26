@@ -53,6 +53,17 @@ public class User implements UserDetails {
 
     private String profilePictureUrl;
 
+    @Column(length = 500)
+    private String bio;
+
+    private String location;
+
+    private String website;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer postCount = 0;
+
     /* *
      * @Enumerated(EnumType.STRING): Store enum as "ADMIN", "MANAGER" text in DB
      * instead of 0, 1, 2 numbers. STRING is safer — if you reorder enums, data stays correct.

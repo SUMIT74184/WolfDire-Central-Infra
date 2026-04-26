@@ -1,13 +1,17 @@
 "use client"
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import Link from "next/link"
-import { authApi, socialApi, postApi, analyticsApi } from "@/lib/api-client"
+import { authApi, socialApi, postApi, analyticsApi, communityApi } from "@/lib/api-client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import {
   Mail,
   MapPin,
@@ -23,23 +27,59 @@ import {
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("posts")
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   const { data: me, isLoading: meLoading, error: meError } = useQuery({
     queryKey: ['me'],
     queryFn: authApi.me,
   })
 
+  const [editFormData, setEditFormData] = useState({
+    firstName: "",
+    lastName: "",
+    bio: "",
+    location: "",
+    website: "",
+    profilePictureUrl: ""
+  })
+
+  // Initialize form when data loads
+  if (me && editFormData.firstName === "" && editFormData.lastName === "") {
+    setEditFormData({
+      firstName: me.firstName || "",
+      lastName: me.lastName || "",
+      bio: me.bio || "",
+      location: me.location || "",
+      website: me.website || "",
+      profilePictureUrl: me.profilePictureUrl || ""
+    })
+  }
+
+  const updateProfileMutation = useMutation({
+    mutationFn: (data) => authApi.updateProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['me'] })
+      setIsEditProfileOpen(false)
+    }
+  })
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault()
+    updateProfileMutation.mutate(editFormData)
+  }
+
   const userId = me?.userId || me?.id || ""
 
   const { data: followersData } = useQuery({
-    queryKey: ['followers', userId],
-    queryFn: () => socialApi.followers(userId),
+    queryKey: ['followers'],
+    queryFn: () => socialApi.followers(),
     enabled: !!userId,
   })
 
   const { data: followingData } = useQuery({
-    queryKey: ['following', userId],
-    queryFn: () => socialApi.following(userId),
+    queryKey: ['following'],
+    queryFn: () => socialApi.following(),
     enabled: !!userId,
   })
 
@@ -55,8 +95,26 @@ export default function ProfilePage() {
   })
 
   const { data: postsData } = useQuery({
-    queryKey: ['posts'],
-    queryFn: () => postApi.list(0, 10),
+    queryKey: ['userPosts', userId],
+    queryFn: () => postApi.getUserPosts(userId, 0, 10),
+    enabled: !!userId,
+  })
+
+  const { data: communitiesData } = useQuery({
+    queryKey: ['myCommunities'],
+    queryFn: () => communityApi.myCommunities(),
+  })
+
+  const { data: savedPostsData } = useQuery({
+    queryKey: ['savedPosts'],
+    queryFn: () => postApi.getSavedPosts(0, 50),
+  })
+
+  const unsavePostMutation = useMutation({
+    mutationFn: (postId) => postApi.unsavePost(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['savedPosts'] })
+    }
   })
 
   const userProfile = {
@@ -77,11 +135,22 @@ export default function ProfilePage() {
   const userPosts = postsData ? (Array.isArray(postsData) ? postsData : postsData.content || []).map(p => ({
     id: p.id,
     title: p.title || "Untitled",
-    community: p.subredditName || "General",
-    likes: p.upvotes || 0,
+    community: p.communityName || p.subredditName || "General",
+    likes: p.score || p.upvotes || 0,
     comments: p.commentCount || 0,
     date: p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "",
   })) : []
+
+  const savedPosts = savedPostsData ? (Array.isArray(savedPostsData) ? savedPostsData : savedPostsData.content || []).map(p => ({
+    id: p.id,
+    title: p.title || "Untitled",
+    community: p.communityName || p.subredditName || "General",
+    likes: p.score || p.upvotes || 0,
+    comments: p.commentCount || 0,
+    date: p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "",
+  })) : []
+
+  const myCommunities = communitiesData ? (Array.isArray(communitiesData) ? communitiesData : communitiesData.content || []) : []
 
   const loading = meLoading
   const error = meError ? meError.message || "Failed to load profile" : null
@@ -112,10 +181,77 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="mt-4 flex gap-2 sm:mt-0">
-            <Button variant="outline" className="gap-2 bg-transparent">
-              <Edit2 className="h-4 w-4" />
-              Edit Profile
-            </Button>
+            <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-2 bg-transparent">
+                  <Edit2 className="h-4 w-4" />
+                  Edit Profile
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Edit Profile</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleEditSubmit} className="space-y-4 pt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        value={editFormData.firstName}
+                        onChange={(e) => setEditFormData({...editFormData, firstName: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        value={editFormData.lastName}
+                        onChange={(e) => setEditFormData({...editFormData, lastName: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea
+                      id="bio"
+                      value={editFormData.bio}
+                      onChange={(e) => setEditFormData({...editFormData, bio: e.target.value})}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={editFormData.location}
+                      onChange={(e) => setEditFormData({...editFormData, location: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Website URL</Label>
+                    <Input
+                      id="website"
+                      type="url"
+                      value={editFormData.website}
+                      onChange={(e) => setEditFormData({...editFormData, website: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profilePictureUrl">Avatar URL</Label>
+                    <Input
+                      id="profilePictureUrl"
+                      type="url"
+                      value={editFormData.profilePictureUrl}
+                      onChange={(e) => setEditFormData({...editFormData, profilePictureUrl: e.target.value})}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={updateProfileMutation.isPending}>
+                    {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
             <Button variant="outline" size="icon" className="bg-transparent">
               <Settings className="h-4 w-4" />
             </Button>
@@ -212,16 +348,79 @@ export default function ProfilePage() {
             )}
 
             {activeTab === "saved" && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Bookmark className="mx-auto mb-2 h-8 w-8 opacity-50" />
-                <p>No saved posts yet</p>
+              <div className="space-y-4">
+                {savedPosts.length > 0 ? (
+                  savedPosts.map((post) => (
+                    <Link key={post.id} href={`/post/${post.id}`}>
+                      <div className="rounded-lg border border-border p-4 hover:bg-secondary transition-colors cursor-pointer">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-foreground hover:text-primary">
+                              {post.title}
+                            </h3>
+                            <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+                              <Badge variant="outline">c/{post.community}</Badge>
+                              <span>{post.date}</span>
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-primary" 
+                            onClick={(e) => {
+                              e.preventDefault()
+                              unsavePostMutation.mutate(post.id)
+                            }}
+                            disabled={unsavePostMutation.isPending}
+                          >
+                            <Bookmark className="h-4 w-4 fill-current" />
+                          </Button>
+                        </div>
+                        <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <TrendingUp className="h-3 w-3" /> {post.likes}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageCircle className="h-3 w-3" /> {post.comments}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Bookmark className="mx-auto mb-2 h-8 w-8 opacity-50" />
+                    <p>No saved posts yet</p>
+                  </div>
+                )}
               </div>
             )}
 
             {activeTab === "communities" && (
-              <div className="text-center py-8 text-muted-foreground">
-                <TrendingUp className="mx-auto mb-2 h-8 w-8 opacity-50" />
-                <p>Join communities to see them here</p>
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                {myCommunities.length > 0 ? (
+                  myCommunities.map((community) => (
+                    <Link key={community.id} href={`/c/${community.name || community.id}`}>
+                      <Card className="h-full border-border hover:bg-secondary cursor-pointer transition-colors">
+                        <CardContent className="p-4 text-center">
+                          <Avatar className="mx-auto mb-3 h-12 w-12 text-lg font-bold">
+                            <AvatarFallback>
+                              {(community.name || "C")[0].toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <h3 className="font-semibold">{community.name || "Community"}</h3>
+                          <Badge variant="secondary" className="mt-2">Member</Badge>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="col-span-full py-8 text-center text-muted-foreground">
+                    <TrendingUp className="mx-auto mb-2 h-8 w-8 opacity-50" />
+                    <p>Join communities to see them here</p>
+                  </div>
+                )}
               </div>
             )}
             

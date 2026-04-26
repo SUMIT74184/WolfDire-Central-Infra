@@ -139,6 +139,9 @@ export const authApi = {
   resetPassword: (data: ResetPasswordRequest) =>
     apiClient.post<{ message: string }>("/api/auth/reset-password", data),
 
+  updateProfile: (data: unknown) =>
+    apiClient.put<Record<string, unknown>>("/api/auth/me", data),
+
   verifyEmail: (token: string) =>
     apiClient.post<{ message: string }>(`/api/auth/verify-email?token=${encodeURIComponent(token)}`),
 };
@@ -159,6 +162,15 @@ export const postApi = {
 
   getCommunityPosts: (communityId: string, page = 0, size = 20) =>
     apiClient.get(`/api/posts/community/${communityId}?page=${page}&size=${size}`),
+
+  getUserPosts: (userId: string, page = 0, size = 20) =>
+    apiClient.get(`/api/posts/user/${userId}?page=${page}&size=${size}`),
+
+  savePost: (postId: string) => apiClient.post(`/api/posts/${postId}/save`),
+  
+  unsavePost: (postId: string) => apiClient.delete(`/api/posts/${postId}/save`),
+  
+  getSavedPosts: (page = 0, size = 20) => apiClient.get(`/api/posts/saved?page=${page}&size=${size}`),
 };
 
 // ── Comment Service helpers ───────────────────────────────────────────────────
@@ -187,6 +199,12 @@ export const commentApi = {
 export const feedApi = {
   getFeed: (page = 0, size = 20) =>
     apiClient.get(`/api/feed?page=${page}&size=${size}`),
+
+  getPersonalizedFeed: (page = 0, size = 20) =>
+    apiClient.get(`/api/feed/personalized?page=${page}&size=${size}`),
+
+  trackInteraction: (postId: string, type: 'VIEW' | 'UPVOTE' | 'COMMENT' | 'SHARE', durationSeconds?: number) =>
+    apiClient.post(`/api/feed/interact?postId=${postId}&type=${type}${durationSeconds ? `&durationSeconds=${durationSeconds}` : ''}`),
 };
 
 // ── Social Connection Service helpers ─────────────────────────────────────────
@@ -194,8 +212,8 @@ export const feedApi = {
 export const socialApi = {
   follow: (userId: string) => apiClient.post(`/api/social/follow/${userId}`),
   unfollow: (userId: string) => apiClient.delete(`/api/social/unfollow/${userId}`),
-  followers: (userId: string) => apiClient.get(`/api/social/followers/${userId}`),
-  following: (userId: string) => apiClient.get(`/api/social/following/${userId}`),
+  followers: () => apiClient.get(`/api/social/followers`),
+  following: () => apiClient.get(`/api/social/following`),
 };
 
 // ── Analytics Service helpers ─────────────────────────────────────────────────
@@ -269,4 +287,7 @@ export const communityApi = {
     
   follow: (communityId: string) =>
     apiClient.post(`/api/communities/follow`, { communityId }),
+
+  myCommunities: () =>
+    apiClient.get(`/api/communities/my-communities`),
 };

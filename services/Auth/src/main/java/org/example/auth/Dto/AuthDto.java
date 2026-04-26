@@ -112,4 +112,19 @@ public class AuthDto {
         @Size(min = 8, message = "Password must be at least 8 characters")
         private String newPassword;
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateProfileRequest {
+        private String firstName;
+        private String lastName;
+
+        @Size(max = 500, message = "Bio must be at most 500 characters")
+        private String bio;
+
+        private String location;
+        private String website;
+        private String profilePictureUrl;
+    }
 }

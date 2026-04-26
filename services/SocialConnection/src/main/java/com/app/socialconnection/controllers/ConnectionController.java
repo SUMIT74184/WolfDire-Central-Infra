@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.*;
  * from the URL query string. No manual parsing needed!
  */
 @RestController
-@RequestMapping("/api/v1/connections")
+@RequestMapping("/api/social")
 @RequiredArgsConstructor
 public class ConnectionController {
 

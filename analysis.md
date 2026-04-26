@@ -58,49 +58,77 @@
 | **Auth** | `user.registered`, `user.login`, `user.logout`, `user.login.oauth2` | `tenant.created`, `auth.password-reset-requested` |
 | **Post** | `post.created`, `comment.added`, `vote.changed`, `user.mentioned`, `post.viewed` | `post.created` *(AIService)* |
 | **Feed** | *(none)* | `post.created`, `feed.update` |
-| **Social** | `connection-events`, `block-events`, `feed.fanout` | `post.created`, `reputation-updated` |
-| **Moderation** | `content-moderated`, `content-enriched`, `reputation-updated` | *(none)* |
-| **Analytics** | *(none)* | `post.created`, `comment.added`, `vote.changed`, `user.registered`, `content-moderated`, `post.viewed` |
-| **Notification** | *(none — sends email only)* | `comment.added`, `vote.changed`, `content-moderated`, `content-enriched`, `user.mentioned`, `post.trending` |
-
-### Topic Mismatch Resolution
-
-- [x] NotificationSvc `comment.created` → fixed to `comment.added`
-- [x] NotificationSvc `vote.cast` → fixed to `vote.changed` + VoteService now publishes
-- [x] NotificationSvc `moderation.flagged`/`moderation.approved` → fixed to `content-moderated`/`content-enriched`
-- [x] NotificationSvc `user.mentioned` → PostSvc + CommentSvc now publish this event
-- [x] SocialConnection `user.reputation.updated` → fixed to `reputation-updated`
-- [x] AnalyticsSvc all 6 topics → remapped to actual producer topics
-- [ ] NotificationSvc `post.trending` → **still no producer** (future: analytics-driven trending detection)
-
----
-
-## 3. Frontend → Backend Gap Analysis
-
-### ✅ Wired Pages (11 / 23 total pages)
-
-| Frontend Page | API Call | Service |
-|--------------|---------|--------|
-| `/login` | `authApi.login()` | Auth |
-| `/signup` | `authApi.register()` | Auth |
-| `/feed` | `feedApi.getFeed()` | Feed |
-| `/post/[id]` | `postApi.getById(id)` | Post |
-| `/dashboard` | `analyticsApi.dashboard()` | Analytics |
-| `/write` | `postApi.create()` | Post |
-| `/profile` | `authApi.me()` + `socialApi.followers()` + `postApi.list()` | Auth + Social + Post |
-| `/explore` | `postApi.list()` with pagination | Post |
-| `/admin/analytics` | `analyticsApi.dashboard()` | Analytics |
-| `/admin/users` | `authAdminApi.listUsers()` + `banUser()` | Auth |
-| `/admin/moderation` | `moderationApi.getFlaggedQueue()` + approve/reject | Moderation |
-
-### ❌ Remaining — No Backend Support (10 pages)
-
-| Frontend Page | Issue | Priority |
+| **Social** | `connection-events`, `block-events`, `feed.fanout` | `post.create| Frontend Page | Issue | Priority |
 |--------------|-------|-----------|
 | `/forgot-password` | ✅ Wired with React Query | High |
 | `/verify-email` | ✅ Wired with React Query | High |
-| `/communities` | ✅ Backend implemented, needs UI wiring | Medium |
-| `/community/[id]` | ✅ Backend implemented, needs UI wiring | Medium |
+| `/communities` | ✅ Wired — completed | Medium |
+| `/community/[id]` | ✅ Wired — completed | Medium |
+| `/admin` | Needs role guard only | Medium |
+| `/admin/articles` | ❌ No backend endpoints for overall post/article management | Medium |
+| `/admin/users` | ✅ Wired (list, ban, unban) | Medium |
+| `/admin/analytics` | ✅ Wired to AnalyticsSvc | Medium |
+| `/admin/moderation` | ✅ Wired to ModerationSvc | Medium |
+| `/admin/settings` | ❌ No backend endpoints for system-wide configuration | Low |
+| `/about` | Static — no backend needed | — |
+| `/contact` | No contact form endpoint | Low |
+| `/pricing` | Static — no backend needed | — |
+| `/become-author` | No author role logic | Low |
+| `/` (home) | Static — no backend needed | — |
+
+### 🛠️ Admin Mapping Gaps
+- **`/admin/articles`**: Currently, `PostSvc` only allows users to see their own posts or community posts. Admin needs a "God View" endpoint: `GET /api/posts/admin/list` (all posts regardless of user).
+- **`/admin/settings`**: Needs a `SettingsSvc` or a table in `AuthSvc` for global flags (e.g., `registrationEnabled`, `maintenanceMode`).
+
+---
+
+## 4. Backend → Frontend Gap Analysis
+
+These backend capabilities exist but have **no frontend consumer**:
+
+| Endpoint | Service | Status |
+|----------|---------|--------|
+| `POST /api/auth/logout` | Auth | ✅ Sidebar logout wired |
+| `POST /api/auth/refresh` | Auth | ✅ AuthContext auto-refresh |
+| `GET /api/auth/validate` | Auth | ✅ AuthContext JWT route guards |
+| OAuth2 Google/GitHub redirect | Auth | ✅ Social auth buttons wired |
+| `GET /api/analytics/user/:id` | Analytics | ✅ Surfaced in profile analytics tab |
+| `GET /api/analytics/content/:id` | Analytics | ❌ No per-content analytics UI |
+| `GET /api/analytics/trending` | Analytics | ❌ Not surfaced on Explore page |
+| `POST /api/social/follow/:id` | Social | ✅ Wired on Profile and Community pages |
+| Notification polling/WebSocket | Notification | ✅ Notification bell UI wired with polling |
+
+### 🔍 Feed & Post Mapping Details
+The following "Feed Card" items found in typical Reddit/WolfDire designs are mapped as follows:
+
+| UI Element | Backend Field | Status |
+|------------|---------------|--------|
+| **Heading** | `Post.title` | ✅ Mapped |
+| **Writer** | `Post.username` | ✅ Mapped |
+| **Comments Count** | `Post.commentCount` | ✅ Mapped |
+| **Date** | `Post.createdAt` | ✅ Mapped |
+| **Small Images** | `Post.thumbnailUrl` | ✅ Mapped |
+| **Upvote/Downvote**| `Post.score`, `Post.upVotes` | ✅ Mapped |
+| **Save Button** | **Missing** | ❌ No "SavedPost" table in DB |
+| **Share Button** | `Post.shareCount` | ⚠️ Counter exists, social share is client-side |
+
+---
+
+## 5. Missing Backend Endpoints
+
+| Feature | Missing Endpoint | Priority |
+|---------|-----------------|----------|
+| Password reset | `POST /api/auth/reset-password` | ✅ Done (Phase 8) |
+| Email verification| `POST /api/auth/verify-email?token=` | ✅ Done (Phase 8) |
+| Communities | `GET/POST /api/communities` | ✅ Done (Phase 5) |
+| Threaded comments | `GET /api/posts/:id/comments` | ✅ Done (Phase 9) |
+| **Save Content** | `POST /api/social/save/:postId` | **Medium** |
+rity |
+|--------------|-------|-----------|
+| `/forgot-password` | ✅ Wired with React Query | High |
+| `/verify-email` | ✅ Wired with React Query | High |
+| `/communities` | ✅ Backend implemented, needs UI wiring | Medium |-- completed
+| `/community/[id]` | ✅ Backend implemented, needs UI wiring | Medium |-- completed
 | `/admin` | Needs role guard only | Medium |
 | `/admin/articles` | No admin article management endpoints | Medium |
 | `/about` | Static — no backend needed | — |
@@ -215,3 +243,209 @@ To fully run the application without errors, ensure the following environment va
 
 ### Frontend (`wolf-frontend/.env.local`)
 - `NEXT_PUBLIC_API_URL=http://localhost:8090` (API Gateway URL)
+
+---
+
+## 9. Profile Feature — Gap Analysis
+
+### ✅ Fixed: `/me` Endpoint Returns Incomplete Data
+
+The `GET /api/auth/me` endpoint now returns full data:
+```json
+{ "email", "userId", "tenantId", "authorities" }
+```
+**Missing fields** that the frontend profile page expects:
+- `firstName`, `lastName` — exist on User entity but not returned
+- `profilePictureUrl` — exists on User entity but not returned
+- `createdAt` — exists on User entity but not returned
+- `bio`, `location`, `website` — **do NOT exist** on User entity at all
+- `karma`, `postCount` — **no backend concept** for these
+
+### ✅ Fixed: Follow/Followers/Following API Path Mismatch
+
+| What | Frontend calls | Backend actual path |
+|------|---------------|---------------------|
+| Follow | `POST /api/social/follow/{userId}` | `POST /api/v1/connections/follow/{targetUserId}` |
+| Unfollow | `DELETE /api/social/unfollow/{userId}` | `DELETE /api/v1/connections/follow/{targetUserId}` |
+| Followers | `GET /api/social/followers/{userId}` | `GET /api/v1/connections/followers` (no userId param, reads from JWT) |
+| Following | `GET /api/social/following/{userId}` | `GET /api/v1/connections/following` (no userId param, reads from JWT) |
+
+The **API Gateway** routes `/api/social/**` to the SocialConnection service, and `ConnectionController` now correctly uses `/api/social/**`. The frontend API client also no longer passes a `{userId}` to followers/following to match the backend behavior.
+
+### 🟡 Missing Backend Endpoints for Profile
+
+| Feature | Missing Endpoint | Service | Priority |
+|---------|-----------------|---------|----------|
+| Update Profile | `PUT /api/auth/me` (update bio, location, website, name, avatar) | Auth | ✅ **Completed** |
+| Change Password | `POST /api/auth/change-password` | Auth | **High** |
+| User's Posts | `GET /api/posts/user/{userId}` | PostsvcWolf | ✅ **Completed** |
+| Save/Bookmark Post | `POST /api/posts/{postId}/save`<br>`DELETE /api/posts/{postId}/save` | PostsvcWolf | ✅ **Completed** |
+| Get Saved Posts | `GET /api/posts/saved` | PostsvcWolf | ✅ **Completed** |
+
+### 🟡 Missing User Entity Fields
+
+The `User` entity in Auth service currently has:
+`id, email, password, firstName, lastName, tenantId, provider, oauth2Id, profilePictureUrl, roles, enabled, accountNonLocked, createdAt, updatedAt`
+
+**Needs to be added:**
+- ✅ `bio` (String, nullable) — user biography
+- ✅ `location` (String, nullable) — city/country
+- ✅ `website` (String, nullable) — personal URL
+- ✅ `postCount` (Integer) — tracked dynamically via Kafka `post.created` / `post.deleted`
+
+### 🟢 Frontend Tab Wiring Status
+
+| Tab | Current Status | Required Backend |
+|-----|---------------|------------------|
+| **Posts** | ✅ Wired to `postApi.getUserPosts(userId)` | `GET /api/posts/user/{userId}` (Completed) |
+| **Saved** | ✅ Wired to `postApi.getSavedPosts()` | `GET /api/posts/saved` (Completed) |
+| **Communities** | ✅ Wired to `communityApi.myCommunities()` | `GET /api/communities/my-communities` (Mapped) |
+| **Analytics** | ✅ Wired to `analyticsApi.user()` | — |
+
+### ✅ Frontend UI Elements Not Wired (Fixed)
+
+| Element | Status |
+|---------|--------|
+| **Edit Profile** button | ✅ Opens dialog to edit fields, wired to `PUT /api/auth/me` |
+| **Settings** button | ❌ No settings page yet |
+| **Avatar** | ✅ Fetches from query |
+| **Bio** | ✅ Fetches from query |
+| **Location / Website / Email** | ✅ Fetches from query |
+| **Karma** | ❌ Shows `0` (waiting on feature definition) |
+| **Posts count** | ✅ Accurately reflects Kafka-tracked user `postCount` |
+
+---
+
+## 10. Settings Feature — Gap Analysis
+
+### Feature Matrix (Backend Readiness)
+
+| Settings Feature | Backend Status | Service | Frontend Status |
+|-----------------|---------------|---------|----------------|
+| **Account Deactivation** | 🔴 Missing | Auth | 🔴 No page |
+| **Notification Preferences** | ✅ Fully built | NotificationSvc | 🔴 Not wired |
+| **Profile Visibility** | 🔴 Missing | Auth | 🔴 No page |
+| **Blocked Users** | 🟡 Partial | SocialConnection | 🔴 Not wired |
+| **MFA / 2FA** | 🔴 Missing | Auth | 🔴 No page (v2) |
+
+---
+
+### 1. Account Deactivation 🔴
+
+**Backend:** No self-deactivation endpoint exists. The `User` entity has `enabled` and `accountNonLocked` fields, but these are only toggled by admin endpoints (`POST /api/auth/users/{id}/ban`). There is no user-initiated deactivation or deletion flow.
+
+**What's Needed (Backend):**
+| Endpoint | Description | Priority |
+|----------|-------------|----------|
+| `POST /api/auth/deactivate` | Self-deactivate (set `enabled=false`, blacklist tokens, publish Kafka event) | **High** |
+| `POST /api/auth/reactivate` | Re-enable account via email verification link | Medium |
+| `DELETE /api/auth/account` | Permanent deletion (GDPR-compliant, cascade to all services via Kafka) | Low (v2) |
+
+**What's Needed (Frontend):**
+- Settings page → "Deactivate Account" section with confirmation modal
+- Reactivation flow on login attempt (if `enabled=false`, show "Account deactivated" message with re-enable option)
+
+---
+
+### 2. Notification Preferences ✅ Backend / 🔴 Frontend
+
+**Backend (FULLY BUILT):** The `NotificationPreference` entity has 13 configurable fields:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `emailEnabled` | Boolean | `true` | Email notifications master toggle |
+| `pushEnabled` | Boolean | `true` | Push notifications master toggle |
+| `websocketEnabled` | Boolean | `true` | Real-time WebSocket toggle |
+| `commentNotifications` | Boolean | `true` | Notify on comment on your post |
+| `replyNotifications` | Boolean | `true` | Notify on reply to your comment |
+| `upvoteNotifications` | Boolean | `true` | Notify on upvotes |
+| `mentionNotifications` | Boolean | `true` | Notify on @mentions |
+| `moderationNotifications` | Boolean | `true` | Notify on moderation actions |
+| `followerNotifications` | Boolean | `true` | Notify on new followers |
+| `digestEnabled` | Boolean | `true` | Email digest toggle |
+| `digestFrequency` | Enum | `DAILY` | `DAILY`, `WEEKLY`, etc. |
+
+**Backend Endpoints (exist, not wired):**
+- `GET /api/notifications/preferences/{userId}` — fetch current preferences
+- `PUT /api/notifications/preferences/{userId}` — update preferences
+
+**What's Needed (Frontend only):**
+- Add `notificationApi.getPreferences(userId)` and `notificationApi.updatePreferences(userId, prefs)` to `api-client.ts`
+- Settings page → "Notification Preferences" section with toggles for each field
+- Wire via React Query `useQuery` + `useMutation`
+
+---
+
+### 3. Profile Visibility (Public/Private Toggle) 🔴
+
+**Backend:** No concept of profile visibility exists. The `User` entity has no `isPublic`/`isPrivate` field. There is no middleware or filter that checks profile visibility before returning user data.
+
+**What's Needed (Backend):**
+| Item | Description | Service |
+|------|-------------|---------|
+| `profileVisibility` field on `User` entity | Enum: `PUBLIC`, `PRIVATE`, `FOLLOWERS_ONLY` | Auth |
+| `PUT /api/auth/me` (include visibility in update) | Update profile visibility | Auth |
+| Visibility check in `GET /api/auth/users/{id}` | Return limited data if viewer is not follower and profile is private | Auth |
+| Inter-service check | Other services (Post, Social) should respect visibility via header or Feign call | All |
+
+**What's Needed (Frontend):**
+- Settings page → "Privacy" section with radio/toggle for Public/Private/Followers Only
+- Other users' profiles should show limited info when private
+
+---
+
+### 4. Blocked Users 🟡 Partially Built
+
+**Backend (Partial):** `BlockedUser` entity, block/unblock endpoints, and block-checking logic all EXIST:
+- `POST /api/v1/connections/block/{blockedUserId}` — block a user ✅
+- `DELETE /api/v1/connections/block/{blockedUserId}` — unblock a user ✅
+- `BlockedUserRepository` has `existsByBlockerIdAndBlockedId` and `findByBlockerIdAndBlockedId` ✅
+- Kafka `block-events` topic published on block ✅
+
+**What's Missing (Backend):**
+| Item | Description | Priority |
+|------|-------------|----------|
+| `GET /api/v1/connections/blocked` | List all users blocked by current user (paginated) | **High** |
+| `findByBlockerId(Long, Pageable)` | Repository method to fetch blocked users list | **High** |
+| ⚠️ Path mismatch | Controller is at `/api/v1/connections/block/**` but gateway routes `/api/social/**` — calls will **404** | **Critical** |
+
+**What's Needed (Frontend):**
+- Add `socialApi.block(userId)`, `socialApi.unblock(userId)`, `socialApi.blockedUsers()` to `api-client.ts`
+- Settings page → "Blocked Users" section with list + unblock buttons
+- Block button on user profiles
+
+---
+
+### 5. MFA / Two-Factor Authentication 🔴 (Version 2)
+
+**Backend:** No MFA infrastructure exists. No TOTP libraries, no recovery codes, no MFA-related fields on User entity.
+
+**What Will Be Needed (v2):**
+| Item | Description | Service |
+|------|-------------|---------|
+| `mfaEnabled` field on `User` entity | Boolean flag | Auth |
+| `mfaSecret` field on `User` entity | Encrypted TOTP secret | Auth |
+| `POST /api/auth/mfa/enable` | Generate TOTP secret, return QR code URI | Auth |
+| `POST /api/auth/mfa/verify` | Verify TOTP code and enable MFA | Auth |
+| `POST /api/auth/mfa/disable` | Disable MFA with password confirmation | Auth |
+| MFA challenge on login | After password validation, require TOTP code if MFA enabled | Auth |
+| Recovery codes | Generate & store one-time backup codes | Auth |
+| Library dependency | `com.warrenstrange:googleauth` or similar TOTP library | Auth |
+
+**What Will Be Needed (Frontend — v2):**
+- Settings → "Security" section with MFA enable/disable toggle
+- QR code display modal on enable
+- TOTP input dialog during login flow
+- Recovery codes display & download
+
+---
+
+### 📋 Settings Implementation Priority Summary
+
+| Priority | Feature | Backend Work | Frontend Work |
+|----------|---------|-------------|---------------|
+| 🟢 **P0** (wire only) | Notification Preferences | None — endpoints exist | Build settings UI + wire |
+| 🟡 **P1** | Blocked Users List | Add list endpoint + fix path | Build blocked users UI |
+| 🟡 **P1** | Account Deactivation | New endpoint + token blacklist | Build deactivation UI |
+| 🟡 **P1** | Profile Visibility | New entity field + update endpoint | Build privacy toggle |
+| 🔵 **P2** (v2) | MFA / 2FA | Full new subsystem | Full new UI flow |

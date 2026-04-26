@@ -250,6 +250,47 @@ public class AuthService {
         }
     }
 
+    /**
+     * Get user by ID — used by /me endpoint to return full profile.
+     */
+    public User getUserById(String userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
+    /**
+     * Update user profile fields (partial update — only non-null fields are applied).
+     */
+    @Transactional
+    public User updateProfile(String userId, AuthDto.UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (request.getFirstName() != null && !request.getFirstName().isBlank()) {
+            user.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null && !request.getLastName().isBlank()) {
+            user.setLastName(request.getLastName());
+        }
+        if (request.getBio() != null) {
+            user.setBio(request.getBio());
+        }
+        if (request.getLocation() != null) {
+            user.setLocation(request.getLocation());
+        }
+        if (request.getWebsite() != null) {
+            user.setWebsite(request.getWebsite());
+        }
+        if (request.getProfilePictureUrl() != null) {
+            user.setProfilePictureUrl(request.getProfilePictureUrl());
+        }
+
+        User saved = userRepository.save(user);
+        log.info("Profile updated for user: {}", saved.getEmail());
+        evictTenantUsersCache(saved.getTenantId());
+        return saved;
+    }
+
     private void cacheRefreshToken(String userId, String refreshToken) {
         redisTemplate.opsForValue().set(
                 "refresh_token:" + userId,

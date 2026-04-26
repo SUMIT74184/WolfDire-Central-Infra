@@ -123,43 +123,65 @@ public class AuthController {
     }
 
     /**
-     * Get current user info.
-     * Extracts user from SecurityContext (set by JwtAuthenticationFilter).
-     * Useful for frontend to display "Welcome, John!" after login.
+     * Get current user's full profile.
+     * Loads user from DB to return all profile fields.
      */
-
     @GetMapping("/me")
     public ResponseEntity<Map<String,Object>> getCurrentUser(@RequestHeader("Authorization") String authHeader){
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String token = authHeader.substring(7);
+        String userId = jwtUtil.extractUserId(token);
+
+        User user = authService.getUserById(userId);
+
+        Map<String, Object> profile = new HashMap<>();
+        profile.put("userId", user.getId());
+        profile.put("email", user.getEmail());
+        profile.put("firstName", user.getFirstName());
+        profile.put("lastName", user.getLastName());
+        profile.put("bio", user.getBio());
+        profile.put("location", user.getLocation());
+        profile.put("website", user.getWebsite());
+        profile.put("profilePictureUrl", user.getProfilePictureUrl());
+        profile.put("tenantId", user.getTenantId());
+        profile.put("roles", user.getRoles());
+        profile.put("createdAt", user.getCreatedAt());
+        profile.put("provider", user.getProvider());
+        profile.put("postCount", user.getPostCount());
+
+        return ResponseEntity.ok(profile);
+    }
+
+    /**
+     * Update current user's profile.
+     * Accepts partial updates — only non-null fields are applied.
+     */
+    @PutMapping("/me")
+    public ResponseEntity<Map<String,Object>> updateProfile(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestBody AuthDto.UpdateProfileRequest request) {
 
         String token = authHeader.substring(7);
-        String email = jwtUtil.extractEmail(token);
         String userId = jwtUtil.extractUserId(token);
-        String tenantId = jwtUtil.extractTenantId(token);
 
-//        if(auth ==  null || !auth.isAuthenticated()){
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-//        }
+        User user = authService.updateProfile(userId, request);
 
-//        String email = auth.getName();
-//        String token = extractTokenFromContext();
+        Map<String, Object> profile = new HashMap<>();
+        profile.put("userId", user.getId());
+        profile.put("email", user.getEmail());
+        profile.put("firstName", user.getFirstName());
+        profile.put("lastName", user.getLastName());
+        profile.put("bio", user.getBio());
+        profile.put("location", user.getLocation());
+        profile.put("website", user.getWebsite());
+        profile.put("profilePictureUrl", user.getProfilePictureUrl());
+        profile.put("tenantId", user.getTenantId());
+        profile.put("roles", user.getRoles());
+        profile.put("createdAt", user.getCreatedAt());
+        profile.put("provider", user.getProvider());
+        profile.put("postCount", user.getPostCount());
 
-//        if (token!=null){
-//            String userId = jwtUtil.extractUserId(token);
-//            String tenantId = jwtUtil.extractTenantId(token);
-
-            Map<String, Object>userInfo = new HashMap<>();
-            userInfo.put("email",email);
-            userInfo.put("userId", userId);
-            userInfo.put("tenantId", tenantId);
-            userInfo.put("authorities",auth!=null ? auth.getAuthorities(): List.of());
-
-            return ResponseEntity.ok(userInfo);
-        }
-
-//        return ResponseEntity.ok(userInfo);
-
-
+        return ResponseEntity.ok(profile);
+    }
 
     @GetMapping("/oauth2/error")
     public ResponseEntity<Map<String,String>> oauth2Error(

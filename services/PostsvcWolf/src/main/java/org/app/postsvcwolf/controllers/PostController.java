@@ -82,6 +82,16 @@ public class PostController {
         return ResponseEntity.ok(postService.searchPosts(query, pageable, userId));
     }
 
+    @GetMapping("/user/{targetUserId}")
+    public ResponseEntity<Page<PostResponse>> getUserPosts(
+            @PathVariable String targetUserId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return ResponseEntity.ok(postService.getUserPosts(targetUserId, pageable, userId));
+    }
+
     @PutMapping("/{postId}")
     public ResponseEntity<PostResponse> updatePost(
             @PathVariable String postId,
@@ -97,5 +107,30 @@ public class PostController {
             @RequestHeader("X-User-Id") String userId) {
         postService.deletePost(postId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{postId}/save")
+    public ResponseEntity<Void> savePost(
+            @PathVariable String postId,
+            @RequestHeader("X-User-Id") String userId) {
+        postService.savePost(userId, postId);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("/{postId}/save")
+    public ResponseEntity<Void> unsavePost(
+            @PathVariable String postId,
+            @RequestHeader("X-User-Id") String userId) {
+        postService.unsavePost(userId, postId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/saved")
+    public ResponseEntity<Page<PostResponse>> getSavedPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestHeader("X-User-Id") String userId) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(postService.getSavedPosts(userId, pageable));
     }
 }

@@ -8,8 +8,10 @@ import org.app.postsvcwolf.Entity.Post;
 import org.app.postsvcwolf.Entity.Vote;
 import org.app.postsvcwolf.Event.PostCreatedEvent;
 import org.app.postsvcwolf.repository.PostRepository;
+import org.app.postsvcwolf.repository.SavedPostRepository;
 import org.app.postsvcwolf.repository.VoteRepository;
 import org.app.postsvcwolf.client.SocialConnectionClient;
+import org.app.postsvcwolf.Entity.SavedPost;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -33,6 +35,7 @@ import java.util.regex.Pattern;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final SavedPostRepository savedPostRepository;
     private final VoteRepository voteRepository;
     private final MediaService mediaService;
     private final SocialConnectionClient socialConnectionClient;
@@ -175,6 +178,14 @@ public class PostService {
         return posts.map(post -> mapToResponse(post, userId));
     }
 
+    /**
+     * Get all posts by a specific user (for profile page).
+     */
+    public Page<PostResponse> getUserPosts(String targetUserId, Pageable pageable, String viewerUserId) {
+        Page<Post> posts = postRepository.findByUser(targetUserId, pageable);
+        return posts.map(post -> mapToResponse(post, viewerUserId));
+    }
+
 
     @Transactional
     @CacheEvict(value = {"posts", "feed"}, allEntries = true)
@@ -221,6 +232,47 @@ public class PostService {
         post.setIsRemoved(true);
         postRepository.save(post);
 
+        publishPostDeletedEvent(post);
+    }
+
+    @Transactional
+    public void savePost(String userId, String postId) {
+        if (!savedPostRepository.existsByUserIdAndPostId(userId, postId)) {
+            Post post = postRepository.findActive(postId)
+                    .orElseThrow(() -> new RuntimeException("Post not found"));
+            SavedPost savedPost = SavedPost.builder()
+                    .userId(userId)
+                    .post(post)
+                    .build();
+            savedPostRepository.save(savedPost);
+        }
+    }
+
+    @Transactional
+    public void unsavePost(String userId, String postId) {
+        savedPostRepository.findByUserIdAndPostId(userId, postId)
+                .ifPresent(savedPostRepository::delete);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PostResponse> getSavedPosts(String userId, Pageable pageable) {
+        Page<SavedPost> savedPostsPage = savedPostRepository.findByUserIdOrderBySavedAtDesc(userId, pageable);
+        List<PostResponse> postResponses = savedPostsPage.getContent().stream()
+                .map(savedPost -> mapToResponse(savedPost.getPost(), userId))
+                .toList();
+        return new PageImpl<>(postResponses, pageable, savedPostsPage.getTotalElements());
+    }
+
+    private void publishPostDeletedEvent(Post post) {
+        try {
+            java.util.Map<String, Object> event = new java.util.HashMap<>();
+            event.put("postId", post.getId());
+            event.put("userId", post.getUserId());
+            kafkaTemplate.send("post.deleted", post.getId(), event);
+            log.info("Published post.deleted event for post: {}", post.getId());
+        } catch (Exception e) {
+            log.warn("Failed to publish post.deleted event: {}", e.getMessage());
+        }
     }
 
     private Set<String> extractMentions(String content) {
