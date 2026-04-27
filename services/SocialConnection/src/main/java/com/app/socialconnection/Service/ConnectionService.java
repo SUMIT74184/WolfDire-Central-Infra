@@ -299,6 +299,18 @@ public class ConnectionService {
         log.info("User {} unblocked user {}", userId, blockedId);
     }
 
+    @Transactional(readOnly = true)
+    public Page<ConnectionDTO.BlockedUserResponse> getBlockedUsers(Long userId, Pageable pageable) {
+        return blockedUserRepository.findByBlockerId(userId, pageable)
+                .map(block -> ConnectionDTO.BlockedUserResponse.builder()
+                        .id(block.getId())
+                        .blockerId(block.getBlockerId())
+                        .blockedId(block.getBlockedId())
+                        .reason(block.getReason())
+                        .blockedAt(block.getBlockedAt())
+                        .build());
+    }
+
     // ==================== HELPER METHODS ====================
 
     /**

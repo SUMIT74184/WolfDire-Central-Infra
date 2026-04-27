@@ -148,6 +148,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
       postgres:
@@ -175,6 +176,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
       postgres:
@@ -204,6 +206,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
       postgres:
@@ -231,6 +234,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
       postgres:
@@ -255,6 +259,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
       redis:
@@ -280,6 +285,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     depends_on:
       postgres:
@@ -307,6 +313,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       MAIL_USERNAME: ${MAIL_USERNAME:-your-email@gmail.com}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-your-app-password}

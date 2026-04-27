@@ -12,4 +12,6 @@ public interface BlockedUserRepository extends JpaRepository<BlockedUser, Long> 
     boolean existsByBlockerIdAndBlockedId(Long blockerId, Long blockedId);
 
     Optional<BlockedUser> findByBlockerIdAndBlockedId(Long blockerId, Long blockedId);
+
+    org.springframework.data.domain.Page<BlockedUser> findByBlockerId(Long blockerId, org.springframework.data.domain.Pageable pageable);
 }

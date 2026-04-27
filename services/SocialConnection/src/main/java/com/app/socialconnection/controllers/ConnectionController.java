@@ -21,17 +21,22 @@ import org.springframework.web.bind.annotation.*;
  * - Return the response
  *
  * Key annotations:
- * @RestController    — Combines @Controller + @ResponseBody (auto-serializes to JSON)
- * @RequestMapping    — Base URL prefix for all endpoints in this controller
+ * 
+ * @RestController — Combines @Controller + @ResponseBody (auto-serializes to
+ *                 JSON)
+ * @RequestMapping — Base URL prefix for all endpoints in this controller
  * @RequiredArgsConstructor — Lombok injects ConnectionService via constructor
  *
- * How we get the authenticated userId:
- * The JwtAuthenticationFilter extracts userId from the JWT token and sets it
- * as a request attribute. We read it with request.getAttribute("userId").
+ *                          How we get the authenticated userId:
+ *                          The JwtAuthenticationFilter extracts userId from the
+ *                          JWT token and sets it
+ *                          as a request attribute. We read it with
+ *                          request.getAttribute("userId").
  *
- * Pagination:
- * Spring Data's Pageable + @PageableDefault auto-parses ?page=0&size=20&sort=createdAt,desc
- * from the URL query string. No manual parsing needed!
+ *                          Pagination:
+ *                          Spring Data's Pageable + @PageableDefault
+ *                          auto-parses ?page=0&size=20&sort=createdAt,desc
+ *                          from the URL query string. No manual parsing needed!
  */
 @RestController
 @RequestMapping("/api/social")
@@ -138,6 +143,15 @@ public class ConnectionController {
         Long userId = getUserId(request);
         connectionService.unblockUser(userId, blockedUserId);
         return ResponseEntity.noContent().build();
+    }
+    // GET /api/social/blocked
+
+    @GetMapping("/blocked")
+    public ResponseEntity<Page<ConnectionDTO.BlockedUserResponse>> getBlockedUsers(
+            HttpServletRequest request,
+            @PageableDefault(size = 20) Pageable pageable) {
+        Long userId = getUserId(request);
+        return ResponseEntity.ok(connectionService.getBlockedUsers(userId, pageable));
     }
 
     // ==================== HELPER ====================

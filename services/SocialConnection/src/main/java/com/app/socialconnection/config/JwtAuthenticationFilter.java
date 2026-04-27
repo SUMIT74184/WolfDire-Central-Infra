@@ -2,6 +2,7 @@ package com.app.socialconnection.config;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -49,7 +50,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7); // Remove "Bearer " prefix
 
             try {
-                SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+                byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+                SecretKey key = Keys.hmacShaKeyFor(keyBytes);
 
                 Claims claims = Jwts.parser()
                         .verifyWith(key)
@@ -57,9 +59,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .parseSignedClaims(token)
                         .getPayload();
 
-                // Extract userId from the "sub" (subject) claim and set as request attribute
-                Long userId = Long.parseLong(claims.getSubject());
-                request.setAttribute("userId", userId);
+                // Extract userId from the custom "userId" claim instead of subject (which is email)
+                Object userIdObj = claims.get("userId");
+                Long userId = null;
+                if (userIdObj instanceof Number) {
+                    userId = ((Number) userIdObj).longValue();
+                } else if (userIdObj instanceof String) {
+                    userId = Long.parseLong((String) userIdObj);
+                }
+                
+                if (userId != null) {
+                    request.setAttribute("userId", userId);
+                } else {
+                    throw new RuntimeException("userId claim missing in JWT");
+                }
 
             } catch (Exception e) {
                 // Token is invalid or expired — send 401 Unauthorized

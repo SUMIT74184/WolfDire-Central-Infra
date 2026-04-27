@@ -96,6 +96,16 @@ public class AuthController {
         return ResponseEntity.ok("Logged out successfully");
     }
 
+    @PostMapping("/deactivate")
+    public ResponseEntity<Map<String, String>> deactivate(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        authService.deactivateAccount(token);
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Account deactivated successfully");
+        return ResponseEntity.ok(response);
+    }
+
     /* *
      * Validate token: Used by API Gateway on every forwarded request.
      *

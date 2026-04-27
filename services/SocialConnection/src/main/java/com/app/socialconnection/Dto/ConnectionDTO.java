@@ -90,4 +90,16 @@ public class ConnectionDTO {
         private String action;
     }
 
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class BlockedUserResponse {
+        private Long id;
+        private Long blockerId;
+        private Long blockedId;
+        private String reason;
+        private LocalDateTime blockedAt;
+    }
+
 }

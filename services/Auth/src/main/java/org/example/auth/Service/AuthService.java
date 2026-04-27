@@ -170,6 +170,20 @@ public class AuthService {
         }
     }
 
+    @Transactional
+    public void deactivateAccount(String token) {
+        String userId = jwtUtil.extractUserId(token);
+        String email = jwtUtil.extractEmail(token);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        user.setEnabled(false);
+        userRepository.save(user);
+        
+        log.info("Account deactivated for user: {}", email);
+        logout(token, email);
+    }
+
     /**
      * Logout: blacklist token in Redis AND evict the user from the "users" cache.
      *

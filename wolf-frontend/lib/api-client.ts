@@ -144,6 +144,8 @@ export const authApi = {
 
   verifyEmail: (token: string) =>
     apiClient.post<{ message: string }>(`/api/auth/verify-email?token=${encodeURIComponent(token)}`),
+
+  deactivateAccount: () => apiClient.post("/api/auth/deactivate"),
 };
 
 // ── Post Service helpers ──────────────────────────────────────────────────────
@@ -171,6 +173,15 @@ export const postApi = {
   unsavePost: (postId: string) => apiClient.delete(`/api/posts/${postId}/save`),
   
   getSavedPosts: (page = 0, size = 20) => apiClient.get(`/api/posts/saved?page=${page}&size=${size}`),
+
+  search: (query: string, page = 0, size = 20) =>
+    apiClient.get(`/api/posts/search?query=${encodeURIComponent(query)}&page=${page}&size=${size}`),
+
+  trending: (page = 0, size = 20) =>
+    apiClient.get(`/api/posts/trending?page=${page}&size=${size}`),
+
+  hot: (communityId: string, page = 0, size = 20) =>
+    apiClient.get(`/api/posts/community/${communityId}/hot?page=${page}&size=${size}`),
 };
 
 // ── Comment Service helpers ───────────────────────────────────────────────────
@@ -214,6 +225,9 @@ export const socialApi = {
   unfollow: (userId: string) => apiClient.delete(`/api/social/unfollow/${userId}`),
   followers: () => apiClient.get(`/api/social/followers`),
   following: () => apiClient.get(`/api/social/following`),
+  
+  getBlockedUsers: () => apiClient.get('/api/social/blocked'),
+  unblockUser: (blockedId: string) => apiClient.delete(`/api/social/block/${blockedId}`),
 };
 
 // ── Analytics Service helpers ─────────────────────────────────────────────────
@@ -239,6 +253,9 @@ export const notificationApi = {
     
   markAllRead: (userId: string) => 
     apiClient.post(`/api/notifications/user/${userId}/mark-all-read`),
+
+  getPreferences: (userId: string) => apiClient.get(`/api/notifications/preferences/${userId}`),
+  updatePreferences: (userId: string, data: any) => apiClient.put(`/api/notifications/preferences/${userId}`, data),
 };
 
 // ── Moderation Service helpers ────────────────────────────────────────────────
@@ -276,6 +293,9 @@ export const communityApi = {
   list: (page = 0, size = 20) =>
     apiClient.get(`/api/communities?page=${page}&size=${size}`),
 
+  getAll: (page = 0, size = 50) =>
+    apiClient.get(`/api/communities?page=${page}&size=${size}`),
+
   getById: (id: string) =>
     apiClient.get(`/api/communities/${id}`),
 
@@ -288,6 +308,9 @@ export const communityApi = {
   follow: (communityId: string) =>
     apiClient.post(`/api/communities/follow`, { communityId }),
 
-  myCommunities: () =>
-    apiClient.get(`/api/communities/my-communities`),
+  unfollow: (communityId: string) =>
+    apiClient.delete(`/api/communities/follow/${communityId}`),
+
+  myCommunities: (page = 0, size = 50) =>
+    apiClient.get(`/api/communities/my-communities?page=${page}&size=${size}`),
 };

@@ -252,9 +252,11 @@ export default function ProfilePage() {
                 </form>
               </DialogContent>
             </Dialog>
-            <Button variant="outline" size="icon" className="bg-transparent">
-              <Settings className="h-4 w-4" />
-            </Button>
+            <Link href="/settings">
+              <Button variant="outline" size="icon" className="bg-transparent">
+                <Settings className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
 

@@ -56,7 +56,7 @@ eureka:
     prefer-ip-address: true
 
 jwt:
-  secret: bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1
+  secret: ${JWT_SECRET}
   access-token:
     expiration: 86400000 # 24 hours
   refresh-token:

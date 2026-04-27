@@ -1,8 +1,8 @@
 "use client"
 import { useState } from "react"
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import Link from "next/link"
-import { postApi } from "@/lib/api-client"
+import { postApi, communityApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,28 +11,48 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Heart, MessageCircle, BookmarkPlus, TrendingUp, Clock, Filter } from "lucide-react"
 
-const categories = ["All", "Technology", "Design", "Productivity", "Business", "Lifestyle", "Science", "Health"]
+// Standard categories removed - fetching from communityApi instead
 
 
 export default function ExplorePage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("All")
+  const [selectedCommunityId, setSelectedCommunityId] = useState("All")
   const [sortBy, setSortBy] = useState("trending")
 
+  const { data: communitiesData } = useQuery({
+    queryKey: ['communities'],
+    queryFn: () => communityApi.getAll(0, 100)
+  })
+
+  const communities = communitiesData ? (Array.isArray(communitiesData) ? communitiesData : communitiesData.content || []) : []
+
   const { data, isLoading: loading, fetchNextPage, hasNextPage, isFetchingNextPage, error } = useInfiniteQuery({
-    queryKey: ['explore-posts', sortBy],
-    queryFn: ({ pageParam = 0 }) => postApi.list(pageParam, 20),
-    getNextPageParam: (lastPage, allPages) => {
-      if (Array.isArray(lastPage)) {
-        return lastPage.length === 20 ? allPages.length : undefined
+    queryKey: ['explore-posts', sortBy, selectedCommunityId, searchQuery],
+    queryFn: ({ pageParam = 0 }) => {
+      if (searchQuery) {
+        return postApi.search(searchQuery, pageParam, 20)
       }
-      return !lastPage?.last ? allPages.length : undefined
+      
+      if (selectedCommunityId !== "All") {
+        if (sortBy === "trending") {
+          return postApi.hot(selectedCommunityId, pageParam, 20)
+        }
+        return postApi.getCommunityPosts(selectedCommunityId, pageParam, 20)
+      }
+
+      if (sortBy === "trending") {
+        return postApi.trending(pageParam, 20)
+      }
+
+      return postApi.list(pageParam, 20)
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      const isLast = lastPage && !Array.isArray(lastPage) && lastPage.last 
+      return (lastPage && !isLast) ? allPages.length : undefined
     }
   })
 
-  const fetchedPostsRaw = data ? data.pages.flatMap(page => Array.isArray(page) ? page : page?.content || []) : []
-  
-  const posts = fetchedPostsRaw.map((p, i) => ({
+  const posts = data ? data.pages.flatMap(page => Array.isArray(page) ? page : page?.content || []).map((p, i) => ({
     id: p.id || i,
     title: p.title || "Untitled",
     excerpt: p.content ? p.content.substring(0, 150) + "..." : "",
@@ -41,21 +61,13 @@ export default function ExplorePage() {
       avatar: "/diverse-user-avatars.png",
       role: "Member",
     },
-    category: p.subredditName || "General",
+    category: p.communityName || p.subredditName || "General",
     readTime: `${Math.max(1, Math.ceil((p.content?.length || 0) / 1000))} min read`,
     likes: p.upvotes || p.score || 0,
     comments: p.commentCount || 0,
     image: p.mediaUrl || p.thumbnailUrl || "/placeholder.svg",
     date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
-  }))
-
-  const filteredPosts = posts.filter((post) => {
-    const matchesSearch =
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "All" || post.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+  })) : []
 
   return (
     <div className="min-h-screen bg-background">
@@ -88,15 +100,23 @@ export default function ExplorePage() {
 
         {/* Category Filter */}
         <div className="mb-6 flex flex-wrap gap-2">
-          {categories.map((category) => (
+          <Button
+            variant={selectedCommunityId === "All" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedCommunityId("All")}
+            className={selectedCommunityId === "All" ? "rounded-full" : "rounded-full bg-transparent"}
+          >
+            All Communities
+          </Button>
+          {communities.map((community) => (
             <Button
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
+              key={community.id}
+              variant={selectedCommunityId === community.id.toString() ? "default" : "outline"}
               size="sm"
-              onClick={() => setSelectedCategory(category)}
-              className={selectedCategory === category ? "rounded-full" : "rounded-full bg-transparent"}
+              onClick={() => setSelectedCommunityId(community.id.toString())}
+              className={selectedCommunityId === community.id.toString() ? "rounded-full" : "rounded-full bg-transparent"}
             >
-              {category === "All" ? "All Communities" : `c/${category}`}
+              c/{community.name}
             </Button>
           ))}
         </div>
@@ -106,14 +126,14 @@ export default function ExplorePage() {
           <div className="py-20 text-center text-muted-foreground">Loading posts...</div>
         ) : error ? (
           <div className="py-20 text-center text-red-500">{error}</div>
-        ) : filteredPosts.length === 0 ? (
+        ) : posts.length === 0 ? (
           <div className="py-20 text-center">
             <p className="text-muted-foreground">No posts found matching your criteria.</p>
             <Button
               variant="link"
               onClick={() => {
                 setSearchQuery("")
-                setSelectedCategory("All")
+                setSelectedCommunityId("All")
               }}
             >
               Clear filters
@@ -123,7 +143,7 @@ export default function ExplorePage() {
           <>
             {/* Reddit-style Posts */}
             <div className="space-y-2">
-              {filteredPosts.map((post) => (
+              {posts.map((post) => (
                 <Card key={post.id} className="border-border hover:border-primary/50 transition-colors overflow-hidden">
                   <div className="flex">
                     {/* Voting Sidebar */}
