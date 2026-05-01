@@ -1,6 +1,6 @@
 package com.app.analyticssvc.repositories;
 
-import com.app.analyticssvc.Entity.CommunityAnalytics;
+import com.app.analyticssvc.entity.CommunityAnalytics;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

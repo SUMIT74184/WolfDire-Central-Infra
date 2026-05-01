@@ -2,16 +2,16 @@ package org.app.postsvcwolf.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.app.postsvcwolf.Dto.CreatePostRequest;
-import org.app.postsvcwolf.Dto.PostResponse;
-import org.app.postsvcwolf.Entity.Post;
-import org.app.postsvcwolf.Entity.Vote;
-import org.app.postsvcwolf.Event.PostCreatedEvent;
+import org.app.postsvcwolf.dto.CreatePostRequest;
+import org.app.postsvcwolf.dto.PostResponse;
+import org.app.postsvcwolf.entity.Post;
+import org.app.postsvcwolf.entity.Vote;
+import org.app.postsvcwolf.event.PostCreatedEvent;
 import org.app.postsvcwolf.repository.PostRepository;
 import org.app.postsvcwolf.repository.SavedPostRepository;
 import org.app.postsvcwolf.repository.VoteRepository;
 import org.app.postsvcwolf.client.SocialConnectionClient;
-import org.app.postsvcwolf.Entity.SavedPost;
+import org.app.postsvcwolf.entity.SavedPost;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -19,7 +19,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageImpl;
 
+import java.util.List;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -47,13 +49,13 @@ public class PostService {
     private static final int MAX_POSTS_PER_HOUR = 10;
 
     @Transactional
-    @CacheEvict(value = {"feed", "trending", "hot"}, allEntries = true)
+    @CacheEvict(value = { "feed", "trending", "hot" }, allEntries = true)
     public PostResponse createPost(CreatePostRequest request, String userId, String username) {
         validatePostLimit(userId);
 
         String cacheKey = "community_valid_" + request.getCommunityId();
         Boolean isValid = redisTemplate.hasKey(cacheKey);
-        
+
         if (Boolean.FALSE.equals(isValid)) {
             try {
                 socialConnectionClient.getCommunityById(request.getCommunityId());
@@ -85,8 +87,7 @@ public class PostService {
 
         post = postRepository.save(post);
 
-
-        //getting media,post,user and saving the post
+        // getting media,post,user and saving the post
         if (request.getMediaFile() != null && !request.getMediaFile().isEmpty()) {
             String mediaUrl = mediaService.uploadMedia(request.getMediaFile(), post.getId(), userId);
             post.setMediaUrl(mediaUrl);
@@ -107,20 +108,25 @@ public class PostService {
     }
 
     @Transactional
-    @CacheEvict(value = {"posts", "feed", "trending", "hot"}, allEntries = true)
+    @CacheEvict(value = { "posts", "feed", "trending", "hot" }, allEntries = true)
     public PostResponse repost(String originalPostId, String userId, String username,
-                               String communityId, String communityName) {
+            String additionalContent) {
 
         Post originalPost = postRepository.findActive(originalPostId)
                 .orElseThrow(() -> new RuntimeException("Original post not found"));
 
+        String content = originalPost.getContent();
+        if (additionalContent != null && !additionalContent.isEmpty()) {
+            content = additionalContent + "\n\n---\n" + content;
+        }
+
         Post repost = Post.builder()
                 .title(originalPost.getTitle())
-                .content(originalPost.getContent())
+                .content(content)
                 .userId(userId)
                 .username(username)
-                .communityId(communityId)
-                .communityName(communityName)
+                .communityId(originalPost.getCommunityId())
+                .communityName(originalPost.getCommunityName())
                 .type(originalPost.getType())
                 .mediaUrl(originalPost.getMediaUrl())
                 .thumbnailUrl(originalPost.getThumbnailUrl())
@@ -137,17 +143,16 @@ public class PostService {
 
     }
 
-    @Cacheable(value = "posts",key = "#postId")
-    public PostResponse getPost(String postId,String userId){
+    @Cacheable(value = "posts", key = "#postId")
+    public PostResponse getPost(String postId, String userId) {
         Post post = postRepository.findActive(postId)
-                .orElseThrow(()->new RuntimeException("Post not found"));
+                .orElseThrow(() -> new RuntimeException("Post not found"));
 
-
-        return mapToResponse(post,userId);
+        return mapToResponse(post, userId);
     }
 
     @Transactional
-    public void incrementViewCount(String postId){
+    public void incrementViewCount(String postId) {
         postRepository.incrementViewCount(postId);
         publishViewEvent(postId);
     }
@@ -159,10 +164,10 @@ public class PostService {
     }
 
     @Cacheable(value = "trending", key = "'all_' + #pageable.pageNumber")
-    public Page<PostResponse> getTrendingPosts(Pageable pageable,String userId){
+    public Page<PostResponse> getTrendingPosts(Pageable pageable, String userId) {
         LocalDateTime since = LocalDateTime.now().minusHours(24);
-        Page<Post> posts = postRepository.findTrending(since,pageable);
-        return posts.map(post -> mapToResponse(post,userId));
+        Page<Post> posts = postRepository.findTrending(since, pageable);
+        return posts.map(post -> mapToResponse(post, userId));
     }
 
     @Cacheable(value = "hot", key = "#communityId + '_' + #pageable.pageNumber")
@@ -171,7 +176,6 @@ public class PostService {
         return posts.map(post -> mapToResponse(post, userId));
 
     }
-
 
     public Page<PostResponse> searchPosts(String query, Pageable pageable, String userId) {
         Page<Post> posts = postRepository.search(query, pageable);
@@ -186,12 +190,10 @@ public class PostService {
         return posts.map(post -> mapToResponse(post, viewerUserId));
     }
 
-
     @Transactional
-    @CacheEvict(value = {"posts", "feed"}, allEntries = true)
+    @CacheEvict(value = { "posts", "feed" }, allEntries = true)
     public PostResponse updatePost(String postId, String userId, String title,
-                                   String content
-    ) {
+            String content) {
         Post post = postRepository.findActive(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
@@ -215,11 +217,9 @@ public class PostService {
         post.setEditedAt(LocalDateTime.now());
         post = postRepository.save(post);
 
-
         return mapToResponse(post, userId);
 
     }
-
 
     public void deletePost(String postId, String userId) {
         Post post = postRepository.findActive(postId)
@@ -283,7 +283,6 @@ public class PostService {
         Set<String> mentions = new HashSet<>();
         Matcher matcher = MENTION_PATTERN.matcher(content);
 
-
         while (matcher.find()) {
             mentions.add(matcher.group(1));
         }
@@ -298,7 +297,6 @@ public class PostService {
             throw new RuntimeException("Post limit exceeded.PLease wait before posting again");
         }
     }
-
 
     private void publishPostCreatedEvent(Post post) {
         PostCreatedEvent event = PostCreatedEvent.builder()
@@ -348,13 +346,12 @@ public class PostService {
         }
     }
 
-    private PostResponse mapToResponse(Post post,String userId){
+    private PostResponse mapToResponse(Post post, String userId) {
         String userVote = null;
-        if(userId!=null){
-            Optional<Vote>vote = voteRepository.findByUserAndTarget(
-                    userId, post.getId(), Vote.TargetType.POST
-            );
-            userVote = vote.map(v->v.getVoteType().name()).orElse(null);
+        if (userId != null) {
+            Optional<Vote> vote = voteRepository.findByUserAndTarget(
+                    userId, post.getId(), Vote.TargetType.POST);
+            userVote = vote.map(v -> v.getVoteType().name()).orElse(null);
         }
 
         return PostResponse.builder()
@@ -389,11 +386,6 @@ public class PostService {
                 .editedAt(post.getEditedAt())
                 .build();
 
-
-
     }
 
-
 }
-
-

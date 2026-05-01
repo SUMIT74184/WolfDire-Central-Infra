@@ -2,8 +2,8 @@ package org.app.postsvcwolf.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.app.postsvcwolf.Entity.Post;
-import org.app.postsvcwolf.Event.PostCreatedEvent;
+import org.app.postsvcwolf.entity.Post;
+import org.app.postsvcwolf.event.PostCreatedEvent;
 import org.app.postsvcwolf.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;

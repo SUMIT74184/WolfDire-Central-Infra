@@ -1,0 +1,30 @@
+
+> my-v0-project@0.1.0 dev
+> next dev
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.0.104:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⚠ Found lockfile missing swc dependencies, patching...
+ ✓ Ready in 1250ms
+ ⚠ Lockfile was successfully patched, please run "npm install" to ensure @next/swc dependencies are downloaded
+ ○ Compiling /admin ...
+ GET /admin 200 in 7.9s (compile: 7.4s, render: 529ms)
+ GET /login 200 in 1175ms (compile: 1127ms, render: 49ms)
+ GET /signup 200 in 623ms (compile: 599ms, render: 23ms)
+ GET / 200 in 798ms (compile: 655ms, render: 143ms)
+ GET /feed 200 in 545ms (compile: 506ms, render: 39ms)
+ GET /explore 200 in 557ms (compile: 533ms, render: 24ms)
+ GET /communities 200 in 591ms (compile: 565ms, render: 25ms)
+ GET /signup 200 in 133ms (compile: 3ms, render: 130ms)
+ GET /about 200 in 608ms (compile: 566ms, render: 41ms)
+ GET /pricing 200 in 429ms (compile: 410ms, render: 19ms)
+ GET /profile 200 in 402ms (compile: 384ms, render: 18ms)
+ GET /write 200 in 496ms (compile: 477ms, render: 19ms)
+ GET / 200 in 75ms (compile: 2ms, render: 73ms)
+ GET /signup 200 in 24ms (compile: 3ms, render: 21ms)
+[?25h

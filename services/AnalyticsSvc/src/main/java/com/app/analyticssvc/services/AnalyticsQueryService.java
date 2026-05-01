@@ -2,7 +2,7 @@ package com.app.analyticssvc.services;
 
 import com.app.analyticssvc.dto.AnalyticsResponse;
 import com.app.analyticssvc.repositories.*;
-import com.app.analyticssvc.Entity.*;
+import com.app.analyticssvc.entity.*;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;

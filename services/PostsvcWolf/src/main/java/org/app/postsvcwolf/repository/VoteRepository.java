@@ -1,6 +1,6 @@
 package org.app.postsvcwolf.repository;
 
-import org.app.postsvcwolf.Entity.Vote;
+import org.app.postsvcwolf.entity.Vote;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

@@ -1,6 +1,6 @@
 package org.app.postsvcwolf.repository;
 
-import org.app.postsvcwolf.Entity.SavedPost;
+import org.app.postsvcwolf.entity.SavedPost;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

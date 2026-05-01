@@ -1,6 +1,6 @@
 package com.app.analyticssvc.repositories;
 
-import com.app.analyticssvc.Entity.ContentAnalytics;
+import com.app.analyticssvc.entity.ContentAnalytics;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

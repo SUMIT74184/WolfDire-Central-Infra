@@ -1,7 +1,7 @@
 package com.app.socialconnection.controllers;
 
-import com.app.socialconnection.Dto.ConnectionDTO;
-import com.app.socialconnection.Service.ConnectionService;
+import com.app.socialconnection.dto.ConnectionDTO;
+import com.app.socialconnection.services.ConnectionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

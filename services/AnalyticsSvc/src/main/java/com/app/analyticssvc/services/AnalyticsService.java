@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.app.analyticssvc.event.*;
 import com.app.analyticssvc.repositories.*;
-import com.app.analyticssvc.Entity.*;
+import com.app.analyticssvc.entity.*;
 
 @Service
 @RequiredArgsConstructor

@@ -1,6 +1,6 @@
 package org.app.postsvcwolf.repository;
 
-import org.app.postsvcwolf.Entity.Media;
+import org.app.postsvcwolf.entity.Media;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

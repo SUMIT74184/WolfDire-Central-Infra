@@ -1,8 +1,8 @@
 package com.app.socialconnection.controllers;
 
-import com.app.socialconnection.Dto.ConnectionDTO;
-import com.app.socialconnection.Entity.CommunityFollower;
-import com.app.socialconnection.Service.CommunityFollowService;
+import com.app.socialconnection.dto.ConnectionDTO;
+import com.app.socialconnection.entity.CommunityFollower;
+import com.app.socialconnection.services.CommunityFollowService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

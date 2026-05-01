@@ -2,7 +2,7 @@ package org.app.postsvcwolf.repository;
 
 
 import io.lettuce.core.dynamic.annotation.Param;
-import org.app.postsvcwolf.Entity.Comment;
+import org.app.postsvcwolf.entity.Comment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

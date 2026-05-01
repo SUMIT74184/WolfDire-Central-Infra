@@ -1,7 +1,7 @@
 package org.app.postsvcwolf.config;
 
 import lombok.RequiredArgsConstructor;
-import org.app.postsvcwolf.Security.JwtAuthenticationFilter;
+import org.app.postsvcwolf.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;

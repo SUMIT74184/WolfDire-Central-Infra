@@ -1,6 +1,6 @@
 package com.app.analyticssvc.repositories;
 
-import com.app.analyticssvc.Entity.EventLog;
+import com.app.analyticssvc.entity.EventLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

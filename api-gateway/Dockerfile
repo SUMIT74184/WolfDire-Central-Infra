@@ -1,25 +1,30 @@
 # ── Stage 1: Build ──────────────────────────────────────────────────────────
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM maven:3.9.6-eclipse-temurin-17-alpine AS build
 WORKDIR /app
 
-# Cache dependency layer separately
+# Cache dependencies
 COPY pom.xml .
-RUN mvn dependency:go-offline -q
+RUN mvn dependency:go-offline -B -q
 
 COPY src ./src
-RUN mvn clean package -DskipTests -q
+RUN mvn clean package -DskipTests -B -q
+RUN java -Djarmode=layertools -jar target/*.jar extract --destination extracted
 
 # ── Stage 2: Run ────────────────────────────────────────────────────────────
-# JRE-alpine keeps the final image well under 200MB
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
+# Security: non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-COPY --from=build /app/target/*.jar app.jar
+# Copy layered JAR components
+COPY --from=build /app/extracted/dependencies/ ./
+COPY --from=build /app/extracted/spring-boot-loader/ ./
+COPY --from=build /app/extracted/snapshot-dependencies/ ./
+COPY --from=build /app/extracted/application/ ./
 
 USER appuser
-
 EXPOSE 8090
 
-ENTRYPOINT ["java", "-Xms128m", "-Xmx256m", "-jar", "app.jar"]
+# Enforce 256MB memory limit and use Spring Boot launcher
+ENTRYPOINT ["java", "-Xms128m", "-Xmx256m", "org.springframework.boot.loader.launch.JarLauncher"]

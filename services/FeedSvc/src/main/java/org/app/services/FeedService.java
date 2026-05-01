@@ -1,8 +1,11 @@
 package org.app.services;
+
 import com.pgvector.PGvector;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.app.Feed.FeedRankingAlgorithm;
+import org.app.clients.ConnectionServiceClient;
+import org.app.clients.PostServiceClient;
+import org.app.algorithm.FeedRankingAlgorithm;
 import org.app.dto.FeedDTO;
 import org.app.dto.PostDTO;
 import org.app.entity.FeedItem;
@@ -128,7 +131,7 @@ public class FeedService {
             FeedItem item = FeedItem.builder()
                     .userId(userId)
                     .postId(postId)
-                    .authorId(String.valueOf(authorId))
+                    .authorId(authorId)
                     .communityId(communityId)
                     .embedding(new PGvector(postEmbedding))
                     .popularityScore(popularity)

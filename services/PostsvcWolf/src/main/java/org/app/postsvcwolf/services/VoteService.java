@@ -2,7 +2,7 @@ package org.app.postsvcwolf.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.app.postsvcwolf.Entity.Vote;
+import org.app.postsvcwolf.entity.Vote;
 import org.app.postsvcwolf.repository.CommentRepository;
 import org.app.postsvcwolf.repository.PostRepository;
 import org.app.postsvcwolf.repository.VoteRepository;

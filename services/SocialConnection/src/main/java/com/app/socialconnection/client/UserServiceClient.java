@@ -1,6 +1,6 @@
 package com.app.socialconnection.client;
 
-import com.app.socialconnection.Dto.ConnectionDTO;
+import com.app.socialconnection.dto.ConnectionDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

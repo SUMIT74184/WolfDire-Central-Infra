@@ -118,7 +118,7 @@ services:
   # DISCOVERY (EUREKA)
   # -------------------------------------------------------------
   eureka-server:
-    image: springcloud/eureka
+    image: steeltoeoss/eureka-server
     container_name: shared-eureka
     ports:
       - "8761:8761"

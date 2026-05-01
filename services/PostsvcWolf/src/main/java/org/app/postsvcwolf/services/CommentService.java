@@ -1,14 +1,14 @@
 package org.app.postsvcwolf.services;
 
-import org.app.postsvcwolf.Entity.Vote;
+import org.app.postsvcwolf.entity.Vote;
 import org.app.postsvcwolf.config.CommentAddedEvent;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.app.postsvcwolf.Dto.CommentResponse;
-import org.app.postsvcwolf.Dto.CreateCommentRequest;
-import org.app.postsvcwolf.Entity.Comment;
+import org.app.postsvcwolf.dto.CommentResponse;
+import org.app.postsvcwolf.dto.CreateCommentRequest;
+import org.app.postsvcwolf.entity.Comment;
 import org.app.postsvcwolf.repository.CommentRepository;
 import org.app.postsvcwolf.repository.PostRepository;
 import org.app.postsvcwolf.repository.VoteRepository;

@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import org.app.postsvcwolf.Entity.Media;
+import org.app.postsvcwolf.entity.Media;
 import org.app.postsvcwolf.repository.MediaRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

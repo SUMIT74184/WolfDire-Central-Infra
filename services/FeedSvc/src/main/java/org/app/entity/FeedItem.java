@@ -34,7 +34,7 @@ public class FeedItem {
 
     private Long communityId;
 
-    private String authorId;
+    private Long authorId;
 
     @Column(columnDefinition = "vector(1536)")
     private PGvector embedding;

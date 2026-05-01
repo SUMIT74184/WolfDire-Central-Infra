@@ -17,7 +17,7 @@ public class FeedDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Response {
-        private List<FeedItem> items;
+        private List<FeedItemDTO> items;
         private int page;
         private int size;
         private int totalItems;

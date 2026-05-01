@@ -1,6 +1,6 @@
 package com.app.analyticssvc.repositories;
 
-import com.app.analyticssvc.Entity.TrendingTopic;
+import com.app.analyticssvc.entity.TrendingTopic;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

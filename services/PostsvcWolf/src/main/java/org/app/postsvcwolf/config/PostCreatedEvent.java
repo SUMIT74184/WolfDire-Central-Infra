@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.app.postsvcwolf.Entity.Post;
+import org.app.postsvcwolf.entity.Post;
 
 import java.time.LocalDateTime;
 import java.util.Set;

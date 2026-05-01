@@ -1,9 +1,9 @@
 package org.example.auth.config;
 
 import lombok.RequiredArgsConstructor;
-import org.example.auth.Service.CustomOAuth2UserService;
-import org.example.auth.Service.UserDetailsServiceImpl;
-import org.example.auth.Util.JwtAuthenticationFilter;
+import org.example.auth.services.CustomOAuth2UserService;
+import org.example.auth.services.UserDetailsServiceImpl;
+import org.example.auth.utils.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
