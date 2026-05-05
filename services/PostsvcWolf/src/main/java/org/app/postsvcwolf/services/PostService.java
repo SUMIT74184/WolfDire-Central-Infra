@@ -25,7 +25,7 @@ import java.util.List;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -41,7 +41,7 @@ public class PostService {
     private final VoteRepository voteRepository;
     private final MediaService mediaService;
     private final SocialConnectionClient socialConnectionClient;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 

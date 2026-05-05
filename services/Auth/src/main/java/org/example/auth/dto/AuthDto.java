@@ -21,7 +21,6 @@ public class AuthDto {
         @NotBlank(message = "First name is required")
         private String firstName;
 
-        @NotBlank(message = "Last name is required")
         private String lastName;
 
         @NotBlank(message = "Email is required")
@@ -32,7 +31,6 @@ public class AuthDto {
         @Size(min = 8, message = "Password must be at least 8 characters")
         private String password;
 
-        @NotBlank(message = "Tenant ID is required")
         private String tenantId;
 
         private Set<Role> roles;

@@ -59,7 +59,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .tenantId(request.getTenantId())
+                .tenantId(request.getTenantId() != null && !request.getTenantId().isBlank() ? request.getTenantId() : "default")
                 .roles(roles)
                 .enabled(true)
                 .accountNonLocked(true)

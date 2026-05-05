@@ -73,6 +73,8 @@ public class AnalyticsEventConsumer {
         }
     }
 
+
+
     @KafkaListener(
             topics = "user.registered",
             groupId = "${spring.kafka.consumer.group-id}",

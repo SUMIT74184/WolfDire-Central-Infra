@@ -14,6 +14,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -115,23 +117,35 @@ public class SecurityConfig {
                 // (attacker can't steal JWT from another domain due to CORS + SameSite cookies)
                 .csrf(csfr -> csfr.disable())
 
-                // CORS: Allow frontend to call backend
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // CORS: Disabled here — handled by the API Gateway to avoid duplicate headers
+                .cors(cors -> cors.disable())
 
                 // URL Authorization Rules
                 .authorizeHttpRequests(auth -> auth
+                        // Allow all OPTIONS requests (preflight)
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.OPTIONS, "/**")).permitAll()
+                        
                         // PUBLIC ENDPOINTS — no authentication required
-                        .requestMatchers(
-                                "/api/auth/register",
-                                "/api/auth/login",
-                                "/api/auth/register",
-                                "/actuator/health",
-                                "/oauth2/**",
-                                "/login/oauth2/**")
-                        .permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/register")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/login")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/refresh")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/forgot-password")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/reset-password")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/verify-email")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/actuator/**")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/oauth2/**")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/login/oauth2/**")).permitAll()
 
                         // All Other endpoints - require authentication
                         .anyRequest().authenticated())
+
+                // Return 401 JSON for unauthenticated API requests instead of 302 redirect
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json");
+                            response.setStatus(401);
+                            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
+                        }))
 
                 // oAuth2 Login Configuration
                 .oauth2Login(oauth2 -> oauth2

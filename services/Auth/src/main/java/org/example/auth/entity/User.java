@@ -35,10 +35,10 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String lastName;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String tenantId;
 
     //OAUTH2 - provider

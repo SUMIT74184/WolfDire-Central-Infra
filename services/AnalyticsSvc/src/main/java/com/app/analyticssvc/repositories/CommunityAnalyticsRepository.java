@@ -13,6 +13,6 @@ import java.util.List;
 public interface CommunityAnalyticsRepository extends JpaRepository<CommunityAnalytics, Long> {
     CommunityAnalytics findByCommunityIdAndDate(String communityId, LocalDateTime date);
 
-    @Query("SELECT s FROM SubredditAnalytics s WHERE s.date >= :startDate ORDER BY s.growthRate DESC")
+    @Query("SELECT s FROM CommunityAnalytics s WHERE s.date >= :startDate ORDER BY s.growthRate DESC")
     List<CommunityAnalytics> findFastestGrowing(@Param("startDate") LocalDateTime startDate);
 }

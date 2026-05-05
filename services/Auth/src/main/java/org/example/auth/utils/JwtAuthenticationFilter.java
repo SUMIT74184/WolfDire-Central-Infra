@@ -38,6 +38,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String userEmail;
 
+        // Skip JWT processing for public authentication endpoints
+        String path = request.getServletPath();
+        if (path.startsWith("/api/auth/login") || 
+            path.startsWith("/api/auth/register") || 
+            path.startsWith("/api/auth/refresh") ||
+            path.startsWith("/api/auth/forgot-password") ||
+            path.startsWith("/api/auth/reset-password")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         //All JWT tokens use "Bearer" prefix ....this is the HTTP standard
         if(authHeader == null || !authHeader.startsWith("Bearer ")){
             filterChain.doFilter(request,response);

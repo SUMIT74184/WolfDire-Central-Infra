@@ -43,7 +43,9 @@ async function request<T>(
     let message = `HTTP ${res.status}`;
     try {
       const body = await res.json();
-      message = body?.message ?? body?.error ?? message;
+      // Spring Boot often returns errors in these formats:
+      // { "message": "...", "error": "..." } or { "errors": [{ "message": "..." }] }
+      message = body?.message || body?.error || (body?.errors && body.errors[0]?.message) || message;
     } catch {
       // ignore parse errors
     }
@@ -129,7 +131,13 @@ export const authApi = {
   refresh: (refreshToken: string) =>
     apiClient.post<AuthResponse>("/api/auth/refresh", { refreshToken }),
 
-  me: () => apiClient.get<Record<string, unknown>>("/api/auth/me"),
+  me: () =>
+    apiClient.get<Record<string, unknown>>("/api/auth/me").catch((err) => {
+      if (err instanceof ApiError && err.status === 401) {
+        return null as any;
+      }
+      throw err;
+    }),
 
   validate: () => apiClient.get("/api/auth/validate"),
 

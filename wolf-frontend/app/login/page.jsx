@@ -73,6 +73,13 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive flex items-center gap-2">
+                <p>{error}</p>
+              </div>
+            )}
+
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
