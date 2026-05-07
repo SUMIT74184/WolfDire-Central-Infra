@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { authApi, notificationApi, socialApi } from "@/lib/api-client"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -15,23 +15,23 @@ export default function SettingsPage() {
   const [deactivateConfirm, setDeactivateConfirm] = useState("")
 
   const { data: preferences, isLoading: prefsLoading } = useQuery({
-    queryKey: ['notificationPreferences', user?.userId],
-    queryFn: () => notificationApi.getPreferences(user?.userId || ""),
-    enabled: !!user?.userId
+    queryKey: ['notificationPreferences', user?.id],
+    queryFn: () => notificationApi.getPreferences(user?.id || ""),
+    enabled: !!user?.id
   })
 
   const { data: blockedUsersData, isLoading: blockedLoading } = useQuery({
     queryKey: ['blockedUsers'],
     queryFn: () => socialApi.getBlockedUsers(),
-    enabled: !!user?.userId
+    enabled: !!user?.id
   })
 
   const blockedUsers = blockedUsersData && Array.isArray(blockedUsersData.content) ? blockedUsersData.content : []
 
   const updatePrefsMutation = useMutation({
-    mutationFn: (newPrefs) => notificationApi.updatePreferences(user?.userId || "", newPrefs),
+    mutationFn: (newPrefs) => notificationApi.updatePreferences(user?.id || "", newPrefs),
     onSuccess: (updatedData) => {
-      queryClient.setQueryData(['notificationPreferences', user?.userId], updatedData)
+      queryClient.setQueryData(['notificationPreferences', user?.id], updatedData)
     }
   })
 

@@ -19,7 +19,7 @@ public class NotificationController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<Page<Notification>> getUserNotifications(
-            @PathVariable Long userId,
+            @PathVariable String userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Boolean unreadOnly) {
@@ -27,7 +27,7 @@ public class NotificationController {
     }
 
     @GetMapping("/user/{userId}/unread-count")
-    public ResponseEntity<UnreadCountResponse> getUnreadCount(@PathVariable Long userId) {
+    public ResponseEntity<UnreadCountResponse> getUnreadCount(@PathVariable String userId) {
         return ResponseEntity.ok(queryService.getUnreadCount(userId));
     }
 
@@ -38,19 +38,19 @@ public class NotificationController {
     }
 
     @PostMapping("/user/{userId}/mark-all-read")
-    public ResponseEntity<Void> markAllAsRead(@PathVariable Long userId) {
+    public ResponseEntity<Void> markAllAsRead(@PathVariable String userId) {
         queryService.markAllAsRead(userId);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/preferences/{userId}")
-    public ResponseEntity<NotificationPreference> getPreferences(@PathVariable Long userId) {
+    public ResponseEntity<NotificationPreference> getPreferences(@PathVariable String userId) {
         return ResponseEntity.ok(queryService.getPreferences(userId));
     }
 
     @PutMapping("/preferences/{userId}")
     public ResponseEntity<NotificationPreference> updatePreferences(
-            @PathVariable Long userId,
+            @PathVariable String userId,
             @RequestBody NotificationPreference preferences) {
         return ResponseEntity.ok(queryService.updatePreferences(userId, preferences));
     }

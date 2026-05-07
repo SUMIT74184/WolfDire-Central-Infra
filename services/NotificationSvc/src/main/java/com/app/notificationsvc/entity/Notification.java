@@ -24,7 +24,7 @@ public class Notification {
     private Long id;
 
     @Column(nullable = false)
-    private Long userId;
+    private String userId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -36,11 +36,11 @@ public class Notification {
     @Column(columnDefinition = "TEXT")
     private String message;
 
-    private Long actorId;
+    private String actorId;
     private String actorUsername;
     private String actorAvatar;
 
-    private Long targetId;
+    private String targetId;
 
     @Enumerated(EnumType.STRING)
     private TargetType targetType;

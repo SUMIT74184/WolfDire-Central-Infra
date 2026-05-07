@@ -19,6 +19,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.example.auth.utils.RequestLoggingFilter;
 
 import java.util.*;
 
@@ -105,6 +106,8 @@ public class SecurityConfig {
 
     }
 
+    private final RequestLoggingFilter requestLoggingFilter;
+
     /**
      * SecurityFilterChain: THE MOST IMPORTANT METHOD.
      * Defines the entire security policy for the application.
@@ -113,6 +116,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider) throws Exception {
         http
+                // Logging filter (runs first)
+                .addFilterBefore(requestLoggingFilter, UsernamePasswordAuthenticationFilter.class)
                 // CSRF disabled: JWT authentication is immune to CSRF attacks
                 // (attacker can't steal JWT from another domain due to CORS + SameSite cookies)
                 .csrf(csfr -> csfr.disable())
@@ -126,15 +131,10 @@ public class SecurityConfig {
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.OPTIONS, "/**")).permitAll()
                         
                         // PUBLIC ENDPOINTS — no authentication required
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/register")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/login")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/refresh")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/forgot-password")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/reset-password")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/api/auth/verify-email")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/actuator/**")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/oauth2/**")).permitAll()
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/login/oauth2/**")).permitAll()
+                        .requestMatchers("/api/auth/register/**", "/api/auth/login/**", "/api/auth/refresh/**", 
+                                        "/api/auth/forgot-password/**", "/api/auth/reset-password/**", "/api/auth/verify-email/**",
+                                        "/api/auth/oauth2/**", "/api/auth/health").permitAll()
+                        .requestMatchers("/actuator/**", "/oauth2/**", "/login/oauth2/**").permitAll()
 
                         // All Other endpoints - require authentication
                         .anyRequest().authenticated())

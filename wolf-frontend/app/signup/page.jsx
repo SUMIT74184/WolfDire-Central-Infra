@@ -59,7 +59,8 @@ export default function SignupPage() {
       const isAdminUser = roles.some(r => r === "ADMIN" || r === "SUPER_ADMIN" || r === "TENANT_ADMIN")
       router.push(isAdminUser ? "/admin" : "/feed")
     } catch (err) {
-      setError(err.message || "Signup failed. Please try again.")
+      const errorMessage = err instanceof Error ? err.message : String(err || "Signup failed");
+      setError(errorMessage || "Signup failed. Please try again.");
     } finally {
       setIsLoading(false)
     }
@@ -97,7 +98,7 @@ export default function SignupPage() {
             {error && (
               <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive flex items-center gap-2">
                 <X className="h-4 w-4" />
-                <p>{error}</p>
+                <p className="flex-1">{typeof error === 'string' ? error : 'An unexpected error occurred'}</p>
               </div>
             )}
 

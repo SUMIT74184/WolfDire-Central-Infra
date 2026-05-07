@@ -13,24 +13,24 @@ import com.app.notificationsvc.entity.Notification;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-    List<Notification> findByUserIdAndIsReadOrderByCreatedAtDesc(Long userId, Boolean isRead, Pageable pageable);
+    List<Notification> findByUserIdAndIsReadOrderByCreatedAtDesc(String userId, Boolean isRead, Pageable pageable);
 
-    List<Notification> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    List<Notification> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
 
-    Long countByUserIdAndIsRead(Long userId, Boolean isRead);
+    Long countByUserIdAndIsRead(String userId, Boolean isRead);
 
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true, n.readAt = :readAt WHERE n.userId = :userId AND n.id IN :ids")
-    void markAsRead(@Param("userId") Long userId, @Param("ids") List<Long> ids, @Param("readAt") LocalDateTime readAt);
+    void markAsRead(@Param("userId") String userId, @Param("ids") List<Long> ids, @Param("readAt") LocalDateTime readAt);
 
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true, n.readAt = :readAt WHERE n.userId = :userId AND n.isRead = false")
-    void markAllAsRead(@Param("userId") Long userId, @Param("readAt") LocalDateTime readAt);
+    void markAllAsRead(@Param("userId") String userId, @Param("readAt") LocalDateTime readAt);
 
     @Query("SELECT n FROM Notification n WHERE n.createdAt < :cutoffDate")
     List<Notification> findOldNotifications(@Param("cutoffDate") LocalDateTime cutoffDate);
 
-    List<Notification> findByAggregationKeyAndUserId(String aggregationKey, Long userId);
+    List<Notification> findByAggregationKeyAndUserId(String aggregationKey, String userId);
 
     @Query("SELECT n FROM Notification n WHERE n.isSent = false AND n.createdAt <= :threshold")
     List<Notification> findUnsentNotifications(@Param("threshold") LocalDateTime threshold, Pageable pageable);

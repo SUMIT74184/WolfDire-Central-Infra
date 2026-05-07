@@ -20,14 +20,14 @@ import java.time.LocalDateTime;
 public class BlockedUser {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @Column(nullable = false)
-    private Long blockerId;
+    private String blockerId;
 
     @Column(nullable = false)
-    private Long blockedId;
+    private String blockedId;
 
     @Column(nullable = false)
     private LocalDateTime blockedAt;

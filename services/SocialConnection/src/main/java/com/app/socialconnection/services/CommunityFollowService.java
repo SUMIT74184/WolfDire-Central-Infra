@@ -40,8 +40,8 @@ public class CommunityFollowService {
      */
     @Transactional
     @CacheEvict(value = "communityMemberCount", key = "#request.communityId")
-    public CommunityFollower followCommunity(Long userId, ConnectionDTO.FollowCommunityRequest request) {
-        Long communityId = request.getCommunityId();
+    public CommunityFollower followCommunity(String userId, ConnectionDTO.FollowCommunityRequest request) {
+        String communityId = request.getCommunityId();
 
         if (communityFollowerRepository.existsByCommunityIdAndUserId(communityId, userId)) {
             throw new DuplicateResourceException("You are already following this community");
@@ -64,7 +64,7 @@ public class CommunityFollowService {
      */
     @Transactional
     @CacheEvict(value = "communityMemberCount", key = "#communityId")
-    public void unfollowCommunity(Long userId, Long communityId) {
+    public void unfollowCommunity(String userId, String communityId) {
         CommunityFollower follower = communityFollowerRepository
                 .findByCommunityIdAndUserId(communityId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("You are not following this community"));
@@ -78,7 +78,7 @@ public class CommunityFollowService {
      * Get paginated list of followers for a community.
      */
     @Transactional(readOnly = true)
-    public Page<CommunityFollower> getCommunityFollowers(Long communityId, Pageable pageable) {
+    public Page<CommunityFollower> getCommunityFollowers(String communityId, Pageable pageable) {
         return communityFollowerRepository.findByCommunityId(communityId, pageable);
     }
 
@@ -86,7 +86,7 @@ public class CommunityFollowService {
      * Get paginated list of communities a user follows.
      */
     @Transactional(readOnly = true)
-    public Page<CommunityFollower> getUserCommunities(Long userId, Pageable pageable) {
+    public Page<CommunityFollower> getUserCommunities(String userId, Pageable pageable) {
         return communityFollowerRepository.findByUserId(userId, pageable);
     }
 
@@ -94,7 +94,7 @@ public class CommunityFollowService {
      * Toggle notification preferences for a community.
      */
     @Transactional
-    public CommunityFollower toggleNotifications(Long userId, Long communityId) {
+    public CommunityFollower toggleNotifications(String userId, String communityId) {
         CommunityFollower follower = communityFollowerRepository
                 .findByCommunityIdAndUserId(communityId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -112,7 +112,7 @@ public class CommunityFollowService {
      */
     @Cacheable(value = "communityMemberCount", key = "#communityId")
     @Transactional(readOnly = true)
-    public long getCommunityMemberCount(Long communityId) {
+    public long getCommunityMemberCount(String communityId) {
         return communityFollowerRepository.countByCommunityId(communityId);
     }
 }

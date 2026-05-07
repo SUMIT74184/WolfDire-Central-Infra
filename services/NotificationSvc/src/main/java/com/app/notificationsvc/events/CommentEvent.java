@@ -10,12 +10,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CommentEvent {
-    private Long commentId;
-    private Long postId;
-    private Long userId;
+    private String commentId;
+    private String postId;
+    private String userId;
     private String username;
-    private Long parentCommentId;
-    private Long postAuthorId;
+    private String parentCommentId;
+    private String postAuthorId;
     private String content;
     private String action;
     private LocalDateTime timestamp;

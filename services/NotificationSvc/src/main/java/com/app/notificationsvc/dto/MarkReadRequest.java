@@ -9,6 +9,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MarkReadRequest {
-    private Long userId;
+    private String userId;
     private List<Long> notificationIds;
 }

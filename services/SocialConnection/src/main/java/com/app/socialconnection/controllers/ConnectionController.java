@@ -51,7 +51,7 @@ public class ConnectionController {
     public ResponseEntity<ConnectionDTO.ConnectionResponse> sendConnectionRequest(
             HttpServletRequest request,
             @Valid @RequestBody ConnectionDTO.ConnectionRequest connectionRequest) {
-        Long userId = getUserId(request);
+        String userId = getUserId(request);
         ConnectionDTO.ConnectionResponse response = connectionService.sendConnectionRequest(userId, connectionRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -60,7 +60,7 @@ public class ConnectionController {
     public ResponseEntity<ConnectionDTO.ConnectionResponse> acceptConnection(
             HttpServletRequest request,
             @PathVariable Long id) {
-        Long userId = getUserId(request);
+        String userId = getUserId(request);
         return ResponseEntity.ok(connectionService.acceptConnection(userId, id));
     }
 
@@ -68,7 +68,7 @@ public class ConnectionController {
     public ResponseEntity<ConnectionDTO.ConnectionResponse> rejectConnection(
             HttpServletRequest request,
             @PathVariable Long id) {
-        Long userId = getUserId(request);
+        String userId = getUserId(request);
         return ResponseEntity.ok(connectionService.rejectConnection(userId, id));
     }
 
@@ -77,16 +77,16 @@ public class ConnectionController {
     @PostMapping("/follow/{targetUserId}")
     public ResponseEntity<ConnectionDTO.ConnectionResponse> followUser(
             HttpServletRequest request,
-            @PathVariable Long targetUserId) {
-        Long userId = getUserId(request);
+            @PathVariable String targetUserId) {
+        String userId = getUserId(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(connectionService.followUser(userId, targetUserId));
     }
 
     @DeleteMapping("/follow/{targetUserId}")
     public ResponseEntity<Void> unfollowUser(
             HttpServletRequest request,
-            @PathVariable Long targetUserId) {
-        Long userId = getUserId(request);
+            @PathVariable String targetUserId) {
+        String userId = getUserId(request);
         connectionService.unfollowUser(userId, targetUserId);
         return ResponseEntity.noContent().build();
     }
@@ -97,7 +97,7 @@ public class ConnectionController {
     public ResponseEntity<Page<ConnectionDTO.ConnectionResponse>> getFollowers(
             HttpServletRequest request,
             @PageableDefault(size = 20) Pageable pageable) {
-        Long userId = getUserId(request);
+        String userId = getUserId(request);
         return ResponseEntity.ok(connectionService.getFollowers(userId, pageable));
     }
 
@@ -105,7 +105,7 @@ public class ConnectionController {
     public ResponseEntity<Page<ConnectionDTO.ConnectionResponse>> getFollowing(
             HttpServletRequest request,
             @PageableDefault(size = 20) Pageable pageable) {
-        Long userId = getUserId(request);
+        String userId = getUserId(request);
         return ResponseEntity.ok(connectionService.getFollowing(userId, pageable));
     }
 
@@ -113,14 +113,14 @@ public class ConnectionController {
     public ResponseEntity<Page<ConnectionDTO.ConnectionResponse>> getPendingRequests(
             HttpServletRequest request,
             @PageableDefault(size = 20) Pageable pageable) {
-        Long userId = getUserId(request);
+        String userId = getUserId(request);
         return ResponseEntity.ok(connectionService.getPendingRequests(userId, pageable));
     }
 
     @GetMapping("/stats")
     public ResponseEntity<ConnectionDTO.ConnectionStats> getConnectionStats(
             HttpServletRequest request) {
-        Long userId = getUserId(request);
+        String userId = getUserId(request);
         return ResponseEntity.ok(connectionService.getConnectionStats(userId));
     }
 
@@ -129,9 +129,9 @@ public class ConnectionController {
     @PostMapping("/block/{blockedUserId}")
     public ResponseEntity<Void> blockUser(
             HttpServletRequest request,
-            @PathVariable Long blockedUserId,
+            @PathVariable String blockedUserId,
             @RequestParam(required = false, defaultValue = "") String reason) {
-        Long userId = getUserId(request);
+        String userId = getUserId(request);
         connectionService.blockUser(userId, blockedUserId, reason);
         return ResponseEntity.ok().build();
     }
@@ -139,8 +139,8 @@ public class ConnectionController {
     @DeleteMapping("/block/{blockedUserId}")
     public ResponseEntity<Void> unblockUser(
             HttpServletRequest request,
-            @PathVariable Long blockedUserId) {
-        Long userId = getUserId(request);
+            @PathVariable String blockedUserId) {
+        String userId = getUserId(request);
         connectionService.unblockUser(userId, blockedUserId);
         return ResponseEntity.noContent().build();
     }
@@ -150,17 +150,17 @@ public class ConnectionController {
     public ResponseEntity<Page<ConnectionDTO.BlockedUserResponse>> getBlockedUsers(
             HttpServletRequest request,
             @PageableDefault(size = 20) Pageable pageable) {
-        Long userId = getUserId(request);
+        String userId = getUserId(request);
         return ResponseEntity.ok(connectionService.getBlockedUsers(userId, pageable));
     }
 
     // ==================== HELPER ====================
 
-    private Long getUserId(HttpServletRequest request) {
+    private String getUserId(HttpServletRequest request) {
         Object userId = request.getAttribute("userId");
         if (userId == null) {
             throw new IllegalArgumentException("User not authenticated — no userId found in request");
         }
-        return (Long) userId;
+        return (String) userId;
     }
 }

@@ -64,6 +64,7 @@ export function AuthProvider({ children }) {
     const payload = parseJwt(token)
     if (payload) {
       setUser({
+        id: payload.userId,
         userId: payload.userId,
         email: payload.sub,
         firstName: payload.firstName,
@@ -86,6 +87,7 @@ export function AuthProvider({ children }) {
     const payload = parseJwt(accessToken)
     if (payload) {
       setUser({
+        id: payload.userId,
         userId: payload.userId,
         email: payload.sub,
         firstName: payload.firstName,

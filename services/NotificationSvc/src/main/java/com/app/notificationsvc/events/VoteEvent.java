@@ -9,10 +9,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VoteEvent {
-    private Long targetId;
+    private String targetId;
     private String targetType;
-    private Long targetAuthorId;
-    private Long voterId;
+    private String targetAuthorId;
+    private String voterId;
     private String voterUsername;
     private Integer voteValue;
     private LocalDateTime timestamp;

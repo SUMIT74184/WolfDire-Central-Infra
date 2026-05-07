@@ -22,19 +22,26 @@ public class FeedEventConsumer {
     @KafkaListener(topics = "post.created", groupId = "connection-service-feed-group")
     public void handlePostCreated(Map<String, Object> event) {
         try {
-            Long authorId = ((Number) event.get("authorId")).longValue();
-            String postId = (String) event.get("postId");
-            String type = (String) event.get("type");
+            // 🎓 LEARNING: Handling polymorphic IDs from Kafka
+            // We ensure IDs are treated as Strings (UUIDs) for consistency.
+            String authorId = String.valueOf(event.get("authorId"));
+            String postId = String.valueOf(event.get("postId"));
+            String type = String.valueOf(event.get("type"));
 
             log.info("Processing post created event: postId={}, authorId={}, type={}",
                     postId, authorId, type);
 
-            List<Long> followerIds;
+            List<String> followerIds;
 
             if ("USER_POST".equals(type)) {
                 followerIds = connectionRepository.findFollowerIdsByUserId(authorId);
             } else if ("COMMUNITY_POST".equals(type)) {
-                Long communityId = ((Number) event.get("communityId")).longValue();
+                // Communities still use Long IDs
+                Object rawCommunityId = event.get("communityId");
+                Long communityId = (rawCommunityId instanceof Number) ? 
+                        ((Number) rawCommunityId).longValue() : 
+                        Long.parseLong(String.valueOf(rawCommunityId));
+                
                 followerIds = communityFollowerRepository.findUserIdsByCommunityId(communityId);
             } else {
                 log.warn("Unknown post type: {}", type);
@@ -54,7 +61,7 @@ public class FeedEventConsumer {
     @KafkaListener(topics = "reputation-updated", groupId = "connection-service-reputation-group")
     public void handleReputationUpdate(Map<String, Object> event) {
         try {
-            Long userId = ((Number) event.get("userId")).longValue();
+            String userId = String.valueOf(event.get("userId"));
             Double trustScore = ((Number) event.get("trustScore")).doubleValue();
 
             log.info("User {} reputation updated: trustScore={}", userId, trustScore);

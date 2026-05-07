@@ -9,9 +9,9 @@ import java.util.Optional;
 @Repository
 public interface BlockedUserRepository extends JpaRepository<BlockedUser, Long> {
 
-    boolean existsByBlockerIdAndBlockedId(Long blockerId, Long blockedId);
+    boolean existsByBlockerIdAndBlockedId(String blockerId, String blockedId);
 
-    Optional<BlockedUser> findByBlockerIdAndBlockedId(Long blockerId, Long blockedId);
+    Optional<BlockedUser> findByBlockerIdAndBlockedId(String blockerId, String blockedId);
 
-    org.springframework.data.domain.Page<BlockedUser> findByBlockerId(Long blockerId, org.springframework.data.domain.Pageable pageable);
+    org.springframework.data.domain.Page<BlockedUser> findByBlockerId(String blockerId, org.springframework.data.domain.Pageable pageable);
 }

@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostEvent {
-    private Long postId;
-    private Long userId;
+    private String postId;
+    private String userId;
     private String username;
     private String title;
     private String communityId;

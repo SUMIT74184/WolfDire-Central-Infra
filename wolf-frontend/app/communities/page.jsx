@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Search, Users, TrendingUp, Plus, CheckCircle, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
+const categories = ["All", "Technology", "Design", "Productivity", "Business", "Lifestyle", "Science", "Health", "Finance"]
+
 export default function CommunitiesPage() {
   const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState("")

@@ -11,19 +11,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CommunityFollowerRepository extends JpaRepository<CommunityFollower, Long> {
+public interface CommunityFollowerRepository extends JpaRepository<CommunityFollower, String> {
 
-    boolean existsByCommunityIdAndUserId(Long communityId, Long userId);
+    boolean existsByCommunityIdAndUserId(String communityId, String userId);
 
-    Optional<CommunityFollower> findByCommunityIdAndUserId(Long communityId, Long userId);
+    Optional<CommunityFollower> findByCommunityIdAndUserId(String communityId, String userId);
 
-    Page<CommunityFollower> findByCommunityId(Long communityId, Pageable pageable);
+    Page<CommunityFollower> findByCommunityId(String communityId, Pageable pageable);
 
-    Page<CommunityFollower> findByUserId(Long userId, Pageable pageable);
+    Page<CommunityFollower> findByUserId(String userId, Pageable pageable);
 
-    long countByCommunityId(Long communityId);
+    long countByCommunityId(String communityId);
 
     // Get user IDs who follow a community
     @Query("SELECT cf.userId FROM CommunityFollower cf WHERE cf.communityId = :communityId")
-    List<Long> findUserIdsByCommunityId(Long communityId);
+    List<String> findUserIdsByCommunityId(String communityId);
 }

@@ -20,7 +20,7 @@ public class CommunityService {
     private final CommunityRepository communityRepository;
 
     @Transactional
-    public CommunityDto createCommunity(Long userId, CommunityDto.CreateRequest request) {
+    public CommunityDto createCommunity(String userId, CommunityDto.CreateRequest request) {
         if (communityRepository.existsByName(request.getName())) {
             throw new DuplicateResourceException("Community with this name already exists");
         }
@@ -45,7 +45,7 @@ public class CommunityService {
     }
 
     @Transactional(readOnly = true)
-    public CommunityDto getCommunityById(Long id) {
+    public CommunityDto getCommunityById(String id) {
         Community community = communityRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Community not found"));
         return mapToDto(community);

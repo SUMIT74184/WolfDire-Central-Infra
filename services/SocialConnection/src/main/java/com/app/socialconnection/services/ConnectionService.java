@@ -53,8 +53,8 @@ public class ConnectionService {
      */
     @Transactional
     @CacheEvict(value = "connectionStats", allEntries = true)
-    public ConnectionDTO.ConnectionResponse sendConnectionRequest(Long userId, ConnectionDTO.ConnectionRequest request) {
-        Long targetUserId = request.getTargetUserId();
+    public ConnectionDTO.ConnectionResponse sendConnectionRequest(String userId, ConnectionDTO.ConnectionRequest request) {
+        String targetUserId = request.getTargetUserId();
 
         // Can't connect with yourself
         if (userId.equals(targetUserId)) {
@@ -93,7 +93,7 @@ public class ConnectionService {
      */
     @Transactional
     @CacheEvict(value = "connectionStats", allEntries = true)
-    public ConnectionDTO.ConnectionResponse acceptConnection(Long userId, Long connectionId) {
+    public ConnectionDTO.ConnectionResponse acceptConnection(String userId, Long connectionId) {
         Connection connection = connectionRepository.findById(connectionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Connection", connectionId));
 
@@ -121,7 +121,7 @@ public class ConnectionService {
      */
     @Transactional
     @CacheEvict(value = "connectionStats", key = "#userId")
-    public ConnectionDTO.ConnectionResponse rejectConnection(Long userId, Long connectionId) {
+    public ConnectionDTO.ConnectionResponse rejectConnection(String userId, Long connectionId) {
         Connection connection = connectionRepository.findById(connectionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Connection", connectionId));
 
@@ -150,7 +150,7 @@ public class ConnectionService {
      */
     @Transactional
     @CacheEvict(value = "connectionStats", allEntries = true)
-    public ConnectionDTO.ConnectionResponse followUser(Long userId, Long targetUserId) {
+    public ConnectionDTO.ConnectionResponse followUser(String userId, String targetUserId) {
         if (userId.equals(targetUserId)) {
             throw new IllegalArgumentException("Cannot follow yourself");
         }
@@ -181,7 +181,7 @@ public class ConnectionService {
      */
     @Transactional
     @CacheEvict(value = "connectionStats", allEntries = true)
-    public void unfollowUser(Long userId, Long targetUserId) {
+    public void unfollowUser(String userId, String targetUserId) {
         Connection connection = connectionRepository.findByUserIdAndFollowerId(targetUserId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("You are not following this user"));
 
@@ -195,7 +195,7 @@ public class ConnectionService {
      * Get paginated list of a user's followers.
      */
     @Transactional(readOnly = true)
-    public Page<ConnectionDTO.ConnectionResponse> getFollowers(Long userId, Pageable pageable) {
+    public Page<ConnectionDTO.ConnectionResponse> getFollowers(String userId, Pageable pageable) {
         return connectionRepository
                 .findByUserIdAndStatusAndType(userId, Connection.ConnectionStatus.ACCEPTED,
                         Connection.ConnectionType.FOLLOW, pageable)
@@ -206,7 +206,7 @@ public class ConnectionService {
      * Get paginated list of users that a user is following.
      */
     @Transactional(readOnly = true)
-    public Page<ConnectionDTO.ConnectionResponse> getFollowing(Long userId, Pageable pageable) {
+    public Page<ConnectionDTO.ConnectionResponse> getFollowing(String userId, Pageable pageable) {
         return connectionRepository
                 .findByFollowerIdAndStatusAndType(userId, Connection.ConnectionStatus.ACCEPTED,
                         Connection.ConnectionType.FOLLOW, pageable)
@@ -217,7 +217,7 @@ public class ConnectionService {
      * Get paginated list of pending incoming connection requests.
      */
     @Transactional(readOnly = true)
-    public Page<ConnectionDTO.ConnectionResponse> getPendingRequests(Long userId, Pageable pageable) {
+    public Page<ConnectionDTO.ConnectionResponse> getPendingRequests(String userId, Pageable pageable) {
         return connectionRepository
                 .findByUserIdAndStatus(userId, Connection.ConnectionStatus.PENDING, pageable)
                 .map(this::mapToResponse);
@@ -228,7 +228,7 @@ public class ConnectionService {
      */
     @Cacheable(value = "connectionStats", key = "#userId")
     @Transactional(readOnly = true)
-    public ConnectionDTO.ConnectionStats getConnectionStats(Long userId) {
+    public ConnectionDTO.ConnectionStats getConnectionStats(String userId) {
         long followersCount = connectionRepository.countByUserIdAndStatusAndType(
                 userId, Connection.ConnectionStatus.ACCEPTED, Connection.ConnectionType.FOLLOW);
         long followingCount = connectionRepository.countByFollowerIdAndStatusAndType(
@@ -253,7 +253,7 @@ public class ConnectionService {
      */
     @Transactional
     @CacheEvict(value = "connectionStats", allEntries = true)
-    public void blockUser(Long userId, Long blockedId, String reason) {
+    public void blockUser(String userId, String blockedId, String reason) {
         if (userId.equals(blockedId)) {
             throw new IllegalArgumentException("Cannot block yourself");
         }
@@ -291,7 +291,7 @@ public class ConnectionService {
      * Unblock a user.
      */
     @Transactional
-    public void unblockUser(Long userId, Long blockedId) {
+    public void unblockUser(String userId, String blockedId) {
         BlockedUser blockedUser = blockedUserRepository.findByBlockerIdAndBlockedId(userId, blockedId)
                 .orElseThrow(() -> new ResourceNotFoundException("Block record not found"));
 
@@ -300,7 +300,7 @@ public class ConnectionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ConnectionDTO.BlockedUserResponse> getBlockedUsers(Long userId, Pageable pageable) {
+    public Page<ConnectionDTO.BlockedUserResponse> getBlockedUsers(String userId, Pageable pageable) {
         return blockedUserRepository.findByBlockerId(userId, pageable)
                 .map(block -> ConnectionDTO.BlockedUserResponse.builder()
                         .id(block.getId())
@@ -317,7 +317,7 @@ public class ConnectionService {
      * Checks if either user has blocked the other.
      * Throws BlockedUserException if a block exists in either direction.
      */
-    private void checkNotBlocked(Long userA, Long userB) {
+    private void checkNotBlocked(String userA, String userB) {
         if (blockedUserRepository.existsByBlockerIdAndBlockedId(userA, userB)) {
             throw new BlockedUserException("You have blocked this user. Unblock them first.");
         }
@@ -326,7 +326,7 @@ public class ConnectionService {
         }
     }
 
-    private void publishEvent(Long senderId, Long receiverId, String type, String status) {
+    private void publishEvent(String senderId, String receiverId, String type, String status) {
         ConnectionRequestEvent event = ConnectionRequestEvent.builder()
                 .senderId(senderId)
                 .receiverId(receiverId)

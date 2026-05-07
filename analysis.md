@@ -497,4 +497,77 @@ Currently, the `app/explore/page.jsx` is functionally disconnected from the back
 
 
 
+Phase 13: System Stabilization & Dynamic Integration
+1. Objective
+Transition the application from a static/mock-driven state to a dynamic, role-aware production environment. This phase focuses on Access Control (RBAC), Data Integrity, and Frontend Stability.
 
+2. Core Navigation & Role-Based Access Control (RBAC)
+Requirement: Implement strict visibility tiers for the Navbar and UI components.
+
+Guest (Unauthenticated): Limit visibility to Explore, Communities, Login, and Signup. Restrict access to all other entities.
+
+User (Authenticated): Reveal standard features: Feed, Profile, Create Post, Saved Drafts, etc.
+
+Admin: All User features + Admin Dashboard, User Management, and Category Management.
+
+Action: Wrap Navbar elements in an authentication/role-guard component.
+
+3. Backend & Post Lifecycle Fixes
+The post creation flow is currently non-functional and requires a complete logic audit.
+
+500 Server Errors (Profile Settings): Investigate the /api/user/settings endpoint. Likely a null pointer or mapping error during data persistence.
+
+Post Persistence:
+
+Fix Cover Image upload/referencing logic.
+
+Repair the Publish, Save Draft, and Preview buttons (ensure state is being dispatched correctly to the backend).
+
+Category Logic: Fix the Category Selection error. Categories must be fetched from the backend and mapped correctly to the post object.
+
+4. Frontend Stability & Error Resolution
+Target: Eliminate runtime crashes and reference errors.
+
+ReferenceError Fix: Resolve categories is not defined in the Communities/Post-creation pages. Ensure category data is fetched and checked for existence before rendering.
+
+React Child Error: Handle the Objects are not valid as a React child error.
+
+Note: This occurs when you try to render a raw Error object or a full JSON object directly in JSX. Ensure you are accessing specific properties (e.g., error.message) or mapping over arrays.
+
+5. Dynamic Home Page Implementation
+Requirement: Remove all hardcoded mock data from the Home Page.
+
+Real Data Fetching: Implement hooks to fetch:
+
+Trending Topics (based on post frequency/engagement).
+
+Editors' Picks (curated admin-flagged content).
+
+Joined Communities (personalized for the logged-in user).
+
+Personalized Feed: The Home page must prioritize showing posts from communities the user has explicitly joined.
+
+Functional Search: Link the search bar to the backend search service to filter Trending Topics, Communities, and Picks in real-time.
+
+6. Development Philosophy (For AI Assistant)
+No "Vibe Coding": Do not generate boilerplate. Analyze the existing microservice logic and ensure state synchronization across the system.
+
+Core Logic First: Prioritize fixing the 500 errors and ReferenceErrors before polishing UI elements.
+
+
+
+phase 14:
+
+api-client.ts:40  POST http://localhost:8090/api/communities 500 (Internal Server Error)
+api-client.ts:40  GET http://localhost:8090/api/posts/trending?page=0&size=3 403 (Forbidden)
+
+not able to preview the post which is in the write
+not able to draft and save
+media url is not working as it should be uploaded using the cloudinary or uploadthings for image,video shared
+
+
+cannot create communities
+
+explore page not loading posts and communities giving HTTP 403 ERROR as forbidden
+
+the posts that are created are not visible to the user who created it and other users

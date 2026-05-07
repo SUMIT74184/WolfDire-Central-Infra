@@ -186,7 +186,7 @@ public class NotificationService {
         sendRealTimeNotification(notification);
     }
 
-    private boolean shouldNotify(Long userId, NotificationType type) {
+    private boolean shouldNotify(String userId, NotificationType type) {
         NotificationPreference pref = preferenceRepository.findByUserId(userId)
                 .orElse(createDefaultPreference(userId));
 
@@ -201,13 +201,13 @@ public class NotificationService {
         };
     }
 
-    private boolean shouldAggregate(String aggKey, Long userId) {
+    private boolean shouldAggregate(String aggKey, String userId) {
         String cacheKey = "notif:agg:" + aggKey;
         Object cached = redisTemplate.opsForValue().get(cacheKey);
         return cached != null;
     }
 
-    private void aggregateNotification(String aggKey, Long userId, Long actorId, LocalDateTime timestamp) {
+    private void aggregateNotification(String aggKey, String userId, String actorId, LocalDateTime timestamp) {
         NotificationAggregation agg = aggregationRepository
                 .findByAggregationKeyAndUserIdAndSentAtIsNull(aggKey, userId)
                 .orElseGet(() -> {
@@ -225,8 +225,8 @@ public class NotificationService {
         agg.setLastEventAt(timestamp);
 
         try {
-            List<Long> actorIds = objectMapper.readValue(agg.getActorIds(),
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, Long.class));
+            List<String> actorIds = objectMapper.readValue(agg.getActorIds(),
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
             if (!actorIds.contains(actorId)) {
                 actorIds.add(actorId);
             }
@@ -241,7 +241,7 @@ public class NotificationService {
         redisTemplate.opsForValue().set(cacheKey, "1", 5, TimeUnit.MINUTES);
     }
 
-    private String generateAggregationKey(Long userId, NotificationType type, Long targetId) {
+    private String generateAggregationKey(String userId, NotificationType type, String targetId) {
         return userId + ":" + type + ":" + targetId;
     }
 
@@ -252,7 +252,7 @@ public class NotificationService {
         redisTemplate.opsForValue().increment(cacheKey);
     }
 
-    private NotificationPreference createDefaultPreference(Long userId) {
+    private NotificationPreference createDefaultPreference(String userId) {
         NotificationPreference pref = new NotificationPreference();
         pref.setUserId(userId);
         return preferenceRepository.save(pref);

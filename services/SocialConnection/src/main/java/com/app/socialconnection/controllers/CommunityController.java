@@ -23,13 +23,13 @@ public class CommunityController {
     public ResponseEntity<CommunityDto> createCommunity(
             HttpServletRequest request,
             @Valid @RequestBody CommunityDto.CreateRequest createRequest) {
-        Long userId = getUserId(request);
+        String userId = getUserId(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(communityService.createCommunity(userId, createRequest));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CommunityDto> getCommunityById(@PathVariable Long id) {
+    public ResponseEntity<CommunityDto> getCommunityById(@PathVariable String id) {
         return ResponseEntity.ok(communityService.getCommunityById(id));
     }
 
@@ -44,11 +44,11 @@ public class CommunityController {
         return ResponseEntity.ok(communityService.getAllCommunities(pageable));
     }
 
-    private Long getUserId(HttpServletRequest request) {
+    private String getUserId(HttpServletRequest request) {
         Object userId = request.getAttribute("userId");
         if (userId == null) {
             throw new IllegalArgumentException("User not authenticated — no userId found in request");
         }
-        return (Long) userId;
+        return (String) userId;
     }
 }

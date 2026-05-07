@@ -25,7 +25,7 @@ public class NotificationQueryService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final WebSocketNotificationService webSocketService;
 
-    public Page<Notification> getUserNotifications(Long userId, int page, int size, Boolean unreadOnly) {
+    public Page<Notification> getUserNotifications(String userId, int page, int size, Boolean unreadOnly) {
         Pageable pageable = PageRequest.of(page, size);
 
         List<Notification> results;
@@ -38,7 +38,7 @@ public class NotificationQueryService {
         return new PageImpl<>(results, pageable, results.size());
     }
 
-    public UnreadCountResponse getUnreadCount(Long userId) {
+    public UnreadCountResponse getUnreadCount(String userId) {
         String cacheKey = "user:" + userId + ":unread";
         Object cached = redisTemplate.opsForValue().get(cacheKey);
 
@@ -54,14 +54,14 @@ public class NotificationQueryService {
     }
 
     @Transactional
-    public void markAsRead(Long userId, List<Long> notificationIds) {
+    public void markAsRead(String userId, List<Long> notificationIds) {
         notificationRepository.markAsRead(userId, notificationIds, LocalDateTime.now());
 
         updateUnreadCount(userId);
     }
 
     @Transactional
-    public void markAllAsRead(Long userId) {
+    public void markAllAsRead(String userId) {
         notificationRepository.markAllAsRead(userId, LocalDateTime.now());
 
         String cacheKey = "user:" + userId + ":unread";
@@ -70,13 +70,13 @@ public class NotificationQueryService {
         webSocketService.sendUnreadCount(userId, 0L);
     }
 
-    public NotificationPreference getPreferences(Long userId) {
+    public NotificationPreference getPreferences(String userId) {
         return preferenceRepository.findByUserId(userId)
                 .orElseGet(() -> createDefaultPreference(userId));
     }
 
     @Transactional
-    public NotificationPreference updatePreferences(Long userId, NotificationPreference preferences) {
+    public NotificationPreference updatePreferences(String userId, NotificationPreference preferences) {
         NotificationPreference existing = preferenceRepository.findByUserId(userId)
                 .orElseGet(() -> createDefaultPreference(userId));
 
@@ -101,7 +101,7 @@ public class NotificationQueryService {
         notificationRepository.deleteById(notificationId);
     }
 
-    private void updateUnreadCount(Long userId) {
+    private void updateUnreadCount(String userId) {
         Long count = notificationRepository.countByUserIdAndIsRead(userId, false);
 
         String cacheKey = "user:" + userId + ":unread";
@@ -110,7 +110,7 @@ public class NotificationQueryService {
         webSocketService.sendUnreadCount(userId, count);
     }
 
-    private NotificationPreference createDefaultPreference(Long userId) {
+    private NotificationPreference createDefaultPreference(String userId) {
         NotificationPreference pref = new NotificationPreference();
         pref.setUserId(userId);
         return preferenceRepository.save(pref);

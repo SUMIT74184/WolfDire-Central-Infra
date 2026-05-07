@@ -8,11 +8,11 @@ import lombok.*;
 @AllArgsConstructor
 public class CommunityDto {
 
-    private Long id;
+    private String id;
     private String name;
     private String slug;
     private String description;
-    private Long ownerId;
+    private String ownerId;
     private Long memberCount;
     private boolean isArchived;
 

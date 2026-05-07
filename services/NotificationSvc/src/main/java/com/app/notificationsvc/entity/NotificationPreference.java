@@ -19,7 +19,7 @@ public class NotificationPreference {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private Long userId;
+    private String userId;
 
     private Boolean emailEnabled = true;
     private Boolean pushEnabled = true;

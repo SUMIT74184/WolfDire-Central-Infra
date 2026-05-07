@@ -13,10 +13,10 @@ public class WebSocketNotificationService {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    public void sendToUser(Long userId, Notification notification) {
+    public void sendToUser(String userId, Notification notification) {
         try {
             messagingTemplate.convertAndSendToUser(
-                    userId.toString(),
+                    userId,
                     "/queue/notifications",
                     notification);
             log.info("Sent real-time notification to user: {}", userId);
@@ -25,10 +25,10 @@ public class WebSocketNotificationService {
         }
     }
 
-    public void sendUnreadCount(Long userId, Long count) {
+    public void sendUnreadCount(String userId, Long count) {
         try {
             messagingTemplate.convertAndSendToUser(
-                    userId.toString(),
+                    userId,
                     "/queue/unread-count",
                     count);
         } catch (Exception e) {

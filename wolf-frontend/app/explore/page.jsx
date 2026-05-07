@@ -2,6 +2,7 @@
 import { useState } from "react"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import Link from "next/link"
+
 import { postApi, communityApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -32,7 +33,7 @@ export default function ExplorePage() {
       if (searchQuery) {
         return postApi.search(searchQuery, pageParam, 20)
       }
-      
+
       if (selectedCommunityId !== "All") {
         if (sortBy === "trending") {
           return postApi.hot(selectedCommunityId, pageParam, 20)
@@ -47,7 +48,7 @@ export default function ExplorePage() {
       return postApi.list(pageParam, 20)
     },
     getNextPageParam: (lastPage, allPages) => {
-      const isLast = lastPage && !Array.isArray(lastPage) && lastPage.last 
+      const isLast = lastPage && !Array.isArray(lastPage) && lastPage.last
       return (lastPage && !isLast) ? allPages.length : undefined
     }
   })

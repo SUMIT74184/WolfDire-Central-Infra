@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface CommunityRepository extends JpaRepository<Community, Long> {
+public interface CommunityRepository extends JpaRepository<Community,String> {
 
     Optional<Community> findBySlug(String slug);
 
@@ -20,15 +20,15 @@ public interface CommunityRepository extends JpaRepository<Community, Long> {
 
     boolean existsBySlug(String slug);
 
-    Page<Community> findByOwnerId(Long ownerId, Pageable pageable);
+    Page<Community> findByOwnerId(String ownerId, Pageable pageable);
 
     Page<Community> findByIsArchivedFalse(Pageable pageable);
 
     @Modifying
     @Query("UPDATE Community c SET c.memberCount = c.memberCount + 1 WHERE c.id = :communityId")
-    void incrementMemberCount(@Param("communityId") Long communityId);
+    void incrementMemberCount(@Param("communityId") String communityId);
 
     @Modifying
     @Query("UPDATE Community c SET c.memberCount = c.memberCount - 1 WHERE c.id = :communityId")
-    void decrementMemberCount(@Param("communityId") Long communityId);
+    void decrementMemberCount(@Param("communityId") String communityId);
 }

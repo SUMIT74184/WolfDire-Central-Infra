@@ -2,7 +2,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { postApi } from "@/lib/api-client"
+import { useQuery } from "@tanstack/react-query"
+import { postApi, communityApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -27,12 +28,10 @@ import {
   X,
 } from "lucide-react"
 
-const categories = ["Technology", "Design", "Productivity", "Business", "Lifestyle", "Science", "Health", "Finance"]
-
 export default function WritePage() {
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
-  const [category, setCategory] = useState("")
+  const [selectedCommunity, setSelectedCommunity] = useState(null)
   const [tags, setTags] = useState([])
   const [tagInput, setTagInput] = useState("")
   const [coverImage, setCoverImage] = useState(null)
@@ -40,18 +39,31 @@ export default function WritePage() {
   const [error, setError] = useState(null)
   const router = useRouter()
 
+  const { data: communitiesData } = useQuery({
+    queryKey: ["communities-list"],
+    queryFn: () => communityApi.list(0, 100),
+  })
+
+  const communities = communitiesData?.content || []
+
   const handlePublish = async () => {
     if (!title.trim() || !content.trim()) {
       setError("Title and content are required")
       return
     }
+    if (!selectedCommunity) {
+      setError("Please select a community")
+      return
+    }
+
     setIsPublishing(true)
     setError(null)
     try {
       await postApi.create({
         title,
         content,
-        subredditName: category || "General",
+        communityId: String(selectedCommunity.id),
+        communityName: selectedCommunity.name,
         type: "TEXT",
         hashtags: tags,
       })
@@ -163,16 +175,22 @@ export default function WritePage() {
           <p className="mt-2 text-sm text-red-500">{error}</p>
         )}
 
-        {/* Category & Tags */}
+        {/* Community selection */}
         <div className="mt-6 flex flex-wrap items-center gap-4">
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select category" />
+          <Select 
+            value={selectedCommunity?.id?.toString()} 
+            onValueChange={(id) => {
+              const comm = communities.find(c => c.id.toString() === id);
+              setSelectedCommunity(comm);
+            }}
+          >
+            <SelectTrigger className="w-[280px]">
+              <SelectValue placeholder="Select a community to post in" />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
+              {communities.map((comm) => (
+                <SelectItem key={comm.id} value={comm.id.toString()}>
+                  {comm.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -233,23 +251,6 @@ export default function WritePage() {
               <Button variant="outline" size="sm" className="bg-transparent">
                 Set Schedule
               </Button>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-foreground">Community</Label>
-                <p className="text-sm text-muted-foreground">Post to a specific community</p>
-              </div>
-              <Select>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select community" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tech">Tech Enthusiasts</SelectItem>
-                  <SelectItem value="writers">Creative Writers</SelectItem>
-                  <SelectItem value="startup">Startup Founders</SelectItem>
-                  <SelectItem value="design">Design Hub</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <div className="flex items-center justify-between">
               <div>

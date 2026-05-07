@@ -9,10 +9,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MentionEvent {
-    private Long contentId;
+    private String contentId;
     private String contentType;
-    private Long mentionedUserId;
-    private Long mentionerUserId;
+    private String mentionedUserId;
+    private String mentionerUserId;
     private String mentionerUsername;
     private String context;
     private LocalDateTime timestamp;

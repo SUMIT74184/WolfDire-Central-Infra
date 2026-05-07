@@ -22,14 +22,14 @@ import java.time.LocalDateTime;
 public class Connection {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @Column(nullable = false)
-    private Long userId;
+    private String userId;
 
     @Column(nullable = false)
-    private Long followerId;
+    private String followerId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

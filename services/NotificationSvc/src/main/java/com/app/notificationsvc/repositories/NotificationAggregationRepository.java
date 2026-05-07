@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface NotificationAggregationRepository extends JpaRepository<NotificationAggregation, Long> {
-    Optional<NotificationAggregation> findByAggregationKeyAndUserIdAndSentAtIsNull(String aggregationKey, Long userId);
+    Optional<NotificationAggregation> findByAggregationKeyAndUserIdAndSentAtIsNull(String aggregationKey, String userId);
 
     List<NotificationAggregation> findBySentAtIsNullAndLastEventAtBefore(LocalDateTime threshold);
 }

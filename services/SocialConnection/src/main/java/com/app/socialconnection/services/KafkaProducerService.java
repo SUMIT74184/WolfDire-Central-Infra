@@ -31,17 +31,17 @@ public class KafkaProducerService {
         log.info("Publishing connection event: {} -> {} [{}]",
                 event.getSenderId(), event.getReceiverId(), event.getStatus());
         kafkaTemplate.send(CONNECTION_EVENTS_TOPIC,
-                String.valueOf(event.getReceiverId()), event);
+                event.getReceiverId(), event);
     }
 
     public void publishBlockEvent(ConnectionRequestEvent event) {
         log.info("Publishing block event: {} blocked {} ",
                 event.getSenderId(), event.getReceiverId());
         kafkaTemplate.send(BLOCK_EVENTS_TOPIC,
-                String.valueOf(event.getReceiverId()), event);
+                event.getReceiverId(), event);
     }
 
-    public void publishFeedFanoutEvent(String postId, Long authorId, String type, List<Long> followerIds) {
+    public void publishFeedFanoutEvent(String postId, String authorId, String type, List<String> followerIds) {
         Map<String, Object> fanoutEvent = new HashMap<>();
         fanoutEvent.put("postId", postId);
         fanoutEvent.put("authorId", authorId);

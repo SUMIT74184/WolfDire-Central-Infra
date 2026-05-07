@@ -33,7 +33,7 @@ public class CommunityFollowController {
     public ResponseEntity<CommunityFollower> followCommunity(
             HttpServletRequest request,
             @Valid @RequestBody ConnectionDTO.FollowCommunityRequest followRequest) {
-        Long userId = getUserId(request);
+        String userId = getUserId(request);
         CommunityFollower follower = communityFollowService.followCommunity(userId, followRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(follower);
     }
@@ -41,15 +41,15 @@ public class CommunityFollowController {
     @DeleteMapping("/follow/{communityId}")
     public ResponseEntity<Void> unfollowCommunity(
             HttpServletRequest request,
-            @PathVariable Long communityId) {
-        Long userId = getUserId(request);
+            @PathVariable String communityId) {
+        String userId = getUserId(request);
         communityFollowService.unfollowCommunity(userId, communityId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{communityId}/followers")
     public ResponseEntity<Page<CommunityFollower>> getCommunityFollowers(
-            @PathVariable Long communityId,
+            @PathVariable String communityId,
             @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(communityFollowService.getCommunityFollowers(communityId, pageable));
     }
@@ -58,28 +58,28 @@ public class CommunityFollowController {
     public ResponseEntity<Page<CommunityFollower>> getUserCommunities(
             HttpServletRequest request,
             @PageableDefault(size = 20) Pageable pageable) {
-        Long userId = getUserId(request);
+        String userId = getUserId(request);
         return ResponseEntity.ok(communityFollowService.getUserCommunities(userId, pageable));
     }
 
     @PutMapping("/{communityId}/notifications")
     public ResponseEntity<CommunityFollower> toggleNotifications(
             HttpServletRequest request,
-            @PathVariable Long communityId) {
-        Long userId = getUserId(request);
+            @PathVariable String communityId) {
+        String userId = getUserId(request);
         return ResponseEntity.ok(communityFollowService.toggleNotifications(userId, communityId));
     }
 
     @GetMapping("/{communityId}/member-count")
-    public ResponseEntity<Long> getCommunityMemberCount(@PathVariable Long communityId) {
+    public ResponseEntity<Long> getCommunityMemberCount(@PathVariable String communityId) {
         return ResponseEntity.ok(communityFollowService.getCommunityMemberCount(communityId));
     }
 
-    private Long getUserId(HttpServletRequest request) {
+    private String getUserId(HttpServletRequest request) {
         Object userId = request.getAttribute("userId");
         if (userId == null) {
             throw new IllegalArgumentException("User not authenticated — no userId found in request");
         }
-        return (Long) userId;
+        return (String) userId;
     }
 }

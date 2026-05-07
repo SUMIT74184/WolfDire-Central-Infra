@@ -45,7 +45,10 @@ async function request<T>(
       const body = await res.json();
       // Spring Boot often returns errors in these formats:
       // { "message": "...", "error": "..." } or { "errors": [{ "message": "..." }] }
-      message = body?.message || body?.error || (body?.errors && body.errors[0]?.message) || message;
+      const rawMessage = body?.message || body?.error || (body?.errors && body.errors[0]?.message);
+      if (rawMessage) {
+        message = typeof rawMessage === 'string' ? rawMessage : JSON.stringify(rawMessage);
+      }
     } catch {
       // ignore parse errors
     }

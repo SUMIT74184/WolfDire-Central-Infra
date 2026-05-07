@@ -50,7 +50,7 @@ public class NotificationBatchProcessor {
     }
 
     private void createAggregatedNotification(NotificationAggregation agg) throws JsonProcessingException {
-        List<Long> actorIds = objectMapper.readValue(agg.getActorIds(), new TypeReference<>() {
+        List<String> actorIds = objectMapper.readValue(agg.getActorIds(), new TypeReference<>() {
         });
 
         Notification notification = new Notification();

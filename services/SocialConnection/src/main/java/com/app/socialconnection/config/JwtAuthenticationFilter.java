@@ -59,14 +59,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .parseSignedClaims(token)
                         .getPayload();
 
-                // Extract userId from the custom "userId" claim instead of subject (which is email)
-                Object userIdObj = claims.get("userId");
-                Long userId = null;
-                if (userIdObj instanceof Number) {
-                    userId = ((Number) userIdObj).longValue();
-                } else if (userIdObj instanceof String) {
-                    userId = Long.parseLong((String) userIdObj);
-                }
+                // Extract userId from the custom "userId" claim directly as a String
+                String userId = (String) claims.get("userId");
                 
                 if (userId != null) {
                     request.setAttribute("userId", userId);

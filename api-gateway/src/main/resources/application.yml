@@ -47,6 +47,14 @@ spring:
           filters:
             - RewritePath=/api/posts/(?<segment>.*), /api/posts/$\{segment}
 
+        # ── Comment Service (Routed to PostsvcWolf) ───────────────────────────────
+        - id: comment-service
+          uri: lb://PostsvcWolf
+          predicates:
+            - Path=/api/comments/**
+          filters:
+            - RewritePath=/api/comments/(?<segment>.*), /api/comments/$\{segment}
+
         # ── Feed Service ──────────────────────────────────────────────────────────
         - id: feed-service
           uri: lb://feed-service

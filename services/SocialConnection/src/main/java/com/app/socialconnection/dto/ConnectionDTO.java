@@ -15,7 +15,7 @@ public class ConnectionDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ConnectionRequest {
-        private Long targetUserId;
+        private String targetUserId;
         private Connection.ConnectionType type;
     }
 
@@ -24,9 +24,9 @@ public class ConnectionDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ConnectionResponse {
-        private Long id;
-        private Long userId;
-        private Long followerId;
+        private String id;
+        private String userId;
+        private String followerId;
         private Connection.ConnectionStatus status;
         private LocalDateTime createdAt;
         private LocalDateTime acceptedAt;
@@ -40,7 +40,7 @@ public class ConnectionDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class FollowCommunityRequest {
-        private Long communityId;
+        private String communityId;
         private boolean enabledNotifications;
     }
 
@@ -61,7 +61,7 @@ public class ConnectionDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UserInfo {
-        private Long id;
+        private String id;
         private String username;
         private String displayName;
         private String avatarUrl;
@@ -73,7 +73,7 @@ public class ConnectionDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CommunityInfo {
-        private Long id;
+        private String id;
         private String name;
         private String description;
         private String iconUrl;
@@ -86,7 +86,7 @@ public class ConnectionDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ConnectionActionRequest {
-        private Long connectionId;
+        private String connectionId;
         private String action;
     }
 
@@ -95,9 +95,9 @@ public class ConnectionDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class BlockedUserResponse {
-        private Long id;
-        private Long blockerId;
-        private Long blockedId;
+        private String id;
+        private String blockerId;
+        private String blockedId;
         private String reason;
         private LocalDateTime blockedAt;
     }

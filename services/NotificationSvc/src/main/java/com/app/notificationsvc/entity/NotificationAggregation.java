@@ -22,7 +22,7 @@ public class NotificationAggregation {
     private String aggregationKey;
 
     @Column(nullable = false)
-    private Long userId;
+    private String userId;
 
     @Column(nullable = false)
     private Integer count = 0;

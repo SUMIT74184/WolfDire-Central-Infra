@@ -25,8 +25,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ConnectionRequestEvent {
 
-    private Long senderId;
-    private Long receiverId;
+    private String senderId;
+    private String receiverId;
     private String senderUsername;
     private String receiverUsername;
     private String type;       // FOLLOW or CONNECTION

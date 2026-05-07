@@ -1,64 +1,72 @@
+"use client"
+
+import { useQuery } from "@tanstack/react-query"
+import { postApi, communityApi } from "@/lib/api-client"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowRight, TrendingUp, Users, BookOpen, Zap, Heart, MessageCircle, Star } from "lucide-react"
-
-const featuredPosts = [
-  {
-    id: 1,
-    title: "The Future of Web Development: What to Expect in 2025",
-    excerpt:
-      "Explore the upcoming trends in web development, from AI-powered tools to new frameworks that will shape how we build for the web.",
-    author: { name: "Sarah Chen", avatar: "/woman-developer.png", role: "Senior Developer" },
-    category: "Technology",
-    readTime: "8 min read",
-    likes: 2453,
-    comments: 189,
-    image: "/futuristic-web-development.png",
-    featured: true,
-  },
-  {
-    id: 2,
-    title: "Building Sustainable Habits for Long-term Success",
-    excerpt: "Learn the science-backed strategies for creating habits that stick and transform your productivity.",
-    author: { name: "Marcus Johnson", avatar: "/professional-man.png", role: "Life Coach" },
-    category: "Productivity",
-    readTime: "5 min read",
-    likes: 1876,
-    comments: 95,
-    image: "/productivity-habits.png",
-  },
-  {
-    id: 3,
-    title: "The Art of Minimalist Design in Modern Applications",
-    excerpt: "Discover how less can be more when it comes to creating beautiful, user-friendly interfaces.",
-    author: { name: "Emma Williams", avatar: "/woman-designer.png", role: "UX Designer" },
-    category: "Design",
-    readTime: "6 min read",
-    likes: 1543,
-    comments: 67,
-    image: "/minimalist-design.png",
-  },
-]
-
-const trendingTopics = [
-  { name: "Artificial Intelligence", posts: 12453 },
-  { name: "Web Development", posts: 9876 },
-  { name: "Productivity", posts: 7654 },
-  { name: "Design Systems", posts: 5432 },
-  { name: "Career Growth", posts: 4321 },
-]
-
-const communities = [
-  { name: "Tech Enthusiasts", members: 45200, image: "/vibrant-tech-community.png" },
-  { name: "Creative Writers", members: 32100, image: "/writing-community.jpg" },
-  { name: "Startup Founders", members: 28900, image: "/vibrant-startup-community.png" },
-  { name: "Design Hub", members: 25600, image: "/vibrant-design-community.png" },
-]
+import { ArrowRight, TrendingUp, Users, BookOpen, Zap, Heart, MessageCircle, Star, Loader2 } from "lucide-react"
 
 export default function HomePage() {
+  const { data: postsData, isLoading: postsLoading } = useQuery({
+    queryKey: ["trending-posts"],
+    queryFn: () => postApi.trending(0, 3),
+  })
+
+  const { data: communitiesData, isLoading: communitiesLoading } = useQuery({
+    queryKey: ["top-communities"],
+    queryFn: () => communityApi.list(0, 4),
+  })
+
+  const trendingPosts = postsData?.content || [
+    {
+      id: 1,
+      title: "The Future of Web Development: What to Expect in 2025",
+      excerpt: "Explore the upcoming trends in web development, from AI-powered tools to new frameworks.",
+      authorName: "Sarah Chen",
+      communityName: "Technology",
+      voteCount: 2453,
+      commentCount: 189,
+      mediaUrl: "/futuristic-web-development.png",
+    },
+    {
+      id: 2,
+      title: "Building Sustainable Habits for Long-term Success",
+      excerpt: "Learn the science-backed strategies for creating habits that stick.",
+      authorName: "Marcus Johnson",
+      communityName: "Productivity",
+      voteCount: 1876,
+      commentCount: 95,
+      mediaUrl: "/productivity-habits.png",
+    },
+    {
+      id: 3,
+      title: "The Art of Minimalist Design in Modern Applications",
+      excerpt: "Discover how less can be more when it comes to creating beautiful interfaces.",
+      authorName: "Emma Williams",
+      communityName: "Design",
+      voteCount: 1543,
+      commentCount: 67,
+      mediaUrl: "/minimalist-design.png",
+    },
+  ]
+
+  const trendingTopics = [
+    { name: "Artificial Intelligence", posts: 12453 },
+    { name: "Web Development", posts: 9876 },
+    { name: "Productivity", posts: 7654 },
+    { name: "Design Systems", posts: 5432 },
+    { name: "Career Growth", posts: 4321 },
+  ]
+
+  const communities = communitiesData?.content || [
+    { name: "Tech Enthusiasts", memberCount: 45200, image: "/vibrant-tech-community.png" },
+    { name: "Creative Writers", memberCount: 32100, image: "/writing-community.jpg" },
+    { name: "Startup Founders", memberCount: 28900, image: "/vibrant-startup-community.png" },
+    { name: "Design Hub", memberCount: 25600, image: "/vibrant-design-community.png" },
+  ]
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
@@ -128,40 +136,37 @@ export default function HomePage() {
             <Card className="group overflow-hidden border-border">
               <div className="aspect-[16/10] overflow-hidden">
                 <img
-                  src={featuredPosts[0].image || "/placeholder.svg"}
-                  alt={featuredPosts[0].title}
+                  src={trendingPosts[0].mediaUrl || "/futuristic-web-development.png"}
+                  alt={trendingPosts[0].title}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{featuredPosts[0].category}</Badge>
-                  <span className="text-sm text-muted-foreground">{featuredPosts[0].readTime}</span>
+                  <Badge variant="secondary">{trendingPosts[0].communityName}</Badge>
                 </div>
                 <h3 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
-                  <Link href={`/post/${featuredPosts[0].id}`}>{featuredPosts[0].title}</Link>
+                  <Link href={`/post/${trendingPosts[0].id}`}>{trendingPosts[0].title}</Link>
                 </h3>
               </CardHeader>
               <CardContent className="pb-4">
-                <p className="text-muted-foreground leading-relaxed">{featuredPosts[0].excerpt}</p>
+                <p className="text-muted-foreground leading-relaxed line-clamp-3">{trendingPosts[0].excerpt}</p>
               </CardContent>
               <CardFooter className="flex items-center justify-between border-t border-border pt-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={featuredPosts[0].author.avatar || "/placeholder.svg"} />
-                    <AvatarFallback>{featuredPosts[0].author.name[0]}</AvatarFallback>
+                    <AvatarFallback>{trendingPosts[0].authorName?.charAt(0) || "U"}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{featuredPosts[0].author.name}</p>
-                    <p className="text-xs text-muted-foreground">{featuredPosts[0].author.role}</p>
+                    <p className="text-sm font-medium text-foreground">{trendingPosts[0].authorName || "Anonymous"}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 text-muted-foreground">
                   <span className="flex items-center gap-1 text-sm">
-                    <Heart className="h-4 w-4" /> {featuredPosts[0].likes}
+                    <Heart className="h-4 w-4" /> {trendingPosts[0].voteCount || 0}
                   </span>
                   <span className="flex items-center gap-1 text-sm">
-                    <MessageCircle className="h-4 w-4" /> {featuredPosts[0].comments}
+                    <MessageCircle className="h-4 w-4" /> {trendingPosts[0].commentCount || 0}
                   </span>
                 </div>
               </CardFooter>
@@ -169,11 +174,11 @@ export default function HomePage() {
 
             {/* Secondary Featured */}
             <div className="flex flex-col gap-6">
-              {featuredPosts.slice(1).map((post) => (
+              {trendingPosts.slice(1).map((post) => (
                 <Card key={post.id} className="group flex overflow-hidden border-border">
                   <div className="aspect-square w-32 shrink-0 overflow-hidden sm:w-48">
                     <img
-                      src={post.image || "/placeholder.svg"}
+                      src={post.mediaUrl || "/placeholder.svg"}
                       alt={post.title}
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
@@ -182,9 +187,8 @@ export default function HomePage() {
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <Badge variant="secondary" className="text-xs">
-                          {post.category}
+                          {post.communityName}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">{post.readTime}</span>
                       </div>
                       <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
                         <Link href={`/post/${post.id}`}>{post.title}</Link>
@@ -192,10 +196,9 @@ export default function HomePage() {
                     </div>
                     <div className="flex items-center gap-3 mt-4">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={post.author.avatar || "/placeholder.svg"} />
-                        <AvatarFallback>{post.author.name[0]}</AvatarFallback>
+                        <AvatarFallback>{post.authorName?.charAt(0) || "U"}</AvatarFallback>
                       </Avatar>
-                      <span className="text-sm text-muted-foreground">{post.author.name}</span>
+                      <span className="text-sm text-muted-foreground">{post.authorName || "Anonymous"}</span>
                     </div>
                   </div>
                 </Card>
@@ -251,7 +254,7 @@ export default function HomePage() {
               </div>
               <div className="space-y-3">
                 {communities.map((community) => (
-                  <Link key={community.name} href={`/community/${community.name.toLowerCase().replace(/\s+/g, "-")}`}>
+                  <Link key={community.name} href={`/community/${community.id || community.name.toLowerCase().replace(/\s+/g, "-")}`}>
                     <Card className="flex items-center gap-4 p-4 transition-colors hover:border-primary">
                       <Avatar className="h-12 w-12">
                         <AvatarImage src={community.image || "/placeholder.svg"} />
@@ -259,7 +262,7 @@ export default function HomePage() {
                       </Avatar>
                       <div className="flex-1">
                         <p className="font-medium text-foreground">{community.name}</p>
-                        <p className="text-sm text-muted-foreground">{community.members.toLocaleString()} members</p>
+                        <p className="text-sm text-muted-foreground">{(community.memberCount || community.members || 0).toLocaleString()} members</p>
                       </div>
                       <Button size="sm" variant="secondary">
                         Join

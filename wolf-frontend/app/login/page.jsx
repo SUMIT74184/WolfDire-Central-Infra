@@ -38,7 +38,8 @@ export default function LoginPage() {
       const isAdmin = roles.some(r => r === "ADMIN" || r === "SUPER_ADMIN" || r === "TENANT_ADMIN")
       router.push(isAdmin ? "/admin" : "/feed")
     } catch (err) {
-      setError(err.message || "Invalid email or password. Please try again.")
+      const errorMessage = err instanceof Error ? err.message : String(err || "Login failed");
+      setError(errorMessage || "Invalid email or password. Please try again.");
     } finally {
       setIsLoading(false)
     }
@@ -76,7 +77,7 @@ export default function LoginPage() {
             {/* Error Message */}
             {error && (
               <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive flex items-center gap-2">
-                <p>{error}</p>
+                <p>{typeof error === 'string' ? error : 'An unexpected error occurred'}</p>
               </div>
             )}
 

@@ -22,15 +22,15 @@ import java.time.LocalDateTime;
 public class CommunityFollower {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
 
     @Column(nullable = false)
-    private Long communityId;
+    private String communityId;
 
     @Column(nullable = false)
-    private Long userId;
+    private String userId;
 
 
     @Column(nullable = false)
