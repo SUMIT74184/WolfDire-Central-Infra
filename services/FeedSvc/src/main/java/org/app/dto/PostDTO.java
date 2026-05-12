@@ -12,8 +12,8 @@ public class PostDTO {
     private String id;
     private String title;
     private String content;
-    private Long authorId;
-    private Long communityId;
+    private String authorId;
+    private String communityId;
     private Long upvotes;
     private Long downvotes;
     private Long commentCount;

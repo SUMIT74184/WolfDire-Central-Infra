@@ -9,12 +9,15 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 /**
  * 🎓 LEARNING: JWT Authentication Filter
@@ -27,7 +30,7 @@ import java.nio.charset.StandardCharsets;
  * 4. Each microservice has a filter like this that:
  *    a) Extracts the token from the header
  *    b) Parses it to get the userId
- *    c) Sets the userId as a request attribute
+ *    c) Sets the userId as a request attribute AND populates SecurityContext
  *    d) Controllers access it via request.getAttribute("userId")
  *
  * OncePerRequestFilter ensures this filter runs exactly once per request
@@ -62,9 +65,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Extract userId from the custom "userId" claim directly as a String
                 String userId = (String) claims.get("userId");
                 
-                if (userId != null) {
+                if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     request.setAttribute("userId", userId);
-                } else {
+
+                    // Populate SecurityContext so Spring Security's .authenticated() rule passes
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else if (userId == null) {
                     throw new RuntimeException("userId claim missing in JWT");
                 }
 

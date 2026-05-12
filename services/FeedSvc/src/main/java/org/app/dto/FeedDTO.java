@@ -30,8 +30,8 @@ public class FeedDTO {
     @AllArgsConstructor
     public static class FeedItemDTO{
         private String postId;
-        private Long authorId;
-        private Long communityId;
+        private String authorId;
+        private String communityId;
         private String title;
         private Double relevanceScore;
         private Double popularityScore;
@@ -39,12 +39,8 @@ public class FeedDTO {
         private LocalDateTime createdAt;
         private boolean read;
     }
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
     public static class InteractionRequest{
-        private Long userId;
+        private String userId;
         private String postId;
         private InteractionType type;
         private Integer durationSeconds;

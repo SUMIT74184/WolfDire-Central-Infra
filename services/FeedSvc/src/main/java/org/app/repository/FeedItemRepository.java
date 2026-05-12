@@ -13,10 +13,10 @@ import java.util.List;
 
 public interface FeedItemRepository extends JpaRepository<FeedItem,Long> {
     Page<FeedItem> findByUserIdAndHiddenFalseOrderByCreatedAtDesc(
-            Long userId, Pageable pageable);
+            String userId, Pageable pageable);
 
     Page<FeedItem> findByUserIdAndHiddenFalseAndEmbeddingIsNotNullOrderByFinalScoreDesc(
-            Long userId, Pageable pageable);
+            String userId, Pageable pageable);
 
     List<FeedItem> findByPostId(String postId);
 
@@ -25,13 +25,13 @@ public interface FeedItemRepository extends JpaRepository<FeedItem,Long> {
             "AND fi.createdAt > :since " +
             "ORDER BY fi.finalScore DESC")
     List<FeedItem> findRecentByUserIdOrderByScore(
-            @Param("userId") Long userId,
+            @Param("userId") String userId,
             @Param("since") LocalDateTime since);
 
     @Query("SELECT COUNT(fi) FROM FeedItem fi WHERE fi.userId = :userId AND fi.read = false")
-    Long countUnreadByUserId(@Param("userId") Long userId);
+    Long countUnreadByUserId(@Param("userId") String userId);
 
-    void deleteByUserIdAndPostId(Long userId, String postId);
+    void deleteByUserIdAndPostId(String userId, String postId);
 
     @Modifying
     @Query("DELETE FROM FeedItem fi WHERE fi.createdAt < :cutoffDate")

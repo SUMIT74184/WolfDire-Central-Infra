@@ -33,8 +33,9 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/error"
                         ).permitAll()
-                        // All GET requests to posts are public (explore, trending, search, etc.)
+                        // All GET requests to posts and comments are public (explore, trending, search, etc.)
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
                         // Write operations require authentication
                         .anyRequest().authenticated()
                 )

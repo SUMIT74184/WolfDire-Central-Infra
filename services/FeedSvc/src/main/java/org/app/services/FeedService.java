@@ -44,7 +44,7 @@ public class FeedService {
     private static final String FEED_CACHE_KEY = "feed:user:";
 
     @Cacheable(value = "userFeed", key = "#userId + '-' + #page")
-    public FeedDTO.Response getUserFeed(Long userId, int page, int size) {
+    public FeedDTO.Response getUserFeed(String userId, int page, int size) {
         log.info("Generating feed for user {} (page: {}, size: {})", userId, page, size);
 
         String cacheKey = FEED_CACHE_KEY + userId;
@@ -55,8 +55,8 @@ public class FeedService {
             return buildResponse(cachedItems, page, size);
         }
 
-        List<Long> followingUserIds = connectionClient.getFollowingIds(userId, "USER");
-        List<Long> followingCommunityIds = connectionClient.getFollowingIds(userId, "COMMUNITY");
+        List<String> followingUserIds = connectionClient.getFollowingIds(userId, "USER");
+        List<String> followingCommunityIds = connectionClient.getFollowingIds(userId, "COMMUNITY");
 
         log.info("User {} follows {} users and {} communities",
                 userId, followingUserIds.size(), followingCommunityIds.size());
@@ -69,13 +69,13 @@ public class FeedService {
     }
 
     @Transactional
-    public FeedDTO.Response getPersonalizedFeed(Long userId, int page, int size) {
+    public FeedDTO.Response getPersonalizedFeed(String userId, int page, int size) {
         log.info("Generating AI-personalized feed for user {}", userId);
 
         float[] userEmbedding = getUserPreferenceEmbedding(userId);
 
-        List<Long> followingUserIds = connectionClient.getFollowingIds(userId, "USER");
-        List<Long> followingCommunityIds = connectionClient.getFollowingIds(userId, "COMMUNITY");
+        List<String> followingUserIds = connectionClient.getFollowingIds(userId, "USER");
+        List<String> followingCommunityIds = connectionClient.getFollowingIds(userId, "COMMUNITY");
 
         List<FeedItem> feedItems = fetchPostsWithEmbeddings(userId, followingUserIds, followingCommunityIds);
 
@@ -93,7 +93,7 @@ public class FeedService {
     }
 
     @Transactional
-    public void trackInteraction(Long userId, String postId, InteractionType type, Integer durationSeconds) {
+    public void trackInteraction(String userId, String postId, InteractionType type, Integer durationSeconds) {
         UserInteraction interaction = UserInteraction.builder()
                 .userId(userId)
                 .postId(postId)
@@ -109,10 +109,10 @@ public class FeedService {
     }
 
     @Transactional
-    public void addPostToFeeds(String postId, Long authorId, Long communityId, String title, String content) {
+    public void addPostToFeeds(String postId, String authorId, String communityId, String title, String content) {
         log.info("Adding post {} to follower feeds", postId);
 
-        List<Long> followerIds = communityId != null
+        List<String> followerIds = communityId != null
                 ? connectionClient.getFollowerIds(communityId, "COMMUNITY")
                 : connectionClient.getFollowerIds(authorId, "USER");
 
@@ -127,7 +127,7 @@ public class FeedService {
                 postStats.getShareCount());
 
         List<FeedItem> feedItems = new ArrayList<>();
-        for (Long userId : followerIds) {
+        for (String userId : followerIds) {
             FeedItem item = FeedItem.builder()
                     .userId(userId)
                     .postId(postId)
@@ -147,21 +147,21 @@ public class FeedService {
         log.info("Added post {} to {} feeds", postId, followerIds.size());
     }
 
-    private List<FeedItem> fetchAndRankPosts(Long userId, List<Long> userIds, List<Long> communityIds) {
+    private List<FeedItem> fetchAndRankPosts(String userId, List<String> userIds, List<String> communityIds) {
         Page<FeedItem> page = feedItemRepository.findByUserIdAndHiddenFalseOrderByCreatedAtDesc(
                 userId, PageRequest.of(0, 100));
 
         return page.getContent();
     }
 
-    private List<FeedItem> fetchPostsWithEmbeddings(Long userId, List<Long> userIds, List<Long> communityIds) {
+    private List<FeedItem> fetchPostsWithEmbeddings(String userId, List<String> userIds, List<String> communityIds) {
         Page<FeedItem> page = feedItemRepository.findByUserIdAndHiddenFalseAndEmbeddingIsNotNullOrderByFinalScoreDesc(
                 userId, PageRequest.of(0, 100));
 
         return page.getContent();
     }
 
-    private float[] getUserPreferenceEmbedding(Long userId) {
+    private float[] getUserPreferenceEmbedding(String userId) {
         Query query = entityManager.createNativeQuery(
                 "SELECT AVG(fi.embedding) FROM feed_items fi " +
                         "JOIN user_interactions ui ON fi.post_id = ui.post_id " +
@@ -189,7 +189,7 @@ public class FeedService {
         redisTemplate.opsForValue().set(key, items, 1, TimeUnit.HOURS);
     }
 
-    private void invalidateFeedCache(Long userId) {
+    private void invalidateFeedCache(String userId) {
         String key = FEED_CACHE_KEY + userId;
         redisTemplate.delete(key);
         log.info("Invalidated feed cache for user {}", userId);

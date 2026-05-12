@@ -41,6 +41,7 @@ public class CommentService {
     private static final int MAX_COMMENT_DEPTH = 10;
 
 
+    @CacheEvict(value = {"comments", "posts"}, allEntries = true)
     public CommentResponse createComment(CreateCommentRequest request,String userId,String username){
         postRepository.findActive(request.getPostId())
                 .orElseThrow(() -> new RuntimeException("Post not found"));

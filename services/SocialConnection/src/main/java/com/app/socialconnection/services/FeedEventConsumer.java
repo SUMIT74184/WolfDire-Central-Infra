@@ -36,11 +36,7 @@ public class FeedEventConsumer {
             if ("USER_POST".equals(type)) {
                 followerIds = connectionRepository.findFollowerIdsByUserId(authorId);
             } else if ("COMMUNITY_POST".equals(type)) {
-                // Communities still use Long IDs
-                Object rawCommunityId = event.get("communityId");
-                Long communityId = (rawCommunityId instanceof Number) ? 
-                        ((Number) rawCommunityId).longValue() : 
-                        Long.parseLong(String.valueOf(rawCommunityId));
+                String communityId = String.valueOf(event.get("communityId"));
                 
                 followerIds = communityFollowerRepository.findUserIdsByCommunityId(communityId);
             } else {

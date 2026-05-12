@@ -13,16 +13,16 @@ import java.util.List;
 public interface UserInteractionRepository extends JpaRepository<UserInteraction,Long> {
 
     List<UserInteraction> findByUserIdAndInteractionTypeIn(
-            Long userId, List<InteractionType> types);
+            String userId, List<InteractionType> types);
 
     List<UserInteraction> findByUserIdAndCreatedAtAfter(
-            Long userId, LocalDateTime since);
+            String userId, LocalDateTime since);
 
     @Query("SELECT ui.postId FROM UserInteraction ui " +
             "WHERE ui.userId = :userId " +
             "AND ui.interactionType IN ('UPVOTE', 'COMMENT', 'SAVE') " +
             "ORDER BY ui.createdAt DESC")
-    List<String> findEngagedPostIds(@Param("userId") Long userId);
+    List<String> findEngagedPostIds(@Param("userId") String userId);
 
     @Query("SELECT COUNT(ui) FROM UserInteraction ui " +
             "WHERE ui.postId = :postId " +
@@ -32,5 +32,5 @@ public interface UserInteractionRepository extends JpaRepository<UserInteraction
             @Param("type") InteractionType type);
 
     boolean existsByUserIdAndPostIdAndInteractionType(
-            Long userId, String postId, InteractionType type);
+            String userId, String postId, InteractionType type);
 }

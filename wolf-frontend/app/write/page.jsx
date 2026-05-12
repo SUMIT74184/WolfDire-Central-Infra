@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
@@ -24,9 +24,13 @@ import {
   Heading2,
   Save,
   Eye,
+  EyeOff,
   Send,
   X,
 } from "lucide-react"
+import { toast } from "sonner"
+
+const DRAFT_STORAGE_KEY = "wolfdire_draft"
 
 export default function WritePage() {
   const [title, setTitle] = useState("")
@@ -37,7 +41,25 @@ export default function WritePage() {
   const [coverImage, setCoverImage] = useState(null)
   const [isPublishing, setIsPublishing] = useState(false)
   const [error, setError] = useState(null)
+  const [isPreview, setIsPreview] = useState(false)
   const router = useRouter()
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_STORAGE_KEY)
+      if (saved) {
+        const draft = JSON.parse(saved)
+        if (draft.title) setTitle(draft.title)
+        if (draft.content) setContent(draft.content)
+        if (draft.tags) setTags(draft.tags)
+        if (draft.coverImage) setCoverImage(draft.coverImage)
+        if (draft.selectedCommunity) setSelectedCommunity(draft.selectedCommunity)
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, [])
 
   const { data: communitiesData } = useQuery({
     queryKey: ["communities-list"],
@@ -45,6 +67,20 @@ export default function WritePage() {
   })
 
   const communities = communitiesData?.content || []
+
+  const handleSaveDraft = () => {
+    try {
+      const draft = { title, content, tags, coverImage, selectedCommunity }
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft))
+      toast?.success?.("Draft saved!") 
+    } catch {
+      // fallback if toast not available
+    }
+  }
+
+  const handleClearDraft = () => {
+    localStorage.removeItem(DRAFT_STORAGE_KEY)
+  }
 
   const handlePublish = async () => {
     if (!title.trim() || !content.trim()) {
@@ -67,6 +103,7 @@ export default function WritePage() {
         type: "TEXT",
         hashtags: tags,
       })
+      handleClearDraft()
       router.push("/feed")
     } catch (err) {
       setError(err.message || "Failed to publish post")
@@ -106,6 +143,15 @@ export default function WritePage() {
     { icon: ImagePlus, label: "Image" },
   ]
 
+  // Simple content renderer for preview
+  const renderPreview = (text) => {
+    if (!text) return <p className="text-muted-foreground italic">Nothing to preview yet...</p>
+    return text.split("\n").map((line, i) => {
+      if (!line.trim()) return <br key={i} />
+      return <p key={i} className="mb-2 text-foreground leading-relaxed">{line}</p>
+    })
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top Bar */}
@@ -118,13 +164,18 @@ export default function WritePage() {
             <span className="text-sm text-muted-foreground">Draft in WolfDire</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="gap-2">
+            <Button variant="ghost" size="sm" className="gap-2" onClick={handleSaveDraft}>
               <Save className="h-4 w-4" />
               Save Draft
             </Button>
-            <Button variant="ghost" size="sm" className="gap-2">
-              <Eye className="h-4 w-4" />
-              Preview
+            <Button
+              variant={isPreview ? "secondary" : "ghost"}
+              size="sm"
+              className="gap-2"
+              onClick={() => setIsPreview(!isPreview)}
+            >
+              {isPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {isPreview ? "Edit" : "Preview"}
             </Button>
             <Button size="sm" className="gap-2" onClick={handlePublish} disabled={isPublishing}>
               <Send className="h-4 w-4" />
@@ -164,80 +215,106 @@ export default function WritePage() {
         </div>
 
         {/* Title */}
-        <Input
-          placeholder="Article title..."
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="border-0 bg-transparent text-4xl font-bold placeholder:text-muted-foreground/50 focus-visible:ring-0 px-0"
-        />
+        {isPreview ? (
+          <h1 className="text-4xl font-bold text-foreground">
+            {title || <span className="text-muted-foreground/50">Untitled</span>}
+          </h1>
+        ) : (
+          <Input
+            placeholder="Article title..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="border-0 bg-transparent text-4xl font-bold placeholder:text-muted-foreground/50 focus-visible:ring-0 px-0"
+          />
+        )}
 
         {error && (
           <p className="mt-2 text-sm text-red-500">{error}</p>
         )}
 
         {/* Community selection */}
-        <div className="mt-6 flex flex-wrap items-center gap-4">
-          <Select 
-            value={selectedCommunity?.id?.toString()} 
-            onValueChange={(id) => {
-              const comm = communities.find(c => c.id.toString() === id);
-              setSelectedCommunity(comm);
-            }}
-          >
-            <SelectTrigger className="w-[280px]">
-              <SelectValue placeholder="Select a community to post in" />
-            </SelectTrigger>
-            <SelectContent>
-              {communities.map((comm) => (
-                <SelectItem key={comm.id} value={comm.id.toString()}>
-                  {comm.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {!isPreview && (
+          <div className="mt-6 flex flex-wrap items-center gap-4">
+            <Select 
+              value={selectedCommunity?.id?.toString()} 
+              onValueChange={(id) => {
+                const comm = communities.find(c => c.id.toString() === id);
+                setSelectedCommunity(comm);
+              }}
+            >
+              <SelectTrigger className="w-[280px]">
+                <SelectValue placeholder="Select a community to post in" />
+              </SelectTrigger>
+              <SelectContent>
+                {communities.map((comm) => (
+                  <SelectItem key={comm.id} value={comm.id.toString()}>
+                    {comm.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <div className="flex flex-1 flex-wrap items-center gap-2">
+            <div className="flex flex-1 flex-wrap items-center gap-2">
+              {tags.map((tag) => (
+                <Badge key={tag} variant="secondary" className="gap-1">
+                  {tag}
+                  <button onClick={() => handleRemoveTag(tag)}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {tags.length < 5 && (
+                <Input
+                  placeholder="Add tag..."
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleAddTag}
+                  className="h-7 w-24 border-0 bg-transparent px-0 text-sm focus-visible:ring-0"
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Preview: show community + tags as badges */}
+        {isPreview && selectedCommunity && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Badge variant="outline">c/{selectedCommunity.name}</Badge>
             {tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="gap-1">
-                {tag}
-                <button onClick={() => handleRemoveTag(tag)}>
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
+              <Badge key={tag} variant="secondary">{tag}</Badge>
             ))}
-            {tags.length < 5 && (
-              <Input
-                placeholder="Add tag..."
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleAddTag}
-                className="h-7 w-24 border-0 bg-transparent px-0 text-sm focus-visible:ring-0"
-              />
+          </div>
+        )}
+
+        {/* Toolbar — only in edit mode */}
+        {!isPreview && (
+          <div className="mt-8 flex flex-wrap items-center gap-1 rounded-lg border border-border bg-card p-2">
+            {toolbarButtons.map((item, index) =>
+              item.divider ? (
+                <div key={index} className="mx-1 h-6 w-px bg-border" />
+              ) : (
+                <Button key={index} variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <item.icon className="h-4 w-4" />
+                  <span className="sr-only">{item.label}</span>
+                </Button>
+              ),
             )}
           </div>
-        </div>
+        )}
 
-        {/* Toolbar */}
-        <div className="mt-8 flex flex-wrap items-center gap-1 rounded-lg border border-border bg-card p-2">
-          {toolbarButtons.map((item, index) =>
-            item.divider ? (
-              <div key={index} className="mx-1 h-6 w-px bg-border" />
-            ) : (
-              <Button key={index} variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <item.icon className="h-4 w-4" />
-                <span className="sr-only">{item.label}</span>
-              </Button>
-            ),
-          )}
-        </div>
-
-        {/* Content Editor */}
-        <Textarea
-          placeholder="Tell your story..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="mt-4 min-h-[400px] resize-none border-0 bg-transparent text-lg leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0 px-0"
-        />
+        {/* Content Editor / Preview */}
+        {isPreview ? (
+          <div className="mt-4 min-h-[400px] prose prose-invert max-w-none text-lg leading-relaxed">
+            {renderPreview(content)}
+          </div>
+        ) : (
+          <Textarea
+            placeholder="Tell your story..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="mt-4 min-h-[400px] resize-none border-0 bg-transparent text-lg leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0 px-0"
+          />
+        )}
 
         {/* Publishing Options */}
         <div className="mt-12 rounded-lg border border-border bg-card p-6">
@@ -267,3 +344,4 @@ export default function WritePage() {
     </div>
   )
 }
+

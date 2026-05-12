@@ -1,13 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import {
   Heart,
   MessageCircle,
@@ -19,11 +23,13 @@ import {
   LinkIcon,
   MoreHorizontal,
   ThumbsUp,
-  Loader2
+  Loader2,
+  Edit,
+  Trash2
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useParams } from "next/navigation"
-import { postApi } from "@/lib/api-client"
+import { postApi, authApi } from "@/lib/api-client"
 import CommentSection from "@/components/CommentSection"
 // Mock data removed in favor of dynamic API fetch
 
@@ -33,15 +39,55 @@ export default function PostPage() {
   const params = useParams()
   const postId = params?.id
 
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [isLiked, setIsLiked] = useState(false)
+  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editData, setEditData] = useState({ title: "", content: "" })
+
+  const { data: me } = useQuery({
+    queryKey: ['me'],
+    queryFn: authApi.me,
+  })
+
   const { data: post, isLoading } = useQuery({
     queryKey: ['post', postId],
     queryFn: () => postApi.getById(postId),
     enabled: !!postId,
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: () => postApi.delete(postId),
+    onSuccess: () => {
+      router.push('/feed')
+    }
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: (data) => postApi.update(postId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['post', postId] })
+      setIsEditDialogOpen(false)
+    }
+  })
+
+  const isAuthor = me && post && (me.userId === post.userId || me.id === post.userId)
+
+  const handleEditOpen = () => {
+    setEditData({ title: post.title, content: post.content })
+    setIsEditDialogOpen(true)
+  }
+
+  const handleUpdate = (e) => {
+    e.preventDefault()
+    updateMutation.mutate(editData)
+  }
+
   const { data: relatedData } = useQuery({
     queryKey: ['posts', 'related'],
-    queryFn: () => postApi.list(0, 3),
+    queryFn: () => postApi.trending(0, 3),
   })
 
   // get dynamically fetched related posts based on recent posts
@@ -91,25 +137,27 @@ export default function PostPage() {
           <div className="mt-6 flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-3">
               <Avatar className="h-12 w-12">
-                <AvatarImage src={post.author?.avatar || "/placeholder.svg"} />
-                <AvatarFallback>{post.author?.name?.[0] || '?'}</AvatarFallback>
+                <AvatarImage src={post.userAvatar || "/placeholder.svg"} />
+                <AvatarFallback>{post.username?.[0] || '?'}</AvatarFallback>
               </Avatar>
               <div>
-                <Link href={`/author/${post.author?.name}`} className="font-medium text-foreground hover:text-primary">
-                  {post.author?.name || 'Unknown Author'}
+                <Link href={`/profile/${post.userId}`} className="font-medium text-foreground hover:text-primary">
+                  {post.username || 'Unknown Author'}
                 </Link>
                 <p className="text-sm text-muted-foreground">
-                  {post.date || 'Recently'} · {post.readTime || '5 min read'}
+                  {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Recently'} · {post.readTime || '5 min read'}
                 </p>
               </div>
             </div>
-            <Button
-              variant={isFollowing ? "secondary" : "default"}
-              size="sm"
-              onClick={() => setIsFollowing(!isFollowing)}
-            >
-              {isFollowing ? "Following" : "Follow"}
-            </Button>
+            {!isAuthor && (
+              <Button
+                variant={isFollowing ? "secondary" : "default"}
+                size="sm"
+                onClick={() => setIsFollowing(!isFollowing)}
+              >
+                {isFollowing ? "Following" : "Follow"}
+              </Button>
+            )}
           </div>
 
           {/* Tags */}
@@ -184,10 +232,58 @@ export default function PostPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {isAuthor && (
+                  <>
+                    <DropdownMenuItem onClick={handleEditOpen}>
+                      <Edit className="mr-2 h-4 w-4" /> Edit Post
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-red-500" onClick={() => deleteMutation.mutate()}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete Post
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuItem>Report Article</DropdownMenuItem>
                 <DropdownMenuItem>Hide from Feed</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Edit Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle>Edit Post</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleUpdate} className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                      id="title"
+                      value={editData.title}
+                      onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="content">Content</Label>
+                    <Textarea
+                      id="content"
+                      className="min-h-[200px]"
+                      value={editData.content}
+                      onChange={(e) => setEditData({ ...editData, content: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={updateMutation.isPending}>
+                      {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -195,20 +291,22 @@ export default function PostPage() {
         <Card className="mt-8 border-border">
           <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={post.author?.avatar || "/placeholder.svg"} />
-              <AvatarFallback>{post.author?.name?.[0] || '?'}</AvatarFallback>
+              <AvatarImage src={post.userAvatar || "/placeholder.svg"} />
+              <AvatarFallback>{post.username?.[0] || '?'}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-foreground">{post.author?.name || 'Unknown Author'}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{post.author?.bio}</p>
+              <h3 className="text-lg font-semibold text-foreground">{post.username || 'Unknown Author'}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{post.userBio || ''}</p>
               <div className="mt-2 flex gap-4 text-sm text-muted-foreground">
                 <span>{(post.author?.followers || 0).toLocaleString()} followers</span>
                 <span>{post.author?.articles || 0} articles</span>
               </div>
             </div>
-            <Button variant={isFollowing ? "secondary" : "default"} onClick={() => setIsFollowing(!isFollowing)}>
-              {isFollowing ? "Following" : "Follow"}
-            </Button>
+            {!isAuthor && (
+              <Button variant={isFollowing ? "secondary" : "default"} onClick={() => setIsFollowing(!isFollowing)}>
+                {isFollowing ? "Following" : "Follow"}
+              </Button>
+            )}
           </CardContent>
         </Card>
 

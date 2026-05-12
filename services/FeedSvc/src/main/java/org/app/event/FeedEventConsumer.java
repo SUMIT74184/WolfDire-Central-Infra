@@ -20,10 +20,8 @@ public class FeedEventConsumer {
     public void handlePostCreated(Map<String, Object> event) {
         try {
             String postId = (String) event.get("postId");
-            Long authorId = ((Number) event.get("authorId")).longValue();
-            Long communityId = event.get("communityId") != null
-                    ? ((Number) event.get("communityId")).longValue()
-                    : null;
+            String authorId = (String) event.get("userId"); // Producer sends 'userId' as the author
+            String communityId = (String) event.get("communityId");
             String title = (String) event.get("title");
             String content = (String) event.get("content");
 
@@ -40,7 +38,7 @@ public class FeedEventConsumer {
     @KafkaListener(topics = "feed.update", groupId = "feed-service-group")
     public void handleFeedUpdate(Map<String, Object> event) {
         try {
-            Long userId = ((Number) event.get("userId")).longValue();
+            String userId = (String) event.get("userId");
             String action = (String) event.get("action");
 
             log.info("Processing feed.update event: userId={}, action={}", userId, action);

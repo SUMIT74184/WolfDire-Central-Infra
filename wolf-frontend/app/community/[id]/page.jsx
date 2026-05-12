@@ -4,13 +4,14 @@ import { useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { communityApi, postApi } from "@/lib/api-client"
+import { communityApi, postApi, authApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, Bell, Share2, Heart, MessageCircle, PenSquare, Calendar, Globe, Loader2 } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Users, Bell, Share2, Heart, MessageCircle, PenSquare, Calendar, Globe, Loader2, MoreHorizontal, Trash2 } from "lucide-react"
 
 const members = [
   { name: "Sarah Chen", avatar: "/woman-developer.png", role: "Admin", posts: 47 },
@@ -24,9 +25,21 @@ export default function CommunityPage() {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState("posts")
 
+  const { data: me } = useQuery({
+    queryKey: ["me"],
+    queryFn: authApi.me,
+  })
+
   const { data: community, isLoading: isCommLoading } = useQuery({
     queryKey: ["community", id],
     queryFn: () => communityApi.getById(id),
+  })
+
+  const deletePostMutation = useMutation({
+    mutationFn: (postId) => postApi.delete(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["community-posts", id] })
+    }
   })
 
   // Provide fallback objects so destructuring continues working until fetched
@@ -158,12 +171,17 @@ export default function CommunityPage() {
                           <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{post.content || post.excerpt}</p>
                           <div className="mt-4 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={post.userAvatar || "/placeholder.svg"} />
-                                <AvatarFallback>{(post.username || "U")[0]}</AvatarFallback>
-                              </Avatar>
+                              <Link href={`/profile/${post.userId}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarImage src={post.userAvatar || "/placeholder.svg"} />
+                                  <AvatarFallback>{(post.username || "U")[0]}</AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm text-muted-foreground">
+                                  {post.username}
+                                </span>
+                              </Link>
                               <span className="text-sm text-muted-foreground">
-                                {post.username} · {new Date(post.createdAt || Date.now()).toLocaleDateString()}
+                                · {new Date(post.createdAt || Date.now()).toLocaleDateString()}
                               </span>
                             </div>
                             <div className="flex items-center gap-3 text-muted-foreground">
@@ -173,6 +191,20 @@ export default function CommunityPage() {
                               <span className="flex items-center gap-1 text-sm">
                                 <MessageCircle className="h-4 w-4" /> {post.commentCount || 0}
                               </span>
+                              {(me && (me.userId === post.userId || me.id === post.userId)) && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem className="text-red-500" onClick={() => deletePostMutation.mutate(post.id)}>
+                                      <Trash2 className="mr-2 h-4 w-4" /> Delete Post
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
                             </div>
                           </div>
                         </div>

@@ -27,14 +27,14 @@ public class FeedItem {
     private Long id;
 
     @Column(nullable = false)
-    private Long userId;
+    private String userId;
 
     @Column(nullable = false)
     private String postId;
 
-    private Long communityId;
+    private String communityId;
 
-    private Long authorId;
+    private String authorId;
 
     @Column(columnDefinition = "vector(1536)")
     private PGvector embedding;

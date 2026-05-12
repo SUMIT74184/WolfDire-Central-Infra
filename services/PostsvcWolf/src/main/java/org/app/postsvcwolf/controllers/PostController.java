@@ -1,5 +1,6 @@
 package org.app.postsvcwolf.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.app.postsvcwolf.dto.CreatePostRequest;
 import org.app.postsvcwolf.dto.PostResponse;
@@ -22,24 +23,27 @@ public class PostController {
     @PostMapping
     public ResponseEntity<PostResponse> createPost(
             @RequestBody CreatePostRequest request,
-            @RequestHeader("X-User-Id") String userId,
-            @RequestHeader("X-User-Name") String username) {
+            HttpServletRequest httpRequest) {
+        String userId = getRequiredUserId(httpRequest);
+        String username = getUsername(httpRequest);
         return new ResponseEntity<>(postService.createPost(request, userId, username), HttpStatus.CREATED);
     }
 
     @PostMapping("/{postId}/repost")
     public ResponseEntity<PostResponse> repost(
             @PathVariable String postId,
-            @RequestHeader("X-User-Id") String userId,
-            @RequestHeader("X-User-Name") String username,
+            HttpServletRequest httpRequest,
             @RequestParam(required = false) String additionalContent) {
+        String userId = getRequiredUserId(httpRequest);
+        String username = getUsername(httpRequest);
         return new ResponseEntity<>(postService.repost(postId, userId, username, additionalContent), HttpStatus.CREATED);
     }
 
     @GetMapping("/{postId}")
     public ResponseEntity<PostResponse> getPost(
             @PathVariable String postId,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+            HttpServletRequest httpRequest) {
+        String userId = getOptionalUserId(httpRequest);
         return ResponseEntity.ok(postService.getPost(postId, userId));
     }
 
@@ -48,16 +52,26 @@ public class PostController {
             @PathVariable String communityId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+            HttpServletRequest httpRequest) {
+        String userId = getOptionalUserId(httpRequest);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return ResponseEntity.ok(postService.getCommunityPosts(communityId, pageable, userId));
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<PostResponse>> listPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest httpRequest) {
+        return getTrendingPosts(page, size, httpRequest);
     }
 
     @GetMapping("/trending")
     public ResponseEntity<Page<PostResponse>> getTrendingPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+            HttpServletRequest httpRequest) {
+        String userId = getOptionalUserId(httpRequest);
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(postService.getTrendingPosts(pageable, userId));
     }
@@ -67,7 +81,8 @@ public class PostController {
             @PathVariable String communityId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+            HttpServletRequest httpRequest) {
+        String userId = getOptionalUserId(httpRequest);
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(postService.getHotPosts(communityId, pageable, userId));
     }
@@ -77,7 +92,8 @@ public class PostController {
             @RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+            HttpServletRequest httpRequest) {
+        String userId = getOptionalUserId(httpRequest);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return ResponseEntity.ok(postService.searchPosts(query, pageable, userId));
     }
@@ -87,7 +103,8 @@ public class PostController {
             @PathVariable String targetUserId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+            HttpServletRequest httpRequest) {
+        String userId = getOptionalUserId(httpRequest);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return ResponseEntity.ok(postService.getUserPosts(targetUserId, pageable, userId));
     }
@@ -95,16 +112,17 @@ public class PostController {
     @PutMapping("/{postId}")
     public ResponseEntity<PostResponse> updatePost(
             @PathVariable String postId,
-            @RequestHeader("X-User-Id") String userId,
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String content) {
-        return ResponseEntity.ok(postService.updatePost(postId, userId, title, content));
+            @RequestBody org.app.postsvcwolf.dto.UpdatePostRequest request,
+            HttpServletRequest httpRequest) {
+        String userId = getRequiredUserId(httpRequest);
+        return ResponseEntity.ok(postService.updatePost(postId, userId, request.getTitle(), request.getContent()));
     }
 
     @DeleteMapping("/{postId}")
     public ResponseEntity<Void> deletePost(
             @PathVariable String postId,
-            @RequestHeader("X-User-Id") String userId) {
+            HttpServletRequest httpRequest) {
+        String userId = getRequiredUserId(httpRequest);
         postService.deletePost(postId, userId);
         return ResponseEntity.noContent().build();
     }
@@ -112,7 +130,8 @@ public class PostController {
     @PostMapping("/{postId}/save")
     public ResponseEntity<Void> savePost(
             @PathVariable String postId,
-            @RequestHeader("X-User-Id") String userId) {
+            HttpServletRequest httpRequest) {
+        String userId = getRequiredUserId(httpRequest);
         postService.savePost(userId, postId);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -120,7 +139,8 @@ public class PostController {
     @DeleteMapping("/{postId}/save")
     public ResponseEntity<Void> unsavePost(
             @PathVariable String postId,
-            @RequestHeader("X-User-Id") String userId) {
+            HttpServletRequest httpRequest) {
+        String userId = getRequiredUserId(httpRequest);
         postService.unsavePost(userId, postId);
         return ResponseEntity.noContent().build();
     }
@@ -129,8 +149,30 @@ public class PostController {
     public ResponseEntity<Page<PostResponse>> getSavedPosts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestHeader("X-User-Id") String userId) {
+            HttpServletRequest httpRequest) {
+        String userId = getRequiredUserId(httpRequest);
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(postService.getSavedPosts(userId, pageable));
     }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────────
+
+    private String getRequiredUserId(HttpServletRequest request) {
+        Object userId = request.getAttribute("userId");
+        if (userId == null) {
+            throw new IllegalArgumentException("User not authenticated — no userId found in request");
+        }
+        return (String) userId;
+    }
+
+    private String getOptionalUserId(HttpServletRequest request) {
+        Object userId = request.getAttribute("userId");
+        return userId != null ? (String) userId : null;
+    }
+
+    private String getUsername(HttpServletRequest request) {
+        Object username = request.getAttribute("username");
+        return username != null ? (String) username : "unknown";
+    }
 }
+

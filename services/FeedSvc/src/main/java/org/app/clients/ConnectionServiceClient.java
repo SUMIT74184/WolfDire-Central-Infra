@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "social-connection-service")
+@FeignClient(name = "SocialConnection")
 public interface ConnectionServiceClient {
 
     @GetMapping("/api/connections/following/{userId}")
-    List<Long> getFollowingIds(@PathVariable("userId") Long userId, @RequestParam("type") String type);
+    List<String> getFollowingIds(@PathVariable("userId") String userId, @RequestParam("type") String type);
 
     @GetMapping("/api/connections/followers/{targetId}")
-    List<Long> getFollowerIds(@PathVariable("targetId") Long targetId, @RequestParam("type") String type);
+    List<String> getFollowerIds(@PathVariable("targetId") String targetId, @RequestParam("type") String type);
 }

@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import java.util.Map;
 
-@FeignClient(name = "social-connection") // Will route via discovery or ribbon
+@FeignClient(name = "SocialConnection")
 public interface SocialConnectionClient {
 
     @GetMapping("/api/communities/{id}")

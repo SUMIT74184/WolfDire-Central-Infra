@@ -62,6 +62,7 @@ export default function ExplorePage() {
       avatar: "/diverse-user-avatars.png",
       role: "Member",
     },
+    userId: p.userId,
     category: p.communityName || p.subredditName || "General",
     readTime: `${Math.max(1, Math.ceil((p.content?.length || 0) / 1000))} min read`,
     likes: p.upvotes || p.score || 0,
@@ -126,7 +127,7 @@ export default function ExplorePage() {
         {loading ? (
           <div className="py-20 text-center text-muted-foreground">Loading posts...</div>
         ) : error ? (
-          <div className="py-20 text-center text-red-500">{error}</div>
+          <div className="py-20 text-center text-red-500">{error?.message || "An error occurred"}</div>
         ) : posts.length === 0 ? (
           <div className="py-20 text-center">
             <p className="text-muted-foreground">No posts found matching your criteria.</p>
@@ -173,11 +174,13 @@ export default function ExplorePage() {
                           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                             <span className="font-semibold">c/{post.category}</span>
                             <span>Posted by</span>
-                            <Avatar className="h-5 w-5">
-                              <AvatarImage src={post.author.avatar || "/placeholder.svg"} />
-                              <AvatarFallback>{post.author.name[0]}</AvatarFallback>
-                            </Avatar>
-                            <span>{post.author.name}</span>
+                            <Link href={`/profile/${post.userId || p.userId || ''}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                              <Avatar className="h-5 w-5">
+                                <AvatarImage src={post.author.avatar || "/placeholder.svg"} />
+                                <AvatarFallback>{post.author.name[0]}</AvatarFallback>
+                              </Avatar>
+                              <span>{post.author.name}</span>
+                            </Link>
                             <span>{post.date}</span>
                           </div>
 
