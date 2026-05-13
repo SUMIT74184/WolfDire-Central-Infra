@@ -52,9 +52,18 @@ export default function CommunityPage() {
 
   const posts = Array.isArray(rawPosts) ? rawPosts : []
 
+  const { data: isFollowing, isLoading: isFollowingLoading } = useQuery({
+    queryKey: ["isFollowingCommunity", id],
+    queryFn: () => communityApi.isFollowing(id),
+    enabled: !!id && !!me,
+  })
+
   const followMutation = useMutation({
-    mutationFn: () => communityApi.follow(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["community", id] }),
+    mutationFn: () => isFollowing ? communityApi.unfollow(id) : communityApi.follow(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["isFollowingCommunity", id] })
+      queryClient.invalidateQueries({ queryKey: ["community", id] })
+    },
   })
 
   const rules = cData.rules || ["Be respectful and constructive", "No spam or self-promotion", "Stay on topic", "Credit original sources", "No NSFW content"]
@@ -105,11 +114,11 @@ export default function CommunityPage() {
               <Share2 className="h-4 w-4" />
             </Button>
             <Button 
-               variant={cData.isJoined ? "secondary" : "default"} 
+               variant={isFollowing ? "secondary" : "default"} 
                onClick={() => followMutation.mutate()}
-               disabled={followMutation.isPending}
+               disabled={followMutation.isPending || isFollowingLoading}
             >
-              {cData.isJoined ? "Joined" : "Join Community"}
+              {isFollowing ? "Joined" : "Join Community"}
             </Button>
           </div>
         </div>

@@ -52,10 +52,12 @@ export default function PostPage() {
     queryFn: authApi.me,
   })
 
-  const { data: post, isLoading } = useQuery({
+  const { data: post, isLoading, isError, error } = useQuery({
     queryKey: ['post', postId],
     queryFn: () => postApi.getById(postId),
     enabled: !!postId,
+    staleTime: 30 * 1000,
+    retry: 2,
   })
 
   const deleteMutation = useMutation({
@@ -104,6 +106,27 @@ export default function PostPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground">Couldn't load post</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            The post may have been removed or there was a server error.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button onClick={() => window.history.back()} variant="outline">
+            Go Back
+          </Button>
+          <Button asChild>
+            <Link href="/feed">Back to Feed</Link>
+          </Button>
+        </div>
       </div>
     )
   }

@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
@@ -39,12 +41,20 @@ public class PostController {
         return new ResponseEntity<>(postService.repost(postId, userId, username, additionalContent), HttpStatus.CREATED);
     }
 
-    @GetMapping("/{postId}")
+    @GetMapping("/{id}")
     public ResponseEntity<PostResponse> getPost(
-            @PathVariable String postId,
-            HttpServletRequest httpRequest) {
-        String userId = getOptionalUserId(httpRequest);
-        return ResponseEntity.ok(postService.getPost(postId, userId));
+            @PathVariable String id,
+            HttpServletRequest request) {
+        String userId = (String) request.getAttribute("userId");
+        return ResponseEntity.ok(postService.getPost(id, userId));
+    }
+
+    @PostMapping("/batch")
+    public ResponseEntity<List<PostResponse>> getPostsByIds(
+            @RequestBody List<String> ids,
+            HttpServletRequest request) {
+        String userId = (String) request.getAttribute("userId");
+        return ResponseEntity.ok(postService.getPostsByIds(ids, userId));
     }
 
     @GetMapping("/community/{communityId}")

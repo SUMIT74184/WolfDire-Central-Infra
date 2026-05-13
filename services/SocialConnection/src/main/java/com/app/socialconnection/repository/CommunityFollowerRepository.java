@@ -26,4 +26,8 @@ public interface CommunityFollowerRepository extends JpaRepository<CommunityFoll
     // Get user IDs who follow a community
     @Query("SELECT cf.userId FROM CommunityFollower cf WHERE cf.communityId = :communityId")
     List<String> findUserIdsByCommunityId(String communityId);
+
+    // Get community IDs that a user follows
+    @Query("SELECT cf.communityId FROM CommunityFollower cf WHERE cf.userId = :userId")
+    List<String> findCommunityIdsByUserId(String userId);
 }

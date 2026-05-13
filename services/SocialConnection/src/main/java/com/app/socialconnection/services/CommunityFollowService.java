@@ -1,6 +1,7 @@
 package com.app.socialconnection.services;
 
 import com.app.socialconnection.dto.ConnectionDTO;
+import java.util.List;
 import com.app.socialconnection.entity.CommunityFollower;
 import com.app.socialconnection.repository.CommunityFollowerRepository;
 import com.app.socialconnection.repository.CommunityRepository;
@@ -114,5 +115,20 @@ public class CommunityFollowService {
     @Transactional(readOnly = true)
     public long getCommunityMemberCount(String communityId) {
         return communityFollowerRepository.countByCommunityId(communityId);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isFollowing(String userId, String communityId) {
+        return communityFollowerRepository.existsByCommunityIdAndUserId(communityId, userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> getFollowingIds(String userId) {
+        return communityFollowerRepository.findCommunityIdsByUserId(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> getFollowerIds(String communityId) {
+        return communityFollowerRepository.findUserIdsByCommunityId(communityId);
     }
 }

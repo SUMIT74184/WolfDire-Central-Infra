@@ -322,6 +322,9 @@ export const communityApi = {
   unfollow: (communityId: string) =>
     apiClient.delete(`/api/communities/follow/${communityId}`),
 
+  isFollowing: (communityId: string) =>
+    apiClient.get(`/api/communities/${communityId}/is-joined`),
+
   myCommunities: (page = 0, size = 50) =>
     apiClient.get(`/api/communities/my-communities?page=${page}&size=${size}`),
 };

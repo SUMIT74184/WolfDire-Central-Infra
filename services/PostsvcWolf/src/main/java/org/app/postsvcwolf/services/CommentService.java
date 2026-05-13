@@ -41,8 +41,9 @@ public class CommentService {
     private static final int MAX_COMMENT_DEPTH = 10;
 
 
-    @CacheEvict(value = {"comments", "posts"}, allEntries = true)
-    public CommentResponse createComment(CreateCommentRequest request,String userId,String username){
+    @CacheEvict(value = "comments", key = "#request.postId + '_0'")
+    @Transactional
+    public CommentResponse createComment(CreateCommentRequest request, String userId, String username) {
         postRepository.findActive(request.getPostId())
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
@@ -65,7 +66,7 @@ public class CommentService {
         Comment comment = Comment.builder()
                 .postId(request.getPostId())
                 .userId(userId)
-                .username(username)
+                .username(username != null ? username : "User")
                 .content(request.getContent())
                 .parentCommentId(request.getParentCommentId())
                 .depth(depth)
@@ -94,7 +95,7 @@ public class CommentService {
         return mapToResponse(comment, userId);
     }
 
-    @Cacheable(value = "comments", key = "#postId + '_' + #pageable.pageNumber")
+    @Cacheable(value = "comments", key = "#postId + '_' + #pageable.pageNumber", unless = "#result == null")
     public Page<CommentResponse> getPostComments(String postId, Pageable pageable, String userId){
         Page<Comment> comments = commentRepository.findTopLevel(postId,pageable);
         return comments.map(comment -> mapToResponseWithReplies(comment,userId));
@@ -161,21 +162,23 @@ public class CommentService {
 
 
     private void publishCommentAddedEvent(Comment comment){
-        CommentAddedEvent event = CommentAddedEvent.builder()
-                .commentId(comment.getId())
-                .postId(comment.getPostId())
-                .userId(comment.getUserId())
-                .username(comment.getUsername())
-                .content(comment.getContent())
-                .parentCommentId(comment.getParentCommentId())
-                .mentions(comment.getMentions())
-                .createdAt(comment.getCreatedAt())
-                .build();
+        try {
+            CommentAddedEvent event = CommentAddedEvent.builder()
+                    .commentId(comment.getId())
+                    .postId(comment.getPostId())
+                    .userId(comment.getUserId())
+                    .username(comment.getUsername())
+                    .content(comment.getContent())
+                    .parentCommentId(comment.getParentCommentId())
+                    .mentions(comment.getMentions())
+                    .createdAt(comment.getCreatedAt())
+                    .build();
 
-        kafkaTemplate.send("comment.added", comment.getId(), event);
-        log.info("Published comment added event for comment: {}", comment.getId());
-
-
+            kafkaTemplate.send("comment.added", comment.getId(), event);
+            log.info("Published comment added event for comment: {}", comment.getId());
+        } catch (Exception e) {
+            log.error("Failed to publish comment added event: {}", e.getMessage());
+        }
     }
 
     private void publishMentionEvent(Comment comment, String mentionedUser) {

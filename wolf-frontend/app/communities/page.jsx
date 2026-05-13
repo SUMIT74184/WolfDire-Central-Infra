@@ -27,6 +27,9 @@ export default function CommunitiesPage() {
   const { data: rawCommunities, isLoading } = useQuery({
     queryKey: ["communities"],
     queryFn: () => communityApi.list(0, 50).then((res) => res.content || res),
+    staleTime: 2 * 60 * 1000,   // treat data as fresh for 2 min — no refetch on nav
+    gcTime: 5 * 60 * 1000,      // keep in cache for 5 min
+    retry: 1,
   })
 
   // Normalize API data structure

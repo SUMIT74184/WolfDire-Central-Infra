@@ -143,12 +143,22 @@ public class PostService {
 
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "posts", key = "#postId")
     public PostResponse getPost(String postId, String userId) {
         Post post = postRepository.findActive(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-
+                .orElseThrow(() -> new RuntimeException("Post not found: " + postId));
         return mapToResponse(post, userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PostResponse> getPostsByIds(List<String> ids, String userId) {
+        if (ids == null || ids.isEmpty()) return new java.util.ArrayList<>();
+        List<Post> posts = postRepository.findAllById(ids);
+        return posts.stream()
+                .filter(p -> p.getIsRemoved() == null || !p.getIsRemoved())
+                .map(p -> mapToResponse(p, userId))
+                .toList();
     }
 
     @Transactional
@@ -157,26 +167,26 @@ public class PostService {
         publishViewEvent(postId);
     }
 
-    @Cacheable(value = "feed", key = "#communityId + '_' + #pageable.pageNumber")
+    @Transactional(readOnly = true)
     public Page<PostResponse> getCommunityPosts(String communityId, Pageable pageable, String userId) {
         Page<Post> posts = postRepository.findByCommunity(communityId, pageable);
         return posts.map(post -> mapToResponse(post, userId));
     }
 
-    @Cacheable(value = "trending", key = "'all_' + #pageable.pageNumber")
+    @Transactional(readOnly = true)
     public Page<PostResponse> getTrendingPosts(Pageable pageable, String userId) {
-        LocalDateTime since = LocalDateTime.now().minusHours(24);
+        LocalDateTime since = LocalDateTime.now().minusDays(7);
         Page<Post> posts = postRepository.findTrending(since, pageable);
         return posts.map(post -> mapToResponse(post, userId));
     }
 
-    @Cacheable(value = "hot", key = "#communityId + '_' + #pageable.pageNumber")
+    @Transactional(readOnly = true)
     public Page<PostResponse> getHotPosts(String communityId, Pageable pageable, String userId) {
         Page<Post> posts = postRepository.findHot(communityId, pageable);
         return posts.map(post -> mapToResponse(post, userId));
-
     }
 
+    @Transactional(readOnly = true)
     public Page<PostResponse> searchPosts(String query, Pageable pageable, String userId) {
         Page<Post> posts = postRepository.search(query, pageable);
         return posts.map(post -> mapToResponse(post, userId));
@@ -185,6 +195,7 @@ public class PostService {
     /**
      * Get all posts by a specific user (for profile page).
      */
+    @Transactional(readOnly = true)
     public Page<PostResponse> getUserPosts(String targetUserId, Pageable pageable, String viewerUserId) {
         Page<Post> posts = postRepository.findByUser(targetUserId, pageable);
         return posts.map(post -> mapToResponse(post, viewerUserId));
@@ -299,23 +310,26 @@ public class PostService {
     }
 
     private void publishPostCreatedEvent(Post post) {
-        PostCreatedEvent event = PostCreatedEvent.builder()
-                .postId(post.getId())
-                .title(post.getTitle())
-                .content(post.getContent())
-                .userId(post.getUserId())
-                .username(post.getUsername())
-                .communityId(post.getCommunityId())
-                .communityName(post.getCommunityName())
-                .type(post.getType())
-                .mediaUrl(post.getMediaUrl())
-                .mentions(post.getMentions())
-                .createdAt(post.getCreatedAt())
-                .build();
+        try {
+            PostCreatedEvent event = PostCreatedEvent.builder()
+                    .postId(post.getId())
+                    .title(post.getTitle())
+                    .content(post.getContent())
+                    .userId(post.getUserId())
+                    .username(post.getUsername())
+                    .communityId(post.getCommunityId())
+                    .communityName(post.getCommunityName())
+                    .type(post.getType())
+                    .mediaUrl(post.getMediaUrl())
+                    .mentions(post.getMentions())
+                    .createdAt(post.getCreatedAt())
+                    .build();
 
-        kafkaTemplate.send("post.created", post.getId(), event);
-        log.info("Published post created event for post: {}", post.getId());
-
+            kafkaTemplate.send("post.created", post.getId(), event);
+            log.info("Published post created event for post: {}", post.getId());
+        } catch (Exception e) {
+            log.error("Failed to publish post created event: {}", e.getMessage());
+        }
     }
 
     private void publishMentionEvent(Post post, String mentionedUser) {
@@ -366,8 +380,8 @@ public class PostService {
                 .mediaUrl(post.getMediaUrl())
                 .thumbnailUrl(post.getThumbnailUrl())
                 .aiSummary(post.getAiSummary())
-                .hashtags(post.getHashtags())
-                .mentions(post.getMentions())
+                .hashtags(post.getHashtags() != null ? new java.util.HashSet<>(post.getHashtags()) : new java.util.HashSet<>())
+                .mentions(post.getMentions() != null ? new java.util.HashSet<>(post.getMentions()) : new java.util.HashSet<>())
                 .upvotes(post.getUpVotes())
                 .downvotes(post.getDownVotes())
                 .score(post.getScore())

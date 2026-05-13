@@ -246,6 +246,26 @@ public class ConnectionService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public List<String> getFollowingIds(String userId, String type) {
+        if ("USER".equalsIgnoreCase(type)) {
+            return connectionRepository.findFollowingIds(userId, Connection.ConnectionType.FOLLOW);
+        } else if ("CONNECTION".equalsIgnoreCase(type)) {
+            return connectionRepository.findFollowingIds(userId, Connection.ConnectionType.CONNECTION);
+        }
+        return List.of();
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> getFollowerIds(String targetId, String type) {
+        if ("USER".equalsIgnoreCase(type)) {
+            return connectionRepository.findFollowerIds(targetId, Connection.ConnectionType.FOLLOW);
+        } else if ("CONNECTION".equalsIgnoreCase(type)) {
+            return connectionRepository.findFollowerIds(targetId, Connection.ConnectionType.CONNECTION);
+        }
+        return List.of();
+    }
+
     // ==================== BLOCK / UNBLOCK ====================
 
     /**

@@ -1,5 +1,6 @@
 package com.app.socialconnection.services;
 
+import com.app.socialconnection.entity.Connection;
 import com.app.socialconnection.repository.CommunityFollowerRepository;
 import com.app.socialconnection.repository.ConnectionRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,10 +35,10 @@ public class FeedEventConsumer {
             List<String> followerIds;
 
             if ("USER_POST".equals(type)) {
-                followerIds = connectionRepository.findFollowerIdsByUserId(authorId);
+                followerIds = connectionRepository.findFollowerIds(authorId, Connection.ConnectionType.FOLLOW);
             } else if ("COMMUNITY_POST".equals(type)) {
                 String communityId = String.valueOf(event.get("communityId"));
-                
+
                 followerIds = communityFollowerRepository.findUserIdsByCommunityId(communityId);
             } else {
                 log.warn("Unknown post type: {}", type);

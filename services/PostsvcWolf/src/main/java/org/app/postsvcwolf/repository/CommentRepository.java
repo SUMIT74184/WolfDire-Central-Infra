@@ -1,7 +1,7 @@
 package org.app.postsvcwolf.repository;
 
 
-import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.repository.query.Param;
 import org.app.postsvcwolf.entity.Comment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +19,7 @@ public interface CommentRepository extends JpaRepository<Comment, String> {
     @Query("SELECT c FROM Comment c WHERE c.postId = :postId " +
             "AND c.parentCommentId IS NULL " +
             "AND c.isDeleted = false AND c.isRemoved = false")
-    Page<Comment> findTopLevel(@Param("PostId") String postId, Pageable pageable);
+    Page<Comment> findTopLevel(@Param("postId") String postId, Pageable pageable);
 
 
     @Query("SELECT c FROM Comment c WHERE c.postId = :postId " +

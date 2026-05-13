@@ -75,6 +75,14 @@ public class CommunityFollowController {
         return ResponseEntity.ok(communityFollowService.getCommunityMemberCount(communityId));
     }
 
+    @GetMapping("/{communityId}/is-joined")
+    public ResponseEntity<Boolean> isFollowing(
+            HttpServletRequest request,
+            @PathVariable String communityId) {
+        String userId = getUserId(request);
+        return ResponseEntity.ok(communityFollowService.isFollowing(userId, communityId));
+    }
+
     private String getUserId(HttpServletRequest request) {
         Object userId = request.getAttribute("userId");
         if (userId == null) {

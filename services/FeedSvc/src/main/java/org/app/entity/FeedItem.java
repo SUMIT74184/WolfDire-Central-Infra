@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "feed_items",indexes = {
-        @Index(name = "idx_user_created",columnList = "user_id,created_id"),
+        @Index(name = "idx_user_created",columnList = "user_id,created_at"),
         @Index(name = "idx_post_id",columnList = "post_id"),
         @Index(name = "idx_created_desc",columnList = "created_at DESC")
 })
@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 public class FeedItem {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)

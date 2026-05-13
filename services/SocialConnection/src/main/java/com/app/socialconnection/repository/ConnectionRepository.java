@@ -43,8 +43,12 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
     void deleteByUserIdAndFollowerId(String userId, String followerId);
 
     // Get follower IDs for a user (people who follow this userId)
-    @Query("SELECT c.followerId FROM Connection c WHERE c.userId = :userId AND c.status = 'ACCEPTED'")
-    List<String> findFollowerIdsByUserId(String userId);
+    @Query("SELECT c.followerId FROM Connection c WHERE c.userId = :userId AND c.status = 'ACCEPTED' AND c.type = :type")
+    List<String> findFollowerIds(String userId, Connection.ConnectionType type);
+
+    // Get following IDs for a user (people this user follows)
+    @Query("SELECT c.userId FROM Connection c WHERE c.followerId = :userId AND c.status = 'ACCEPTED' AND c.type = :type")
+    List<String> findFollowingIds(String userId, Connection.ConnectionType type);
 
     // Find all connections between two users (for cleanup when blocking)
     @Query("SELECT c FROM Connection c WHERE (c.userId = :userA AND c.followerId = :userB) " +

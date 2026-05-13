@@ -51,7 +51,7 @@ public interface PostRepository extends JpaRepository<Post,String> {
 
 
 
-    @Query("SELECT p FROM Post p WHERE p.id = :id AND p.isRemoved = false")
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.hashtags LEFT JOIN FETCH p.mentions WHERE p.id = :id AND p.isRemoved = false")
     Optional<Post> findActive(@Param("id") String id);
 
 
