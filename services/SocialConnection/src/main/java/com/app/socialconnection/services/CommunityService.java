@@ -34,6 +34,7 @@ public class CommunityService {
                 .name(request.getName())
                 .slug(slug)
                 .description(request.getDescription())
+                .imageUrl(request.getImageUrl())
                 .ownerId(userId)
                 .memberCount(1L) // Founder is the first member
                 .isArchived(false)
@@ -74,6 +75,7 @@ public class CommunityService {
                 .name(community.getName())
                 .slug(community.getSlug())
                 .description(community.getDescription())
+                .imageUrl(community.getImageUrl())
                 .ownerId(community.getOwnerId())
                 .memberCount(community.getMemberCount())
                 .isArchived(community.getIsArchived())

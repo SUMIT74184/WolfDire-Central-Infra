@@ -12,6 +12,7 @@ public class CommunityDto {
     private String name;
     private String slug;
     private String description;
+    private String imageUrl;
     private String ownerId;
     private Long memberCount;
     private boolean isArchived;
@@ -23,5 +24,7 @@ public class CommunityDto {
     public static class CreateRequest {
         private String name;
         private String description;
+        /** Optional HTTPS image URL for banner / avatar */
+        private String imageUrl;
     }
 }

@@ -33,6 +33,10 @@ public class Community {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    /** Optional banner / card image URL */
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
+
     @Column(name = "owner_id", nullable = false)
     private String ownerId;
 

@@ -22,24 +22,30 @@ export default function CommunitiesPage() {
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [filter, setFilter] = useState("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [formData, setFormData] = useState({ name: "", description: "" })
+  const [formData, setFormData] = useState({ name: "", description: "", imageUrl: "" })
 
   const { data: rawCommunities, isLoading } = useQuery({
-    queryKey: ["communities"],
+    queryKey: ["communities", "browse"],
     queryFn: () => communityApi.list(0, 50).then((res) => res.content || res),
     staleTime: 2 * 60 * 1000,   // treat data as fresh for 2 min — no refetch on nav
     gcTime: 5 * 60 * 1000,      // keep in cache for 5 min
     retry: 1,
   })
 
+  const communityRows = Array.isArray(rawCommunities)
+    ? rawCommunities
+    : Array.isArray(rawCommunities?.content)
+      ? rawCommunities.content
+      : []
+
   // Normalize API data structure
-  const communities = (Array.isArray(rawCommunities) ? rawCommunities : []).map(c => ({
+  const communities = communityRows.map((c) => ({
     id: c.id,
     name: c.name || "Unknown",
     description: c.description || "No description",
     members: c.memberCount || 0,
     posts: 0,
-    image: "/vibrant-tech-community.png",
+    image: c.imageUrl || "/vibrant-tech-community.png",
     tags: [],
     isJoined: false, // Could track actual connection
     trending: false,
@@ -52,7 +58,7 @@ export default function CommunitiesPage() {
     onSuccess: () => {
       toast.success("Community created successfully!")
       setIsDialogOpen(false)
-      setFormData({ name: "", description: "" })
+      setFormData({ name: "", description: "", imageUrl: "" })
       queryClient.invalidateQueries({ queryKey: ["communities"] })
     },
     onError: (err) => {
@@ -129,10 +135,27 @@ export default function CommunitiesPage() {
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Banner image URL (optional)</label>
+                    <Input
+                      type="url"
+                      placeholder="https://…"
+                      value={formData.imageUrl}
+                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">Shown on cards and the community page header.</p>
+                  </div>
                   <Button
                     className="w-full"
-                    disabled={createMutation.isPending || !formData.name}
-                    onClick={() => createMutation.mutate(formData)}
+                    disabled={createMutation.isPending || !formData.name.trim()}
+                    onClick={() => {
+                      const imageUrl = formData.imageUrl.trim()
+                      createMutation.mutate({
+                        name: formData.name.trim(),
+                        description: formData.description.trim(),
+                        ...(imageUrl ? { imageUrl } : {}),
+                      })
+                    }}
                   >
                     {createMutation.isPending ? "Creating..." : "Create"}
                   </Button>

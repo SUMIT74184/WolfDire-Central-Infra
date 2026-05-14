@@ -21,8 +21,10 @@ export default function ExplorePage() {
   const [sortBy, setSortBy] = useState("trending")
 
   const { data: communitiesData } = useQuery({
-    queryKey: ['communities'],
-    queryFn: () => communityApi.getAll(0, 100)
+    // Must differ from ["communities"] on /communities — same key + different queryFn
+    // overwrote the cache with a Spring Page object so the list page saw [].
+    queryKey: ["communities", "explore-filters"],
+    queryFn: () => communityApi.getAll(0, 100),
   })
 
   const communities = communitiesData ? (Array.isArray(communitiesData) ? communitiesData : communitiesData.content || []) : []

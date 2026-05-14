@@ -78,7 +78,7 @@ export default function CommunityPage() {
     <div className="min-h-screen">
       {/* Cover Image */}
       <div className="relative h-48 overflow-hidden bg-muted sm:h-64">
-        <img src={cData.cover || "/placeholder.svg"} alt={cData.name} className="h-full w-full object-cover" />
+        <img src={cData.imageUrl || cData.cover || "/placeholder.svg"} alt={cData.name} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
       </div>
 
@@ -86,7 +86,7 @@ export default function CommunityPage() {
         {/* Community Header */}
         <div className="-mt-16 relative z-10 flex flex-col gap-4 sm:-mt-20 sm:flex-row sm:items-end sm:gap-6">
           <Avatar className="h-24 w-24 border-4 border-background sm:h-32 sm:w-32">
-            <AvatarImage src={cData.image || "/placeholder.svg"} />
+            <AvatarImage src={cData.imageUrl || cData.image || "/placeholder.svg"} />
             <AvatarFallback>{cData.name?.[0]}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
