@@ -37,7 +37,9 @@ flowchart TD
     K_User -.->|Sub: Sync Users| PostSvc
     K_Post -.->|Sub: Validate Post Content| ModSvc
     
-    %% Feed Generation reads events
+    %% Feed Generation (Hybrid: Events + Feign)
     K_Mod -.->|Sub: Add to feeds if Approved| Feed
-    K_Social -.->|Sub: Rebuild/Update feeds based on followers| Feed
+    K_Social -.->|Sub: Rebuild/Update feeds| Feed
+    Feed -->|Feign: Get Following/Followers| Social
+    Feed -->|Feign: Batch Fetch Posts| PostSvc
 ```
