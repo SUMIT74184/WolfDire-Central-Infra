@@ -51,8 +51,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <Link href="/" className="mb-8 flex items-center justify-center gap-2">
-          <img src="/wolf-logo-realistic.jpg" alt="WolfDire" className="h-10 w-10 rounded-lg" />
-          <span className="text-2xl font-bold text-foreground">WolfDire</span>
+          <img src="/Logo-WOlfdire.png" alt="WolfDire" className="h-10 w-auto rounded-lg" />
         </Link>
 
         <Card className="border-border">
@@ -145,6 +144,19 @@ export default function LoginPage() {
                 ) : (
                   "Sign In"
                 )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full mt-2"
+                onClick={() => {
+                  const fakeToken = "dummy.eyJ1c2VySWQiOiIxIiwic3ViIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJmaXJzdE5hbWUiOiJBZG1pbiIsInRlbmFudElkIjoiMSIsInJvbGVzIjpbIkFETUlOIl0sImV4cCI6OTk5OTk5OTk5OX0.dummy"
+                  login(fakeToken, "dummy")
+                  router.push("/admin")
+                }}
+                disabled={isLoading}
+              >
+                Demo Admin Access (Mock)
               </Button>
             </form>
           </CardContent>

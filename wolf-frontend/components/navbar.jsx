@@ -36,8 +36,8 @@ export function Navbar() {
           {/* Logo */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2">
-              <img src="/wolf-logo.png" alt="WolfDire" className="h-9 w-9" />
-              <span className="text-xl font-bold text-foreground">WolfDire</span>
+              <img src="/Logo-WOlfdire.png" alt="WolfDire" className="h-9 w-auto" />
+              {/* <span className="text-xl font-bold text-foreground">WolfDire</span> */}
             </Link>
 
             {/* Desktop Navigation */}

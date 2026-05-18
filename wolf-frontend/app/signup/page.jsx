@@ -71,8 +71,7 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <Link href="/" className="mb-8 flex items-center justify-center gap-2">
-          <img src="/wolf-logo-realistic.jpg" alt="WolfDire" className="h-10 w-10 rounded-lg" />
-          <span className="text-2xl font-bold text-foreground">WolfDire</span>
+          <img src="/Logo-WOlfdire.png" alt="WolfDire" className="h-10 w-auto rounded-lg" />
         </Link>
 
         <Card className="border-border">

@@ -43,8 +43,8 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2">
-              <img src="/wolf-logo.png" alt="WolfDire" className="h-9 w-9" />
-              <span className="text-xl font-bold text-foreground">WolfDire</span>
+              <img src="/Logo-WOlfdire.png" alt="WolfDire" className="h-9 w-auto" />
+              {/* <span className="text-xl font-bold text-foreground">WolfDire</span> */}
             </Link>
             <p className="mt-4 max-w-xs text-sm text-muted-foreground leading-relaxed">
               A community-driven platform where ideas thrive, voices are heard, and meaningful connections are made.

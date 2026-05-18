@@ -36,8 +36,8 @@ export default function ForgotPasswordPage() {
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
         <div className="w-full max-w-md">
           <Link href="/" className="mb-8 flex items-center justify-center gap-2">
-            <img src="/wolf-logo-realistic.jpg" alt="WolfDire" className="h-10 w-10 rounded-lg" />
-            <span className="text-2xl font-bold text-foreground">WolfDire</span>
+            <img src="/Logo-WOlfdire.png" alt="WolfDire" className="h-10 w-auto rounded-lg" />
+            {/* <span className="text-2xl font-bold text-foreground">WolfDire</span> */}
           </Link>
 
           <Card className="border-border">
@@ -85,8 +85,8 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Link href="/" className="mb-8 flex items-center justify-center gap-2">
-          <img src="/wolf-logo-realistic.jpg" alt="WolfDire" className="h-10 w-10 rounded-lg" />
-          <span className="text-2xl font-bold text-foreground">WolfDire</span>
+          <img src="/Logo-WOlfdire.png" alt="WolfDire" className="h-10 w-auto rounded-lg" />
+          {/* <span className="text-2xl font-bold text-foreground">WolfDire</span> */}
         </Link>
 
         <Card className="border-border">

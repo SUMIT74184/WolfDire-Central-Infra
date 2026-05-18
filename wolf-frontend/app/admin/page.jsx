@@ -19,7 +19,7 @@ import {
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
-import { LLMModelSelector } from "@/components/llm-model-selector"
+
 
 const adminStats = [
   { name: "Total Users", value: "52,489", change: "+12.5%", icon: Users },
@@ -46,11 +46,11 @@ const pieData = [
 ]
 
 const COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
+  "#6366f1", // Indigo
+  "#10b983", // Emerald
+  "#f59e0b", // Amber
+  "#ef4444", // Red
+  "#8b5cf6", // Purple
 ]
 
 const pendingArticles = [
@@ -136,8 +136,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* LLM Model Selector */}
-      <LLMModelSelector />
+
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -179,8 +178,8 @@ export default function AdminPage() {
                       borderRadius: "8px",
                     }}
                   />
-                  <Bar dataKey="users" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="articles" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="users" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="articles" fill="#10b981" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

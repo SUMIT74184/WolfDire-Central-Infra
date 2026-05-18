@@ -17,7 +17,10 @@ export const metadata = {
   title: "WolfDire - Join the Pack, Find Your Tribe",
   description:
     "A community-driven platform where ideas thrive, communities flourish, and voices are heard. Join WolfDire and connect with your tribe.",
-    generator: 'v0.app'
+    generator: 'v0.app',
+  icons: {
+    icon: "/Logo-WOlfdire.png",
+  },
 }
 
 export default function RootLayout({ children }) {
