@@ -36,6 +36,7 @@ public class PostResponse {
     private Boolean isRepost;
     private String originalPostId;
     private String userVote;
+    private Boolean isSaved;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime editedAt;

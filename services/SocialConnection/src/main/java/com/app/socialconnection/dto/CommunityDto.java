@@ -15,7 +15,8 @@ public class CommunityDto {
     private String imageUrl;
     private String ownerId;
     private Long memberCount;
-    private boolean isArchived;
+    private Long shareCount;
+    private Boolean isArchived;
 
     @Data
     @Builder

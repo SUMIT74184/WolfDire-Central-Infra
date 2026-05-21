@@ -44,6 +44,10 @@ public class Community {
     @Builder.Default
     private Long memberCount = 0L;
 
+    @Column(name = "share_count", nullable = false)
+    @Builder.Default
+    private Long shareCount = 0L;
+
     @Column(name = "is_archived", nullable = false)
     @Builder.Default
     private Boolean isArchived = false;

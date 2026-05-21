@@ -44,6 +44,12 @@ public class CommunityController {
         return ResponseEntity.ok(communityService.getAllCommunities(pageable));
     }
 
+    @PostMapping("/{id}/share")
+    public ResponseEntity<Void> shareCommunity(@PathVariable String id) {
+        communityService.incrementShareCount(id);
+        return ResponseEntity.ok().build();
+    }
+
     private String getUserId(HttpServletRequest request) {
         Object userId = request.getAttribute("userId");
         if (userId == null) {

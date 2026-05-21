@@ -65,6 +65,11 @@ public class CommunityService {
                 .map(this::mapToDto);
     }
 
+    @Transactional
+    public void incrementShareCount(String communityId) {
+        communityRepository.incrementShareCount(communityId);
+    }
+
     private String generateSlug(String name) {
         return name.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", "");
     }
@@ -78,6 +83,7 @@ public class CommunityService {
                 .imageUrl(community.getImageUrl())
                 .ownerId(community.getOwnerId())
                 .memberCount(community.getMemberCount())
+                .shareCount(community.getShareCount())
                 .isArchived(community.getIsArchived())
                 .build();
     }

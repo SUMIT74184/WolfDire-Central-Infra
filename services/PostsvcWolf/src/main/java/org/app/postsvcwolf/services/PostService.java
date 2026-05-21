@@ -167,6 +167,11 @@ public class PostService {
         publishViewEvent(postId);
     }
 
+    @Transactional
+    public void incrementShareCount(String postId) {
+        postRepository.incrementShareCount(postId);
+    }
+
     @Transactional(readOnly = true)
     public Page<PostResponse> getCommunityPosts(String communityId, Pageable pageable, String userId) {
         Page<Post> posts = postRepository.findByCommunity(communityId, pageable);
@@ -362,10 +367,12 @@ public class PostService {
 
     private PostResponse mapToResponse(Post post, String userId) {
         String userVote = null;
+        Boolean isSaved = false;
         if (userId != null) {
             Optional<Vote> vote = voteRepository.findByUserAndTarget(
                     userId, post.getId(), Vote.TargetType.POST);
             userVote = vote.map(v -> v.getVoteType().name()).orElse(null);
+            isSaved = savedPostRepository.existsByUserIdAndPostId(userId, post.getId());
         }
 
         return PostResponse.builder()
@@ -395,6 +402,7 @@ public class PostService {
                 .isRepost(post.getIsRepost())
                 .originalPostId(post.getOriginalPostId())
                 .userVote(userVote)
+                .isSaved(isSaved)
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .editedAt(post.getEditedAt())

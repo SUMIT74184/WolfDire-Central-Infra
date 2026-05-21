@@ -193,6 +193,8 @@ export const postApi = {
 
   hot: (communityId: string, page = 0, size = 20) =>
     apiClient.get(`/api/posts/community/${communityId}/hot?page=${page}&size=${size}`),
+
+  sharePost: (postId: string) => apiClient.post(`/api/posts/${postId}/share`),
 };
 
 // ── Comment Service helpers ───────────────────────────────────────────────────
@@ -327,4 +329,7 @@ export const communityApi = {
 
   myCommunities: (page = 0, size = 50) =>
     apiClient.get(`/api/communities/my-communities?page=${page}&size=${size}`),
+
+  shareCommunity: (communityId: string) =>
+    apiClient.post(`/api/communities/${communityId}/share`),
 };

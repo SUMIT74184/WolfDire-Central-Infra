@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Users, Bell, Share2, Heart, MessageCircle, PenSquare, Calendar, Globe, Loader2, MoreHorizontal, Trash2 } from "lucide-react"
+import { ShareModal } from "@/components/ShareModal"
 
 const members = [
   { name: "Sarah Chen", avatar: "/woman-developer.png", role: "Admin", posts: 47 },
@@ -24,6 +25,7 @@ export default function CommunityPage() {
   const { id } = useParams()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState("posts")
+  const [shareModal, setShareModal] = useState({ isOpen: false, url: "", title: "", id: "" })
 
   const { data: me } = useQuery({
     queryKey: ["me"],
@@ -69,6 +71,20 @@ export default function CommunityPage() {
   const rules = cData.rules || ["Be respectful and constructive", "No spam or self-promotion", "Stay on topic", "Credit original sources", "No NSFW content"]
   const admins = cData.admins || [{ name: "Sarah Chen", avatar: "/woman-developer.png" }]
 
+  const handleShareClick = () => {
+    const url = `${window.location.origin}/community/${cData.id || id}`
+    setShareModal({ isOpen: true, url, title: cData.name || "Community", id: cData.id || id })
+  }
+
+  const handleShareComplete = async () => {
+    try {
+      await communityApi.shareCommunity(shareModal.id)
+      setShareModal({ isOpen: false, url: "", title: "", id: "" })
+    } catch (error) {
+      console.error("Failed to record share", error)
+    }
+  }
+
 
   if (isCommLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
@@ -110,7 +126,7 @@ export default function CommunityPage() {
             <Button variant="outline" size="icon" className="bg-transparent">
               <Bell className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" className="bg-transparent">
+            <Button variant="outline" size="icon" className="bg-transparent" onClick={handleShareClick}>
               <Share2 className="h-4 w-4" />
             </Button>
             <Button 
@@ -311,6 +327,13 @@ export default function CommunityPage() {
           </TabsContent>
         </Tabs>
       </div>
+      <ShareModal 
+        isOpen={shareModal.isOpen} 
+        onClose={() => setShareModal(prev => ({ ...prev, isOpen: false }))} 
+        url={shareModal.url} 
+        title={shareModal.title}
+        onShareComplete={handleShareComplete}
+      />
     </div>
   )
 }

@@ -146,6 +146,14 @@ public class PostController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PostMapping("/{postId}/share")
+    public ResponseEntity<Void> sharePost(
+            @PathVariable String postId,
+            HttpServletRequest httpRequest) {
+        postService.incrementShareCount(postId);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
     @DeleteMapping("/{postId}/save")
     public ResponseEntity<Void> unsavePost(
             @PathVariable String postId,

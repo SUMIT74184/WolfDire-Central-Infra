@@ -1,7 +1,8 @@
 "use client"
 import { useState } from "react"
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 import Link from "next/link"
+import { ShareModal } from "@/components/ShareModal"
 
 import { postApi, communityApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,8 @@ export default function ExplorePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCommunityId, setSelectedCommunityId] = useState("All")
   const [sortBy, setSortBy] = useState("trending")
+  const queryClient = useQueryClient();
+  const [shareModal, setShareModal] = useState({ isOpen: false, url: "", title: "", postId: "" })
 
   const { data: communitiesData } = useQuery({
     // Must differ from ["communities"] on /communities — same key + different queryFn
@@ -71,7 +74,30 @@ export default function ExplorePage() {
     comments: p.commentCount || 0,
     image: p.mediaUrl || p.thumbnailUrl || "/placeholder.svg",
     date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+    isSaved: p.isSaved || false,
   })) : []
+
+  const saveMutation = useMutation({
+    mutationFn: ({ postId, isSaved }) => 
+      isSaved ? postApi.unsavePost(postId) : postApi.savePost(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['explore-posts'] })
+    }
+  })
+
+  const handleShareClick = (post) => {
+    const url = `${window.location.origin}/post/${post.id}`
+    setShareModal({ isOpen: true, url, title: post.title, postId: post.id })
+  }
+
+  const handleShareComplete = async () => {
+    try {
+      await postApi.sharePost(shareModal.postId)
+      setShareModal({ isOpen: false, url: "", title: "", postId: "" })
+    } catch (error) {
+      console.error("Failed to record share", error)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -199,11 +225,17 @@ export default function ExplorePage() {
                               <MessageCircle className="h-4 w-4" />
                               <span>{post.comments}</span>
                             </button>
-                            <button className="flex items-center gap-1 hover:bg-secondary rounded px-2 py-1 transition-colors">
+                            <button 
+                              className={`flex items-center gap-1 rounded px-2 py-1 transition-colors ${post.isSaved ? 'text-primary bg-primary/10' : 'hover:bg-secondary'}`}
+                              onClick={() => saveMutation.mutate({ postId: post.id, isSaved: post.isSaved })}
+                            >
                               <BookmarkPlus className="h-4 w-4" />
-                              <span>Save</span>
+                              <span>{post.isSaved ? 'Saved' : 'Save'}</span>
                             </button>
-                            <button className="flex items-center gap-1 hover:bg-secondary rounded px-2 py-1 transition-colors">
+                            <button 
+                              className="flex items-center gap-1 hover:bg-secondary rounded px-2 py-1 transition-colors"
+                              onClick={() => handleShareClick(post)}
+                            >
                               <Heart className="h-4 w-4" />
                               <span>Share</span>
                             </button>
@@ -227,6 +259,13 @@ export default function ExplorePage() {
           </>
         )}
       </div>
+      <ShareModal 
+        isOpen={shareModal.isOpen} 
+        onClose={() => setShareModal(prev => ({ ...prev, isOpen: false }))} 
+        url={shareModal.url} 
+        title={shareModal.title}
+        onShareComplete={handleShareComplete}
+      />
     </div>
   )
 }

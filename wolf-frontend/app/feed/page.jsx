@@ -21,9 +21,13 @@ import {
 } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { feedApi, postApi } from "@/lib/api-client"
+import { ShareModal } from "@/components/ShareModal"
+import { useQueryClient, useMutation } from "@tanstack/react-query"
 
 export default function FeedPage() {
+  const queryClient = useQueryClient();
   const [sortBy, setSortBy] = useState("latest")
+  const [shareModal, setShareModal] = useState({ isOpen: false, url: "", title: "", postId: "" })
 
   // Try personalized feed first
   const { data: feedData, isLoading: feedLoading } = useQuery({
@@ -67,6 +71,7 @@ export default function FeedPage() {
     image: item.mediaUrl || "/placeholder.svg",
     date: item.createdAt ? new Date(item.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
     isFeed: true,
+    isSaved: item.isSaved || false,
   }))
 
   // Normalize trending posts from PostSvc format
@@ -81,9 +86,33 @@ export default function FeedPage() {
     image: p.mediaUrl || p.thumbnailUrl || "/placeholder.svg",
     date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
     isFeed: false,
+    isSaved: p.isSaved || false,
   }))
 
   const posts = hasFeedItems ? normalizedFeedItems : normalizedTrending
+
+  const saveMutation = useMutation({
+    mutationFn: ({ postId, isSaved }) => 
+      isSaved ? postApi.unsavePost(postId) : postApi.savePost(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feed'] })
+      queryClient.invalidateQueries({ queryKey: ['trending-fallback'] })
+    }
+  })
+
+  const handleShareClick = (post) => {
+    const url = `${window.location.origin}/post/${post.id}`
+    setShareModal({ isOpen: true, url, title: post.title, postId: post.id })
+  }
+
+  const handleShareComplete = async () => {
+    try {
+      await postApi.sharePost(shareModal.postId)
+      setShareModal({ isOpen: false, url: "", title: "", postId: "" })
+    } catch (error) {
+      console.error("Failed to record share", error)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -227,11 +256,17 @@ export default function FeedPage() {
                             <MessageCircle className="h-3.5 w-3.5" />
                             <span>{post.comments} comments</span>
                           </button>
-                          <button className="flex items-center gap-1 hover:bg-secondary rounded px-2 py-1 transition-colors">
+                          <button 
+                            className={`flex items-center gap-1 rounded px-2 py-1 transition-colors ${post.isSaved ? 'text-primary bg-primary/10' : 'hover:bg-secondary'}`}
+                            onClick={() => saveMutation.mutate({ postId: post.id, isSaved: post.isSaved })}
+                          >
                             <BookmarkPlus className="h-3.5 w-3.5" />
-                            <span>Save</span>
+                            <span>{post.isSaved ? 'Saved' : 'Save'}</span>
                           </button>
-                          <button className="flex items-center gap-1 hover:bg-secondary rounded px-2 py-1 transition-colors">
+                          <button 
+                            className="flex items-center gap-1 hover:bg-secondary rounded px-2 py-1 transition-colors"
+                            onClick={() => handleShareClick(post)}
+                          >
                             <Share2 className="h-3.5 w-3.5" />
                             <span>Share</span>
                           </button>
@@ -254,6 +289,13 @@ export default function FeedPage() {
           </div>
         )}
       </div>
+      <ShareModal 
+        isOpen={shareModal.isOpen} 
+        onClose={() => setShareModal(prev => ({ ...prev, isOpen: false }))} 
+        url={shareModal.url} 
+        title={shareModal.title}
+        onShareComplete={handleShareComplete}
+      />
     </div>
   )
 }

@@ -31,4 +31,8 @@ public interface CommunityRepository extends JpaRepository<Community,String> {
     @Modifying
     @Query("UPDATE Community c SET c.memberCount = c.memberCount - 1 WHERE c.id = :communityId")
     void decrementMemberCount(@Param("communityId") String communityId);
+
+    @Modifying
+    @Query("UPDATE Community c SET c.shareCount = c.shareCount + 1 WHERE c.id = :communityId")
+    void incrementShareCount(@Param("communityId") String communityId);
 }
