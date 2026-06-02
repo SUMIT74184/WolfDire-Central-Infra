@@ -62,6 +62,18 @@ public class Post {
 
     private String aiSummary;
 
+    @Column(name = "scheduled_publish_at")
+    private LocalDateTime scheduledPublishAt;
+
+    @Column(name = "seo_description", length = 500)
+    private String seoDescription;
+
+    @Column(name = "seo_slug", length = 300)
+    private String seoSlug;
+
+    @Column(columnDefinition = "vector(768)")
+    private float[] embedding;
+
     @ElementCollection
     @CollectionTable(name = "post_hashtags" ,joinColumns = @JoinColumn(name = "post_id"))
     @Column(name = "hashtag")

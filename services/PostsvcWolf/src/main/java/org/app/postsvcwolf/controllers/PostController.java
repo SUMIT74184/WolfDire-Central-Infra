@@ -108,6 +108,24 @@ public class PostController {
         return ResponseEntity.ok(postService.searchPosts(query, pageable, userId));
     }
 
+    @GetMapping("/semantic-search")
+    public ResponseEntity<List<PostResponse>> searchSemantically(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "20") int limit,
+            HttpServletRequest httpRequest) {
+        String userId = getOptionalUserId(httpRequest);
+        return ResponseEntity.ok(postService.searchSemantically(query, limit, userId));
+    }
+
+    @GetMapping("/{postId}/related")
+    public ResponseEntity<List<PostResponse>> getRelatedPosts(
+            @PathVariable String postId,
+            @RequestParam(defaultValue = "5") int limit,
+            HttpServletRequest httpRequest) {
+        String userId = getOptionalUserId(httpRequest);
+        return ResponseEntity.ok(postService.getRelatedPosts(postId, limit, userId));
+    }
+
     @GetMapping("/user/{targetUserId}")
     public ResponseEntity<Page<PostResponse>> getUserPosts(
             @PathVariable String targetUserId,

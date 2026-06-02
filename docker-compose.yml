@@ -5,13 +5,13 @@ services:
   # DATABASES & CACHING
   # -------------------------------------------------------------
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: shared-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-databases.sql:/docker-entrypoint-initdb.d/init.sql
@@ -138,6 +138,7 @@ services:
     build:
       context: ./services/Auth
       dockerfile: Dockerfile
+      network: host
     container_name: auth-service
     ports:
       - "8081:8081"
@@ -166,6 +167,7 @@ services:
     build:
       context: ./services/PostsvcWolf
       dockerfile: Dockerfile
+      network: host
     container_name: post-service
     ports:
       - "8082:8082"
@@ -178,6 +180,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       JWT_SECRET: bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-YOUR_GEMINI_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
@@ -196,6 +199,7 @@ services:
     build:
       context: ./services/SocialConnection
       dockerfile: Dockerfile
+      network: host
     container_name: social-connection-service
     ports:
       - "8083:8083"
@@ -224,6 +228,7 @@ services:
     build:
       context: ./services/FeedSvc
       dockerfile: Dockerfile
+      network: host
     container_name: feed-service
     ports:
       - "8084:8084"
@@ -248,33 +253,35 @@ services:
     networks:
       - project-network
 
-  moderation-service:
-    build:
-      context: ./services/ModerationSvc
-      dockerfile: Dockerfile
-    container_name: moderation-service
-    ports:
-      - "8085:8085"
-    environment:
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      JWT_SECRET: bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    depends_on:
-      redis:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-    networks:
-      - project-network
+#  moderation-service:
+#    build:
+#      context: ./services/ModerationSvc
+#      dockerfile: Dockerfile
+#      network: host
+#    container_name: moderation-service
+#    ports:
+#      - "8085:8085"
+#    environment:
+#      SPRING_DATA_REDIS_HOST: redis
+#      SPRING_DATA_REDIS_PORT: 6379
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+#      JWT_SECRET: bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#    depends_on:
+#      redis:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#    networks:
+#      - project-network
 
   analytics-service:
     build:
       context: ./services/AnalyticsSvc
       dockerfile: Dockerfile
+      network: host
     container_name: analytics-service
     ports:
       - "8086:8086"
@@ -303,6 +310,7 @@ services:
     build:
       context: ./services/NotificationSvc
       dockerfile: Dockerfile
+      network: host
     container_name: notification-service
     ports:
       - "8087:8087"
@@ -333,6 +341,7 @@ services:
     build:
       context: ./api-gateway
       dockerfile: Dockerfile
+      network: host
     container_name: api-gateway
     ports:
       - "8090:8090"

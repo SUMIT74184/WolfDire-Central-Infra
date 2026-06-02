@@ -50,6 +50,20 @@ public class CommunityController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/{id}/archive")
+    public ResponseEntity<Void> archiveCommunity(HttpServletRequest request, @PathVariable String id) {
+        String userId = getUserId(request);
+        communityService.archiveCommunity(userId, id);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCommunity(HttpServletRequest request, @PathVariable String id) {
+        String userId = getUserId(request);
+        communityService.deleteCommunity(userId, id);
+        return ResponseEntity.noContent().build();
+    }
+
     private String getUserId(HttpServletRequest request) {
         Object userId = request.getAttribute("userId");
         if (userId == null) {

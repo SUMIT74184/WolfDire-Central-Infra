@@ -49,6 +49,12 @@ public interface PostRepository extends JpaRepository<Post,String> {
             "AND p.isRemoved = false AND p.isSpam = false")
     Page<Post> search(@Param("query") String query, Pageable pageable);
 
+    @Query(value = "SELECT * FROM post WHERE is_removed = false AND is_spam = false AND embedding IS NOT NULL ORDER BY embedding <=> cast(cast(:queryEmbedding as text) as vector) LIMIT :limit", nativeQuery = true)
+    List<Post> searchSemantically(@Param("queryEmbedding") String queryEmbedding, @Param("limit") int limit);
+
+    @Query(value = "SELECT * FROM post WHERE is_removed = false AND is_spam = false AND id != :excludePostId AND embedding IS NOT NULL ORDER BY embedding <=> cast(cast(:queryEmbedding as text) as vector) LIMIT :limit", nativeQuery = true)
+    List<Post> findRelatedPosts(@Param("queryEmbedding") String queryEmbedding, @Param("excludePostId") String excludePostId, @Param("limit") int limit);
+
 
 
     @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.hashtags LEFT JOIN FETCH p.mentions WHERE p.id = :id AND p.isRemoved = false")

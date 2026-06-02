@@ -5,6 +5,7 @@ import com.app.socialconnection.entity.Community;
 import com.app.socialconnection.repository.CommunityRepository;
 import com.app.socialconnection.exception.DuplicateResourceException;
 import com.app.socialconnection.exception.ResourceNotFoundException;
+import com.app.socialconnection.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -68,6 +69,29 @@ public class CommunityService {
     @Transactional
     public void incrementShareCount(String communityId) {
         communityRepository.incrementShareCount(communityId);
+    }
+
+    @Transactional
+    public void archiveCommunity(String userId, String id) {
+        Community community = communityRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Community not found"));
+        if (!community.getOwnerId().equals(userId)) {
+            throw new UnauthorizedException("Only the owner can archive this community");
+        }
+        community.setIsArchived(true);
+        communityRepository.save(community);
+        log.info("User {} archived community {}", userId, id);
+    }
+
+    @Transactional
+    public void deleteCommunity(String userId, String id) {
+        Community community = communityRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Community not found"));
+        if (!community.getOwnerId().equals(userId)) {
+            throw new UnauthorizedException("Only the owner can delete this community");
+        }
+        communityRepository.delete(community);
+        log.info("User {} deleted community {}", userId, id);
     }
 
     private String generateSlug(String name) {

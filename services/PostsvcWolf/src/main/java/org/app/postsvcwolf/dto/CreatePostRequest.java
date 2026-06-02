@@ -36,4 +36,10 @@ public class CreatePostRequest {
     private Boolean isSpoiler;
 
     private MultipartFile mediaFile;
+
+    private java.time.LocalDateTime scheduledPublishAt;
+
+    private String seoDescription;
+
+    private String seoSlug;
 }

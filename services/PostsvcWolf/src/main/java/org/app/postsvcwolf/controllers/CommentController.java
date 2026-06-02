@@ -63,6 +63,14 @@ public class CommentController {
 
         }
 
+        @GetMapping("/post/{postId}/summary")
+        public ResponseEntity<java.util.Map<String, String>> getCommentSummary(
+                @PathVariable String postId
+        ) {
+                String summary = commentService.getCommentSummary(postId);
+                return ResponseEntity.ok(java.util.Map.of("summary", summary));
+        }
+
         @PutMapping("/{commentId}")
         public ResponseEntity<CommentResponse> updateComment(
                 @PathVariable String commentId,

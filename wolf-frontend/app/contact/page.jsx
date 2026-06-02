@@ -24,15 +24,36 @@ export default function ContactPage() {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState(null)
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Simulate form submission
-    console.log("Form submitted:", formData)
-    setSubmitted(true)
-    setTimeout(() => {
+    setIsSubmitting(true)
+    setError(null)
+    
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+      
+      if (!res.ok) {
+        throw new Error("Failed to send message. Please try again.")
+      }
+
+      setSubmitted(true)
       setFormData({ name: "", email: "", subject: "", message: "" })
-      setSubmitted(false)
-    }, 3000)
+      
+      setTimeout(() => {
+        setSubmitted(false)
+      }, 5000)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const contactInfo = [
@@ -54,7 +75,7 @@ export default function ContactPage() {
       icon: MapPin,
       title: "Location",
       description: "Visit our office",
-      detail: "San Francisco, CA",
+      detail: "Mumbai, India",
       link: "#",
     },
   ]
@@ -114,6 +135,11 @@ export default function ContactPage() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {error && (
+                    <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                      {error}
+                    </div>
+                  )}
                   <div className="grid gap-6 sm:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">Name</label>
@@ -161,9 +187,9 @@ export default function ContactPage() {
                       className="w-full rounded-lg border border-border bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
-                  <Button type="submit" className="w-full sm:w-auto gap-2">
+                  <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto gap-2">
                     <Send className="h-4 w-4" />
-                    Send Message
+                    {isSubmitting ? "Sending..." : "Send Message"}
                   </Button>
                 </form>
               )}

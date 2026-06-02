@@ -36,6 +36,9 @@ export default function ExplorePage() {
     queryKey: ['explore-posts', sortBy, selectedCommunityId, searchQuery],
     queryFn: ({ pageParam = 0 }) => {
       if (searchQuery) {
+        if (sortBy === "semantic") {
+          return postApi.semanticSearch(searchQuery, 20)
+        }
         return postApi.search(searchQuery, pageParam, 20)
       }
 
@@ -124,6 +127,7 @@ export default function ExplorePage() {
               <TabsTrigger value="trending">Hot</TabsTrigger>
               <TabsTrigger value="latest">New</TabsTrigger>
               <TabsTrigger value="top">Top</TabsTrigger>
+              <TabsTrigger value="semantic">Semantic</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { communityApi, postApi, authApi } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Users, Bell, Share2, Heart, MessageCircle, PenSquare, Calendar, Globe, Loader2, MoreHorizontal, Trash2 } from "lucide-react"
+import { Users, Bell, Share2, Heart, MessageCircle, PenSquare, Calendar, Globe, Loader2, MoreHorizontal, Trash2, Settings, Archive } from "lucide-react"
 import { ShareModal } from "@/components/ShareModal"
 
 const members = [
@@ -23,6 +23,7 @@ const members = [
 
 export default function CommunityPage() {
   const { id } = useParams()
+  const router = useRouter()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState("posts")
   const [shareModal, setShareModal] = useState({ isOpen: false, url: "", title: "", id: "" })
@@ -66,6 +67,21 @@ export default function CommunityPage() {
       queryClient.invalidateQueries({ queryKey: ["isFollowingCommunity", id] })
       queryClient.invalidateQueries({ queryKey: ["community", id] })
     },
+  })
+
+  const archiveMutation = useMutation({
+    mutationFn: () => communityApi.archive(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["community", id] })
+      alert("Community archived successfully")
+    }
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: () => communityApi.delete(id),
+    onSuccess: () => {
+      router.push("/communities")
+    }
   })
 
   const rules = cData.rules || ["Be respectful and constructive", "No spam or self-promotion", "Stay on topic", "Credit original sources", "No NSFW content"]
@@ -129,13 +145,40 @@ export default function CommunityPage() {
             <Button variant="outline" size="icon" className="bg-transparent" onClick={handleShareClick}>
               <Share2 className="h-4 w-4" />
             </Button>
-            <Button 
-               variant={isFollowing ? "secondary" : "default"} 
-               onClick={() => followMutation.mutate()}
-               disabled={followMutation.isPending || isFollowingLoading}
-            >
-              {isFollowing ? "Joined" : "Join Community"}
-            </Button>
+            {me && (me.userId === cData.ownerId || me.id === cData.ownerId) ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2 bg-transparent">
+                    <Settings className="h-4 w-4" /> Manage
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      if (confirm("Are you sure you want to archive this community?")) archiveMutation.mutate()
+                    }}
+                  >
+                    <Archive className="mr-2 h-4 w-4" /> Archive Community
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="text-red-500"
+                    onClick={() => {
+                      if (confirm("Are you sure you want to permanently delete this community?")) deleteMutation.mutate()
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete Community
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                 variant={isFollowing ? "secondary" : "default"} 
+                 onClick={() => followMutation.mutate()}
+                 disabled={followMutation.isPending || isFollowingLoading}
+              >
+                {isFollowing ? "Joined" : "Join Community"}
+              </Button>
+            )}
           </div>
         </div>
 

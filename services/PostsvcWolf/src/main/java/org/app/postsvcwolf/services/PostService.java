@@ -42,8 +42,8 @@ public class PostService {
     private final MediaService mediaService;
     private final SocialConnectionClient socialConnectionClient;
     private final StringRedisTemplate redisTemplate;
-
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final org.springframework.ai.embedding.EmbeddingModel embeddingModel;
 
     private static final Pattern MENTION_PATTERN = Pattern.compile("@([a-zA-Z0-9_]+)");
     private static final int MAX_POSTS_PER_HOUR = 10;
@@ -79,7 +79,24 @@ public class PostService {
                 .mentions(mentions)
                 .isNsfw(request.getIsNsfw() != null ? request.getIsNsfw() : false)
                 .isSpoiler(request.getIsSpoiler() != null ? request.getIsSpoiler() : false)
+                .scheduledPublishAt(request.getScheduledPublishAt())
+                .seoDescription(request.getSeoDescription())
+                .seoSlug(request.getSeoSlug())
                 .build();
+
+        try {
+            String textToEmbed = post.getTitle() + " " + (post.getContent() != null ? post.getContent() : "");
+            List<Double> embeddingList = embeddingModel.embed(textToEmbed);
+            if (embeddingList != null) {
+                float[] embeddingArray = new float[embeddingList.size()];
+                for (int i = 0; i < embeddingList.size(); i++) {
+                    embeddingArray[i] = embeddingList.get(i).floatValue();
+                }
+                post.setEmbedding(embeddingArray);
+            }
+        } catch (Exception e) {
+            log.error("Failed to generate embedding for post", e);
+        }
 
         if (request.getType() == Post.PostType.LINK && request.getLinkUrl() != null) {
             post.setMediaUrl(request.getLinkUrl());
@@ -197,6 +214,29 @@ public class PostService {
         return posts.map(post -> mapToResponse(post, userId));
     }
 
+    @Transactional(readOnly = true)
+    public List<PostResponse> searchSemantically(String query, int limit, String userId) {
+        List<Double> embeddingList = embeddingModel.embed(query);
+        String embeddingStr = embeddingList.toString();
+        List<Post> posts = postRepository.searchSemantically(embeddingStr, limit);
+        return posts.stream().map(post -> mapToResponse(post, userId)).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PostResponse> getRelatedPosts(String postId, int limit, String userId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+        if (post.getEmbedding() == null) {
+            return List.of();
+        }
+        
+        java.util.List<Double> embList = new java.util.ArrayList<>();
+        for (float f : post.getEmbedding()) embList.add((double) f);
+        String embeddingStr = embList.toString();
+
+        List<Post> posts = postRepository.findRelatedPosts(embeddingStr, postId, limit);
+        return posts.stream().map(p -> mapToResponse(p, userId)).toList();
+    }
+
     /**
      * Get all posts by a specific user (for profile page).
      */
@@ -228,6 +268,20 @@ public class PostService {
         if (content != null) {
             post.setContent(content);
             post.setMentions(extractMentions(content));
+        }
+
+        try {
+            String textToEmbed = post.getTitle() + " " + (post.getContent() != null ? post.getContent() : "");
+            List<Double> embeddingList = embeddingModel.embed(textToEmbed);
+            if (embeddingList != null) {
+                float[] embeddingArray = new float[embeddingList.size()];
+                for (int i = 0; i < embeddingList.size(); i++) {
+                    embeddingArray[i] = embeddingList.get(i).floatValue();
+                }
+                post.setEmbedding(embeddingArray);
+            }
+        } catch (Exception e) {
+            log.error("Failed to generate embedding for post update", e);
         }
 
         post.setEditedAt(LocalDateTime.now());
@@ -406,6 +460,9 @@ public class PostService {
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .editedAt(post.getEditedAt())
+                .scheduledPublishAt(post.getScheduledPublishAt())
+                .seoDescription(post.getSeoDescription())
+                .seoSlug(post.getSeoSlug())
                 .build();
 
     }

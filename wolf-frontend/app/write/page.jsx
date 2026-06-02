@@ -10,18 +10,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { UploadDropzone } from "@/utils/uploadthing"
+import RichTextEditor from "@/components/editor/RichTextEditor"
 import {
-  Bold,
-  Italic,
-  Underline,
-  List,
-  ListOrdered,
-  Quote,
-  Code,
-  ImagePlus,
-  LinkIcon,
-  Heading1,
-  Heading2,
   Save,
   Eye,
   EyeOff,
@@ -42,6 +33,9 @@ export default function WritePage() {
   const [isPublishing, setIsPublishing] = useState(false)
   const [error, setError] = useState(null)
   const [isPreview, setIsPreview] = useState(false)
+  const [scheduledPublishAt, setScheduledPublishAt] = useState("")
+  const [seoDescription, setSeoDescription] = useState("")
+  const [seoSlug, setSeoSlug] = useState("")
   const router = useRouter()
 
   // Load draft from localStorage on mount
@@ -55,6 +49,9 @@ export default function WritePage() {
         if (draft.tags) setTags(draft.tags)
         if (draft.coverImage) setCoverImage(draft.coverImage)
         if (draft.selectedCommunity) setSelectedCommunity(draft.selectedCommunity)
+        if (draft.scheduledPublishAt) setScheduledPublishAt(draft.scheduledPublishAt)
+        if (draft.seoDescription) setSeoDescription(draft.seoDescription)
+        if (draft.seoSlug) setSeoSlug(draft.seoSlug)
       }
     } catch {
       // ignore parse errors
@@ -70,9 +67,9 @@ export default function WritePage() {
 
   const handleSaveDraft = () => {
     try {
-      const draft = { title, content, tags, coverImage, selectedCommunity }
+      const draft = { title, content, tags, coverImage, selectedCommunity, scheduledPublishAt, seoDescription, seoSlug }
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft))
-      toast?.success?.("Draft saved!") 
+      toast?.success?.("Draft saved!")
     } catch {
       // fallback if toast not available
     }
@@ -102,6 +99,10 @@ export default function WritePage() {
         communityName: selectedCommunity.name,
         type: "TEXT",
         hashtags: tags,
+        mediaUrl: coverImage, // Use as cover
+        scheduledPublishAt: scheduledPublishAt || null,
+        seoDescription: seoDescription || null,
+        seoSlug: seoSlug || null,
       })
       handleClearDraft()
       router.push("/feed")
@@ -126,22 +127,7 @@ export default function WritePage() {
     setTags(tags.filter((tag) => tag !== tagToRemove))
   }
 
-  const toolbarButtons = [
-    { icon: Bold, label: "Bold" },
-    { icon: Italic, label: "Italic" },
-    { icon: Underline, label: "Underline" },
-    { divider: true },
-    { icon: Heading1, label: "Heading 1" },
-    { icon: Heading2, label: "Heading 2" },
-    { divider: true },
-    { icon: List, label: "Bullet List" },
-    { icon: ListOrdered, label: "Numbered List" },
-    { icon: Quote, label: "Quote" },
-    { icon: Code, label: "Code" },
-    { divider: true },
-    { icon: LinkIcon, label: "Link" },
-    { icon: ImagePlus, label: "Image" },
-  ]
+  // Using dynamic editor now so static toolbar removed
 
   // Simple content renderer for preview
   const renderPreview = (text) => {
@@ -201,16 +187,18 @@ export default function WritePage() {
               </Button>
             </div>
           ) : (
-            <button
-              onClick={() => setCoverImage("/blog-cover.png")}
-              className="flex aspect-[2/1] w-full items-center justify-center rounded-lg border-2 border-dashed border-border bg-muted/50 transition-colors hover:border-primary hover:bg-muted"
-            >
-              <div className="text-center">
-                <ImagePlus className="mx-auto h-10 w-10 text-muted-foreground" />
-                <p className="mt-2 text-sm font-medium text-muted-foreground">Add a cover image</p>
-                <p className="text-xs text-muted-foreground">Recommended: 1600 x 840</p>
-              </div>
-            </button>
+            <UploadDropzone
+              endpoint="postImage"
+              onClientUploadComplete={(res) => {
+                if (res && res[0]) {
+                  setCoverImage(res[0].url)
+                  toast?.success?.("Cover image uploaded!")
+                }
+              }}
+              onUploadError={(error) => {
+                toast?.error?.(`Upload failed: ${error.message}`)
+              }}
+            />
           )}
         </div>
 
@@ -235,8 +223,8 @@ export default function WritePage() {
         {/* Community selection */}
         {!isPreview && (
           <div className="mt-6 flex flex-wrap items-center gap-4">
-            <Select 
-              value={selectedCommunity?.id?.toString()} 
+            <Select
+              value={selectedCommunity?.id?.toString()}
               onValueChange={(id) => {
                 const comm = communities.find(c => c.id.toString() === id);
                 setSelectedCommunity(comm);
@@ -286,60 +274,57 @@ export default function WritePage() {
           </div>
         )}
 
-        {/* Toolbar — only in edit mode */}
-        {!isPreview && (
-          <div className="mt-8 flex flex-wrap items-center gap-1 rounded-lg border border-border bg-card p-2">
-            {toolbarButtons.map((item, index) =>
-              item.divider ? (
-                <div key={index} className="mx-1 h-6 w-px bg-border" />
-              ) : (
-                <Button key={index} variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <item.icon className="h-4 w-4" />
-                  <span className="sr-only">{item.label}</span>
-                </Button>
-              ),
-            )}
-          </div>
-        )}
+        {/* Dynamic Toolbar handled by RichTextEditor inside */}
 
         {/* Content Editor / Preview */}
         {isPreview ? (
-          <div className="mt-4 min-h-[400px] prose prose-invert max-w-none text-lg leading-relaxed">
-            {renderPreview(content)}
-          </div>
+          <div className="mt-4 min-h-[400px] prose prose-invert max-w-none text-lg leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: content }} />
         ) : (
-          <Textarea
-            placeholder="Tell your story..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="mt-4 min-h-[400px] resize-none border-0 bg-transparent text-lg leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0 px-0"
-          />
+          <RichTextEditor content={content} onChange={setContent} />
         )}
 
         {/* Publishing Options */}
-        <div className="mt-12 rounded-lg border border-border bg-card p-6">
-          <h3 className="text-lg font-semibold text-foreground">Publishing Options</h3>
-          <div className="mt-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-foreground">Schedule Publication</Label>
-                <p className="text-sm text-muted-foreground">Set a specific date and time to publish</p>
+        {!isPreview && (
+          <div className="mt-12 rounded-lg border border-border bg-card p-6">
+            <h3 className="text-lg font-semibold text-foreground">Publishing Options</h3>
+            <div className="mt-6 space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="schedule" className="text-foreground">Schedule Publication</Label>
+                <p className="text-sm text-muted-foreground">Set a specific date and time to automatically publish this post (leave blank to publish immediately).</p>
+                <Input
+                  id="schedule"
+                  type="datetime-local"
+                  className="w-full sm:max-w-xs"
+                  value={scheduledPublishAt}
+                  onChange={(e) => setScheduledPublishAt(e.target.value)}
+                />
               </div>
-              <Button variant="outline" size="sm" className="bg-transparent">
-                Set Schedule
-              </Button>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-foreground">SEO Settings</Label>
-                <p className="text-sm text-muted-foreground">Customize meta description and URL</p>
+              <div className="space-y-2">
+                <Label htmlFor="seoDesc" className="text-foreground">SEO Description</Label>
+                <p className="text-sm text-muted-foreground">Customize the meta description that appears in search engines.</p>
+                <Textarea
+                  id="seoDesc"
+                  placeholder="A short summary of your article..."
+                  className="w-full"
+                  value={seoDescription}
+                  onChange={(e) => setSeoDescription(e.target.value)}
+                />
               </div>
-              <Button variant="outline" size="sm" className="bg-transparent">
-                Edit SEO
-              </Button>
+              <div className="space-y-2">
+                <Label htmlFor="seoSlug" className="text-foreground">Custom URL Slug</Label>
+                <p className="text-sm text-muted-foreground">Customize the URL for this post (e.g. "my-awesome-post").</p>
+                <Input
+                  id="seoSlug"
+                  placeholder="custom-url-slug"
+                  className="w-full sm:max-w-md"
+                  value={seoSlug}
+                  onChange={(e) => setSeoSlug(e.target.value)}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

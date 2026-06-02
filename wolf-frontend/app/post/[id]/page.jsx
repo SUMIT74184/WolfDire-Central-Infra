@@ -25,11 +25,12 @@ import {
   ThumbsUp,
   Loader2,
   Edit,
-  Trash2
+  Trash2,
+  Sparkles
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useParams } from "next/navigation"
-import { postApi, authApi } from "@/lib/api-client"
+import { postApi, authApi, commentApi } from "@/lib/api-client"
 import CommentSection from "@/components/CommentSection"
 // Mock data removed in favor of dynamic API fetch
 
@@ -46,6 +47,13 @@ export default function PostPage() {
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editData, setEditData] = useState({ title: "", content: "" })
+  const [showSummary, setShowSummary] = useState(false)
+
+  const { data: summaryData, isLoading: isSummaryLoading, refetch: fetchSummary } = useQuery({
+    queryKey: ['post', 'summary', postId],
+    queryFn: () => commentApi.getCommentSummary(postId),
+    enabled: false,
+  })
 
   const { data: me } = useQuery({
     queryKey: ['me'],
@@ -88,8 +96,9 @@ export default function PostPage() {
   }
 
   const { data: relatedData } = useQuery({
-    queryKey: ['posts', 'related'],
-    queryFn: () => postApi.trending(0, 3),
+    queryKey: ['posts', 'related', postId],
+    queryFn: () => postApi.getRelatedPosts(postId, 3),
+    enabled: !!postId,
   })
 
   // get dynamically fetched related posts based on recent posts
@@ -332,6 +341,45 @@ export default function PostPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* AI Summary Card */}
+        <div className="mt-8 mb-8">
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold text-foreground">AI Discussion Summary</h3>
+                </div>
+                {!showSummary && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => { setShowSummary(true); fetchSummary(); }}
+                    disabled={isSummaryLoading}
+                  >
+                    {isSummaryLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Generate Summary
+                  </Button>
+                )}
+              </div>
+              
+              {showSummary && (
+                <div className="text-sm text-foreground leading-relaxed">
+                  {isSummaryLoading ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Analyzing comments...
+                    </div>
+                  ) : summaryData?.summary ? (
+                    <p>{summaryData.summary}</p>
+                  ) : (
+                    <p className="text-muted-foreground">Could not generate a summary. There might not be enough comments yet.</p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Comments Section */}
         <CommentSection postId={post.id} />

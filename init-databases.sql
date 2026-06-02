@@ -5,3 +5,6 @@ CREATE DATABASE post_db;
 CREATE DATABASE analytics_db;
 CREATE DATABASE notification_db;
 CREATE DATABASE moderation_db;
+
+\c post_db
+CREATE EXTENSION IF NOT EXISTS vector;

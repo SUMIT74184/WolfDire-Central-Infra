@@ -40,4 +40,7 @@ public class PostResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime editedAt;
+    private LocalDateTime scheduledPublishAt;
+    private String seoDescription;
+    private String seoSlug;
 }

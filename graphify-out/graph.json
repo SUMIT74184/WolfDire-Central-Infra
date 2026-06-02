@@ -24615,8 +24615,8 @@
       "source_file": "services/PostsvcWolf/src/main/java/org/app/postsvcwolf/controllers/PostController.java",
       "source_location": "L153",
       "weight": 1.0,
-      "_src": "postcontroller_postcontroller_sharepost",
-      "_tgt": "postrepository_postrepository_incrementsharecount",
+      "_src": "postrepository_postrepository_incrementsharecount",
+      "_tgt": "postcontroller_postcontroller_sharepost",
       "source": "postrepository_postrepository_incrementsharecount",
       "target": "postcontroller_postcontroller_sharepost"
     },

@@ -24,6 +24,7 @@ import {
   TrendingUp,
   Activity
 } from "lucide-react"
+import { UploadButton } from "@/utils/uploadthing"
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("posts")
@@ -238,13 +239,25 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="profilePictureUrl">Avatar URL</Label>
-                    <Input
-                      id="profilePictureUrl"
-                      type="url"
-                      value={editFormData.profilePictureUrl}
-                      onChange={(e) => setEditFormData({...editFormData, profilePictureUrl: e.target.value})}
-                    />
+                    <Label>Profile Avatar</Label>
+                    <div className="flex items-center gap-4">
+                      {editFormData.profilePictureUrl && (
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={editFormData.profilePictureUrl} />
+                        </Avatar>
+                      )}
+                      <UploadButton
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res) => {
+                          if (res && res[0]) {
+                            setEditFormData({...editFormData, profilePictureUrl: res[0].url})
+                          }
+                        }}
+                        onUploadError={(error) => {
+                          alert(`Upload failed: ${error.message}`)
+                        }}
+                      />
+                    </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={updateProfileMutation.isPending}>
                     {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}

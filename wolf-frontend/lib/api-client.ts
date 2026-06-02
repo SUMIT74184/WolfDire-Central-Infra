@@ -188,6 +188,12 @@ export const postApi = {
   search: (query: string, page = 0, size = 20) =>
     apiClient.get(`/api/posts/search?query=${encodeURIComponent(query)}&page=${page}&size=${size}`),
 
+  semanticSearch: (query: string, limit = 20) =>
+    apiClient.get(`/api/posts/semantic-search?query=${encodeURIComponent(query)}&limit=${limit}`),
+
+  getRelatedPosts: (postId: string, limit = 5) =>
+    apiClient.get(`/api/posts/${postId}/related?limit=${limit}`),
+
   trending: (page = 0, size = 20) =>
     apiClient.get(`/api/posts/trending?page=${page}&size=${size}`),
 
@@ -202,6 +208,9 @@ export const postApi = {
 export const commentApi = {
   getPostComments: (postId: string, page = 0, size = 50) =>
     apiClient.get(`/api/comments/post/${postId}?page=${page}&size=${size}`),
+
+  getCommentSummary: (postId: string) =>
+    apiClient.get(`/api/comments/post/${postId}/summary`),
 
   create: (data: unknown) => apiClient.post("/api/comments", data),
 
@@ -332,4 +341,10 @@ export const communityApi = {
 
   shareCommunity: (communityId: string) =>
     apiClient.post(`/api/communities/${communityId}/share`),
+
+  archive: (communityId: string) =>
+    apiClient.patch(`/api/communities/${communityId}/archive`),
+
+  delete: (communityId: string) =>
+    apiClient.delete(`/api/communities/${communityId}`),
 };

@@ -67,6 +67,16 @@ flowchart TD
 
 ---
 
+## 🧠 Generative AI & Semantic Search
+
+WolfDire leverages Google Gemini via **Spring AI** to power intelligent discovery and summarization:
+*   **Vector Embeddings**: Every post is automatically converted into a 768-dimensional vector stored in a `pgvector` enabled PostgreSQL database.
+*   **Semantic Search**: An AI-powered search allows users to find content based on underlying meaning rather than strict keyword matching.
+*   **Contextual Related Posts**: The platform queries vector cosine similarity (`<=>`) in real-time to surface contextually related articles.
+*   **AI Comment Summaries**: A real-time Retrieval-Augmented Generation (RAG) pipeline analyzes deep comment threads and generates concise discussion summaries for users on-demand.
+
+---
+
 ## 📊 Graphify Analysis Insights
 
 A deep-graph analysis of the codebase reveals the following scale:
@@ -104,8 +114,9 @@ The following components represent the central nervous system of the project:
 *   **Backend**: Java 17+, Spring Boot 3.x, Spring Cloud, Spring Security (JWT).
 *   **Frontend**: Next.js 14, TailwindCSS, TanStack Query (React Query).
 *   **Messaging**: Apache Kafka.
-*   **Databases**: PostgreSQL, MongoDB.
+*   **Databases**: PostgreSQL (with `pgvector`), MongoDB.
 *   **Caching**: Redis.
+*   **Generative AI**: Spring AI, Google Gemini API.
 *   **DevOps**: Docker Compose, Eureka.
 
 ---

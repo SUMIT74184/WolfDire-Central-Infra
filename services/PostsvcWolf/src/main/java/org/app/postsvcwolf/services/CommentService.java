@@ -4,6 +4,7 @@ import org.app.postsvcwolf.entity.Vote;
 import org.app.postsvcwolf.config.CommentAddedEvent;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.ai.chat.model.ChatModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.app.postsvcwolf.dto.CommentResponse;
@@ -36,6 +37,7 @@ public class CommentService {
     private final PostRepository postRepository;
     private final VoteRepository voteRepository;
     private final KafkaTemplate<String, Object>kafkaTemplate;
+    private final ChatModel chatModel;
 
     private static final Pattern MENTION_PATTERN =  Pattern.compile("@([a-zA-Z0-9_]+)");
     private static final int MAX_COMMENT_DEPTH = 10;
@@ -107,6 +109,28 @@ public class CommentService {
         return replies.stream()
                 .map(reply -> mapToResponseWithReplies(reply, userId))
                 .collect(Collectors.toList());
+    }
+
+    public String getCommentSummary(String postId) {
+        List<Comment> topComments = commentRepository.findTopLevelSorted(postId);
+        if (topComments.isEmpty()) {
+            return "No comments available to summarize.";
+        }
+        
+        StringBuilder commentsText = new StringBuilder();
+        int maxComments = Math.min(topComments.size(), 20); // limit to 20 comments to avoid token limit
+        for (int i = 0; i < maxComments; i++) {
+            commentsText.append("- ").append(topComments.get(i).getContent()).append("\n");
+        }
+        
+        String prompt = "Summarize the following discussion on a post in 2-3 sentences. Identify the general sentiment and key points:\n" + commentsText.toString();
+        
+        try {
+            return chatModel.call(prompt);
+        } catch (Exception e) {
+            log.error("Failed to generate comment summary", e);
+            return "Failed to generate summary at this time.";
+        }
     }
 
 // Future no update of Comment will be allowed ----> or will be given as edited withing fixed window
