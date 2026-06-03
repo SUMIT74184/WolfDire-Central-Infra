@@ -64,6 +64,9 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_log:/var/lib/zookeeper/log
     networks:
       - project-network
     healthcheck:
@@ -81,6 +84,8 @@ services:
     ports:
       - "9092:9092"
       - "29092:29092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -138,7 +143,7 @@ services:
     build:
       context: ./services/Auth
       dockerfile: Dockerfile
-      network: host
+
     container_name: auth-service
     ports:
       - "8081:8081"
@@ -151,6 +156,8 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       JWT_SECRET: bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
@@ -167,7 +174,7 @@ services:
     build:
       context: ./services/PostsvcWolf
       dockerfile: Dockerfile
-      network: host
+
     container_name: post-service
     ports:
       - "8082:8082"
@@ -199,7 +206,7 @@ services:
     build:
       context: ./services/SocialConnection
       dockerfile: Dockerfile
-      network: host
+
     container_name: social-connection-service
     ports:
       - "8083:8083"
@@ -228,7 +235,7 @@ services:
     build:
       context: ./services/FeedSvc
       dockerfile: Dockerfile
-      network: host
+
     container_name: feed-service
     ports:
       - "8084:8084"
@@ -257,7 +264,7 @@ services:
 #    build:
 #      context: ./services/ModerationSvc
 #      dockerfile: Dockerfile
-#      network: host
+#
 #    container_name: moderation-service
 #    ports:
 #      - "8085:8085"
@@ -281,7 +288,7 @@ services:
     build:
       context: ./services/AnalyticsSvc
       dockerfile: Dockerfile
-      network: host
+
     container_name: analytics-service
     ports:
       - "8086:8086"
@@ -310,7 +317,7 @@ services:
     build:
       context: ./services/NotificationSvc
       dockerfile: Dockerfile
-      network: host
+
     container_name: notification-service
     ports:
       - "8087:8087"
@@ -341,7 +348,7 @@ services:
     build:
       context: ./api-gateway
       dockerfile: Dockerfile
-      network: host
+
     container_name: api-gateway
     ports:
       - "8090:8090"
@@ -357,6 +364,9 @@ volumes:
   postgres_data:
   mongodb_data:
   redis_data:
+  zookeeper_data:
+  zookeeper_log:
+  kafka_data:
 
 networks:
   project-network:

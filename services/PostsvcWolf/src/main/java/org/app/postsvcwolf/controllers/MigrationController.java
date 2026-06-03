@@ -30,7 +30,7 @@ public class MigrationController {
                 try {
                     String textToEmbed = post.getTitle() + " " + (post.getContent() != null ? post.getContent() : "");
                     List<Double> embeddingList = embeddingModel.embed(textToEmbed);
-                    if (embeddingList != null) {
+                    if (embeddingList != null && !embeddingList.isEmpty()) {
                         float[] embeddingArray = new float[embeddingList.size()];
                         for (int i = 0; i < embeddingList.size(); i++) {
                             embeddingArray[i] = embeddingList.get(i).floatValue();

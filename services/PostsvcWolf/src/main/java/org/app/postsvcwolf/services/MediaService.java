@@ -22,15 +22,18 @@ import java.util.UUID;
 public class MediaService {
 
     private final MediaRepository mediaRepository;
-    private final AmazonS3 s3Client; // Works perfectly with Cloudflare R2
+    // private final AmazonS3 s3Client; // Works perfectly with Cloudflare R2
 
-    @Value("${cloudflare.r2.bucket-name}")
-    private String bucketName;
+    // @Value("${cloudflare.r2.bucket-name}")
+    // private String bucketName;
 
-    @Value("${cloudflare.r2.public-url}")
-    private String r2PublicUrl;
+    // @Value("${cloudflare.r2.public-url}")
+    // private String r2PublicUrl;
 
     public String uploadMedia(MultipartFile file, String postId, String userId) {
+        // UploadThing is used directly from frontend. This method is no longer used for AWS/R2.
+        return null;
+        /*
         try {
             String fileName = generateFileName(file.getOriginalFilename());
             String s3Key = "posts/" + postId + "/" + fileName;
@@ -78,6 +81,7 @@ public class MediaService {
             log.error("Failed to upload media to R2", e);
             throw new RuntimeException("Failed to upload media: " + e.getMessage());
         }
+        */
     }
 
     private String generateFileName(String originalFileName) {

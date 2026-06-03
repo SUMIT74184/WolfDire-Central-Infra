@@ -84,19 +84,8 @@ public class PostService {
                 .seoSlug(request.getSeoSlug())
                 .build();
 
-        try {
-            String textToEmbed = post.getTitle() + " " + (post.getContent() != null ? post.getContent() : "");
-            List<Double> embeddingList = embeddingModel.embed(textToEmbed);
-            if (embeddingList != null) {
-                float[] embeddingArray = new float[embeddingList.size()];
-                for (int i = 0; i < embeddingList.size(); i++) {
-                    embeddingArray[i] = embeddingList.get(i).floatValue();
-                }
-                post.setEmbedding(embeddingArray);
-            }
-        } catch (Exception e) {
-            log.error("Failed to generate embedding for post", e);
-        }
+        // Embedding is generated asynchronously via Kafka (AIService)
+        // after the post.created event — not blocking the user's post flow.
 
         if (request.getType() == Post.PostType.LINK && request.getLinkUrl() != null) {
             post.setMediaUrl(request.getLinkUrl());
@@ -270,19 +259,8 @@ public class PostService {
             post.setMentions(extractMentions(content));
         }
 
-        try {
-            String textToEmbed = post.getTitle() + " " + (post.getContent() != null ? post.getContent() : "");
-            List<Double> embeddingList = embeddingModel.embed(textToEmbed);
-            if (embeddingList != null) {
-                float[] embeddingArray = new float[embeddingList.size()];
-                for (int i = 0; i < embeddingList.size(); i++) {
-                    embeddingArray[i] = embeddingList.get(i).floatValue();
-                }
-                post.setEmbedding(embeddingArray);
-            }
-        } catch (Exception e) {
-            log.error("Failed to generate embedding for post update", e);
-        }
+        // Embedding will be regenerated asynchronously via Kafka
+        // when the post update event is processed by AIService
 
         post.setEditedAt(LocalDateTime.now());
         post = postRepository.save(post);

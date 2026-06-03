@@ -25,10 +25,16 @@
     </properties>
 
     <dependencies>
+
+		<dependency>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-vector</artifactId>
+			<version>6.4.4.Final</version>
+		</dependency>
         <!-- Spring AI Gemini Starter -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-vertex-ai-gemini-spring-boot-starter</artifactId>
+            <artifactId>spring-ai-core</artifactId>
         </dependency>
 
         <dependency>
@@ -135,6 +141,12 @@
 
     <dependencyManagement>
         <dependencies>
+
+		<dependency>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-vector</artifactId>
+			<version>6.4.4.Final</version>
+		</dependency>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>

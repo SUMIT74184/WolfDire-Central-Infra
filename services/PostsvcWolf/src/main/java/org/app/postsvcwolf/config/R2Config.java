@@ -9,15 +9,17 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+/*
 @Configuration
 public class R2Config {
-    @Value("${cloudflare.r2.access-key}")
+    @Value("${cloudflare.r2.access-key:}")
     private String accessKey;
 
-    @Value("${cloudflare.r2.secret-key}")
+    @Value("${cloudflare.r2.secret-key:}")
     private String secretKey;
 
-    @Value("${cloudflare.r2.endpoint}")
+    @Value("${cloudflare.r2.endpoint:}")
     private String endpoint;
 
     @Bean
@@ -32,3 +34,4 @@ public class R2Config {
                 .build();
     }
 }
+*/

@@ -35,7 +35,7 @@ spring:
         - id: auth-service
           uri: lb://auth-service
           predicates:
-            - Path=/api/auth/**
+            - Path=/api/auth/**, /oauth2/**, /login/oauth2/**
           filters:
             - RewritePath=/api/auth/(?<segment>.*), /api/auth/$\{segment}
 

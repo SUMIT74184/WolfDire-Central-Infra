@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 public class AIService {
 
     private final PostRepository postRepository;
+    private final org.springframework.ai.embedding.EmbeddingModel embeddingModel;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${ai.enabled:false}")
@@ -39,11 +40,6 @@ public class AIService {
     @KafkaListener(topics = "post.created", groupId = "ai-service-group")
     @Transactional
     public void processPostCreated(PostCreatedEvent event) {
-        if (!aiEnabled || openAiApiKey.isEmpty()) {
-            log.warn("AI processing is disabled or API key is not configured");
-            return;
-        }
-
         try {
             log.info("Processing post for AI enrichment: {}", event.getPostId());
 
@@ -55,22 +51,44 @@ public class AIService {
 
             Post post = postOpt.get();
 
-            String summary = generateSummary(post.getTitle(), post.getContent());
-            post.setAiSummary(summary);
-
-            Set<String> hashtags = extractHashtags(post.getTitle(), post.getContent());
-            post.setHashtags(hashtags);
-
-            double spamScore = detectSpam(post.getTitle(), post.getContent());
-            post.setSpamScore(spamScore);
-
-            if (spamScore > 0.8) {
-                post.setIsSpam(true);
-                log.warn("Post flagged as spam: {} (score: {})", post.getId(), spamScore);
+            // --- Generate embedding (async, non-blocking for the user) ---
+            try {
+                String textToEmbed = post.getTitle() + " " + (post.getContent() != null ? post.getContent() : "");
+                List<Double> embeddingList = embeddingModel.embed(textToEmbed);
+                if (embeddingList != null && !embeddingList.isEmpty()) {
+                    float[] embeddingArray = new float[embeddingList.size()];
+                    for (int i = 0; i < embeddingList.size(); i++) {
+                        embeddingArray[i] = embeddingList.get(i).floatValue();
+                    }
+                    post.setEmbedding(embeddingArray);
+                    log.info("Embedding generated for post: {} ({} dimensions)", post.getId(), embeddingArray.length);
+                } else {
+                    log.warn("Embedding model returned null/empty for post: {}", post.getId());
+                }
+            } catch (Exception e) {
+                log.error("Failed to generate embedding for post: {}", post.getId(), e);
             }
 
-            double sentimentScore = analyzeSentiment(post.getTitle(), post.getContent());
-            post.setSentimentScore(sentimentScore);
+            // --- AI enrichment (summary, hashtags, spam, sentiment) ---
+            if (aiEnabled && !openAiApiKey.isEmpty()) {
+                String summary = generateSummary(post.getTitle(), post.getContent());
+                post.setAiSummary(summary);
+
+                double spamScore = detectSpam(post.getTitle(), post.getContent());
+                post.setSpamScore(spamScore);
+
+                if (spamScore > 0.8) {
+                    post.setIsSpam(true);
+                    log.warn("Post flagged as spam: {} (score: {})", post.getId(), spamScore);
+                }
+
+                double sentimentScore = analyzeSentiment(post.getTitle(), post.getContent());
+                post.setSentimentScore(sentimentScore);
+            }
+
+            // --- Hashtag extraction (always runs, no API needed) ---
+            Set<String> hashtags = extractHashtags(post.getTitle(), post.getContent());
+            post.setHashtags(hashtags);
 
             postRepository.save(post);
 

@@ -8,16 +8,35 @@ Yes, we can absolutely add this functionality to the current codebase! Here is h
 
 ## 1. WolfDire GenAI Architecture
 
-The WolfDire application uses a Spring Boot microservice backend with a PostgreSQL shared database instance (different logical databases like `post_db` and `feed_db`) and a Next.js frontend.
+The WolfDire application uses a Spring Boot microservice backend with a PostgreSQL shared database instance (different logical databases like `post_db` and `feed_db`) and a Next.js frontend. 
+
+### Before (Synchronous - Slow)
+Previously, embedding generation blocked the user's request.
 
 ```mermaid
 graph TD
     Frontend[Next.js Frontend] -->|API Gateway| Gateway[Spring Cloud API Gateway]
     Gateway -->|Route| PostSvc[PostsvcWolf Microservice]
-    PostSvc -->|Generate Embeddings| LLM[Gemini API / OpenAI API]
-    PostSvc -->|Store & Query Vectors| pgvector[(PostgreSQL + pgvector: post_db)]
-    PostSvc -->|Publish Event| Kafka[Kafka: post.created]
-    FeedSvc[FeedSvc Microservice] -->|Consume Event| Kafka
+    PostSvc -->|1. Generate Embeddings| LLM[Gemini API / OpenAI API]
+    PostSvc -->|2. Store Post + Vector| pgvector[(PostgreSQL + pgvector: post_db)]
+    PostSvc -->|3. Publish Event| Kafka[Kafka: post.created]
+```
+
+### Now (Asynchronous - Fast)
+Embedding generation is now completely decoupled and handled by the `AIService` Kafka consumer, making post creation instantaneous.
+
+```mermaid
+graph TD
+    Frontend[Next.js Frontend] -->|API Gateway| Gateway[Spring Cloud API Gateway]
+    Gateway -->|Route| PostSvc[PostsvcWolf Microservice]
+    PostSvc -->|1. Store Post Without Vector| pgvector[(PostgreSQL + pgvector: post_db)]
+    PostSvc -->|2. Publish Event| Kafka[Kafka: post.created]
+    
+    Kafka -->|Consume Event| AISvc[AIService Consumer]
+    AISvc -->|3. Generate Embeddings async| LLM[Gemini API / OpenAI API]
+    AISvc -->|4. Update Vector & AI Summary| pgvector
+    
+    Kafka -->|Consume Event| FeedSvc[FeedSvc Microservice]
 ```
 
 ---
@@ -27,9 +46,11 @@ graph TD
 ### A. Semantic Post Search (`PostsvcWolf`)
 Instead of simple keyword matching, users can find posts by meaning.
 - **Workflow**: 
-  1. When a post is created, `PostsvcWolf` sends the title + content to an embedding model (e.g. Gemini `text-embedding-004` or OpenAI `text-embedding-3-small`).
-  2. The generated vector embedding (e.g., 1536 dimensions) is stored in the `post` table in a new `embedding` column of type `vector(1536)`.
-  3. When a user searches, the query is embedded, and a cosine similarity query (`<=>` operator) is run against the `post` table.
+  1. When a post is created, it is instantly saved to the database.
+  2. The `post.created` event is fired to Kafka.
+  3. The `AIService` consumer asynchronously receives the event, sends the title + content to the embedding model (e.g. Gemini `text-embedding-004`).
+  4. The generated vector embedding is stored back into the `post` table via an update.
+  5. When a user searches, the query is embedded, and a cosine similarity query (`<=>` operator) is run against the `post` table.
 - **Endpoint**: `GET /api/posts/semantic-search?query=...`
 
 ### B. "Related Posts" Recommendations (`PostsvcWolf`)
