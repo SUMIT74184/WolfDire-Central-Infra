@@ -206,6 +206,10 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostResponse> searchSemantically(String query, int limit, String userId) {
         List<Double> embeddingList = embeddingModel.embed(query);
+        if (embeddingList == null || embeddingList.isEmpty()) {
+            return List.of(); // Return empty list if embedding generation fails/disabled
+        }
+        
         String embeddingStr = embeddingList.toString();
         List<Post> posts = postRepository.searchSemantically(embeddingStr, limit);
         return posts.stream().map(post -> mapToResponse(post, userId)).toList();
@@ -214,8 +218,8 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostResponse> getRelatedPosts(String postId, int limit, String userId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
-        if (post.getEmbedding() == null) {
-            return List.of();
+        if (post.getEmbedding() == null || post.getEmbedding().length == 0) {
+            return List.of(); // Cannot find related posts if current post has no embedding
         }
         
         java.util.List<Double> embList = new java.util.ArrayList<>();
