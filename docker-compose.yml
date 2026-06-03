@@ -6,6 +6,11 @@ services:
   # -------------------------------------------------------------
   postgres:
     image: pgvector/pgvector:pg16
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: shared-postgres
     environment:
       POSTGRES_USER: postgres
@@ -25,6 +30,11 @@ services:
 
   mongodb:
     image: mongo:7.0
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: shared-mongodb
     ports:
       - "27017:27017"
@@ -40,6 +50,11 @@ services:
 
   redis:
     image: redis:7.2-alpine
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: shared-redis
     ports:
       - "6379:6379"
@@ -58,6 +73,11 @@ services:
   # -------------------------------------------------------------
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: shared-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -77,6 +97,11 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: shared-kafka
     depends_on:
       zookeeper:
@@ -106,6 +131,11 @@ services:
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: shared-kafka-ui
     depends_on:
       kafka:
@@ -124,6 +154,11 @@ services:
   # -------------------------------------------------------------
   eureka-server:
     image: steeltoeoss/eureka-server
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: shared-eureka
     ports:
       - "8761:8761"
@@ -144,6 +179,11 @@ services:
       context: ./services/Auth
       dockerfile: Dockerfile
 
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: auth-service
     ports:
       - "8081:8081"
@@ -175,6 +215,11 @@ services:
       context: ./services/PostsvcWolf
       dockerfile: Dockerfile
 
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: post-service
     ports:
       - "8082:8082"
@@ -207,6 +252,11 @@ services:
       context: ./services/SocialConnection
       dockerfile: Dockerfile
 
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: social-connection-service
     ports:
       - "8083:8083"
@@ -236,6 +286,11 @@ services:
       context: ./services/FeedSvc
       dockerfile: Dockerfile
 
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: feed-service
     ports:
       - "8084:8084"
@@ -265,6 +320,11 @@ services:
 #      context: ./services/ModerationSvc
 #      dockerfile: Dockerfile
 #
+#    logging:
+#      driver: "json-file"
+#      options:
+#        max-size: "10m"
+#        max-file: "3"
 #    container_name: moderation-service
 #    ports:
 #      - "8085:8085"
@@ -289,6 +349,11 @@ services:
       context: ./services/AnalyticsSvc
       dockerfile: Dockerfile
 
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: analytics-service
     ports:
       - "8086:8086"
@@ -318,6 +383,11 @@ services:
       context: ./services/NotificationSvc
       dockerfile: Dockerfile
 
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: notification-service
     ports:
       - "8087:8087"
@@ -349,6 +419,11 @@ services:
       context: ./api-gateway
       dockerfile: Dockerfile
 
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     container_name: api-gateway
     ports:
       - "8090:8090"

@@ -39,10 +39,23 @@ public class CommunityFollower {
     @Column
     private boolean notificationsEnabled;
 
+    public enum Role {
+        MEMBER,
+        MODERATOR,
+        ADMIN
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
     @PrePersist
     protected void onCreate() {
         followedAt = LocalDateTime.now();
         notificationsEnabled = true;
+        if (role == null) {
+            role = Role.MEMBER;
+        }
     }
 
 }

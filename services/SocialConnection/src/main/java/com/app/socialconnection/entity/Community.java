@@ -37,6 +37,9 @@ public class Community {
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
+    @Column(name = "background_image_url", columnDefinition = "TEXT")
+    private String backgroundImageUrl;
+
     @Column(name = "owner_id", nullable = false)
     private String ownerId;
 

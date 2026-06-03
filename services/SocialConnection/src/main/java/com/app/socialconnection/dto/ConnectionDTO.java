@@ -48,6 +48,15 @@ public class ConnectionDTO {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class AddMemberRequest {
+        private String targetUserId;
+        private com.app.socialconnection.entity.CommunityFollower.Role role;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ConnectionStats {
         private long followersCount;
         private long followingCount;

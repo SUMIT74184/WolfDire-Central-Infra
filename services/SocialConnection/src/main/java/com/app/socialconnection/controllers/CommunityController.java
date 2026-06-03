@@ -33,6 +33,15 @@ public class CommunityController {
         return ResponseEntity.ok(communityService.getCommunityById(id));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<CommunityDto> updateCommunity(
+            HttpServletRequest request,
+            @PathVariable String id,
+            @Valid @RequestBody CommunityDto.UpdateRequest updateRequest) {
+        String userId = getUserId(request);
+        return ResponseEntity.ok(communityService.updateCommunity(userId, id, updateRequest));
+    }
+
     @GetMapping("/slug/{slug}")
     public ResponseEntity<CommunityDto> getCommunityBySlug(@PathVariable String slug) {
         return ResponseEntity.ok(communityService.getCommunityBySlug(slug));

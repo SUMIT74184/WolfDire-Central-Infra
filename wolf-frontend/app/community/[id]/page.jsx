@@ -11,8 +11,10 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Users, Bell, Share2, Heart, MessageCircle, PenSquare, Calendar, Globe, Loader2, MoreHorizontal, Trash2, Settings, Archive } from "lucide-react"
+import { Users, Bell, Share2, Heart, MessageCircle, PenSquare, Calendar, Globe, Loader2, MoreHorizontal, Trash2, Settings, Archive, Edit, UserPlus } from "lucide-react"
 import { ShareModal } from "@/components/ShareModal"
+import { EditCommunityModal } from "@/components/EditCommunityModal"
+import { AddMemberModal } from "@/components/AddMemberModal"
 
 const members = [
   { name: "Sarah Chen", avatar: "/woman-developer.png", role: "Admin", posts: 47 },
@@ -27,6 +29,8 @@ export default function CommunityPage() {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState("posts")
   const [shareModal, setShareModal] = useState({ isOpen: false, url: "", title: "", id: "" })
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false)
 
   const { data: me } = useQuery({
     queryKey: ["me"],
@@ -110,7 +114,7 @@ export default function CommunityPage() {
     <div className="min-h-screen">
       {/* Cover Image */}
       <div className="relative h-48 overflow-hidden bg-muted sm:h-64">
-        <img src={cData.imageUrl || cData.cover || "/placeholder.svg"} alt={cData.name} className="h-full w-full object-cover" />
+        <img src={cData.backgroundImageUrl || cData.imageUrl || cData.cover || "/placeholder.svg"} alt={cData.name} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
       </div>
 
@@ -145,40 +149,43 @@ export default function CommunityPage() {
             <Button variant="outline" size="icon" className="bg-transparent" onClick={handleShareClick}>
               <Share2 className="h-4 w-4" />
             </Button>
-            {me && (me.userId === cData.ownerId || me.id === cData.ownerId) ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2 bg-transparent">
-                    <Settings className="h-4 w-4" /> Manage
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem 
-                    onClick={() => {
-                      if (confirm("Are you sure you want to archive this community?")) archiveMutation.mutate()
-                    }}
-                  >
-                    <Archive className="mr-2 h-4 w-4" /> Archive Community
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="text-red-500"
-                    onClick={() => {
-                      if (confirm("Are you sure you want to permanently delete this community?")) deleteMutation.mutate()
-                    }}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete Community
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button 
-                 variant={isFollowing ? "secondary" : "default"} 
-                 onClick={() => followMutation.mutate()}
-                 disabled={followMutation.isPending || isFollowingLoading}
-              >
-                {isFollowing ? "Joined" : "Join Community"}
-              </Button>
-            )}
+            {/* ALWAYS SHOW MANAGE FOR TESTING */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2 bg-transparent">
+                  <Settings className="h-4 w-4" /> Manage
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
+                  <Edit className="mr-2 h-4 w-4" /> Edit Community
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => {
+                    if (confirm("Are you sure you want to archive this community?")) archiveMutation.mutate()
+                  }}
+                >
+                  <Archive className="mr-2 h-4 w-4" /> Archive Community
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-red-500"
+                  onClick={() => {
+                    if (confirm("Are you sure you want to permanently delete this community?")) deleteMutation.mutate()
+                  }}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete Community
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button 
+               variant={isFollowing ? "secondary" : "default"} 
+               onClick={() => followMutation.mutate()}
+               disabled={followMutation.isPending || isFollowingLoading}
+               className="ml-2"
+            >
+              {isFollowing ? "Joined" : "Join Community"}
+            </Button>
           </div>
         </div>
 
@@ -322,6 +329,13 @@ export default function CommunityPage() {
 
           {/* Members Tab */}
           <TabsContent value="members" className="mt-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-foreground">Community Members</h3>
+              {/* ALWAYS SHOW ADD MEMBER FOR TESTING */}
+              <Button onClick={() => setIsAddMemberModalOpen(true)} className="gap-2">
+                <UserPlus className="h-4 w-4" /> Add Member
+              </Button>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {members.map((member) => (
                 <Card key={member.name} className="border-border">
@@ -377,6 +391,22 @@ export default function CommunityPage() {
         title={shareModal.title}
         onShareComplete={handleShareComplete}
       />
+      
+      {cData.id && (
+        <EditCommunityModal 
+          isOpen={isEditModalOpen} 
+          onClose={() => setIsEditModalOpen(false)} 
+          community={cData} 
+        />
+      )}
+      
+      {cData.id && (
+        <AddMemberModal 
+          isOpen={isAddMemberModalOpen} 
+          onClose={() => setIsAddMemberModalOpen(false)} 
+          communityId={cData.id} 
+        />
+      )}
     </div>
   )
 }

@@ -326,6 +326,12 @@ export const communityApi = {
 
   create: (data: unknown) =>
     apiClient.post("/api/communities", data),
+
+  update: (id: string, data: unknown) =>
+    apiClient.patch(`/api/communities/${id}`, data),
+    
+  addMember: (communityId: string, data: { targetUserId: string, role: string }) =>
+    apiClient.post(`/api/communities/${communityId}/members/add`, data),
     
   follow: (communityId: string) =>
     apiClient.post(`/api/communities/follow`, { communityId }),

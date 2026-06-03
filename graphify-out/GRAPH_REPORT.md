@@ -1,7 +1,7 @@
 # Graph Report - project-root2  (2026-06-03)
 
 ## Corpus Check
-- 292 files · ~704,197 words
+- 292 files · ~704,228 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -703,8 +703,8 @@ Nodes (1): UserInteraction
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `CustomOAuth2User` connect `Community 1` to `Community 4`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
+- **Why does `PostController` connect `Community 7` to `Community 0`?**
+  _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **What connects `ModerationResponse`, `ModerationScores`, `ModerationRequest` to the rest of the system?**
   _56 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**

@@ -82,6 +82,8 @@ public class PostService {
                 .scheduledPublishAt(request.getScheduledPublishAt())
                 .seoDescription(request.getSeoDescription())
                 .seoSlug(request.getSeoSlug())
+                .mediaUrl(request.getMediaUrl())
+                .thumbnailUrl(request.getThumbnailUrl())
                 .build();
 
         // Embedding is generated asynchronously via Kafka (AIService)

@@ -169,7 +169,7 @@ public class PostController {
             @PathVariable String postId,
             HttpServletRequest httpRequest) {
         postService.incrementShareCount(postId);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{postId}/save")

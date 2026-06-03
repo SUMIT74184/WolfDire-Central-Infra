@@ -47,6 +47,17 @@ public class CommunityFollowController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{communityId}/members/add")
+    public ResponseEntity<CommunityFollower> addMember(
+            HttpServletRequest request,
+            @PathVariable String communityId,
+            @Valid @RequestBody ConnectionDTO.AddMemberRequest addRequest) {
+        String requesterId = getUserId(request);
+        CommunityFollower follower = communityFollowService.addMember(
+                requesterId, communityId, addRequest.getTargetUserId(), addRequest.getRole());
+        return ResponseEntity.status(HttpStatus.CREATED).body(follower);
+    }
+
     @GetMapping("/{communityId}/followers")
     public ResponseEntity<Page<CommunityFollower>> getCommunityFollowers(
             @PathVariable String communityId,

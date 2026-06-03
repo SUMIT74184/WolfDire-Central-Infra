@@ -61,6 +61,36 @@ public class CommunityFollowService {
     }
 
     /**
+     * Admin/Moderator manually adds a member.
+     */
+    @Transactional
+    @CacheEvict(value = "communityMemberCount", key = "#communityId")
+    public CommunityFollower addMember(String requesterId, String communityId, String targetUserId, CommunityFollower.Role role) {
+        CommunityFollower requester = communityFollowerRepository.findByCommunityIdAndUserId(communityId, requesterId)
+                .orElseThrow(() -> new com.app.socialconnection.exception.UnauthorizedException("You are not a member of this community"));
+
+        if (requester.getRole() == CommunityFollower.Role.MEMBER) {
+            throw new com.app.socialconnection.exception.UnauthorizedException("Only Admins or Moderators can add members");
+        }
+
+        if (communityFollowerRepository.existsByCommunityIdAndUserId(communityId, targetUserId)) {
+            throw new DuplicateResourceException("User is already in this community");
+        }
+
+        CommunityFollower follower = CommunityFollower.builder()
+                .communityId(communityId)
+                .userId(targetUserId)
+                .notificationsEnabled(true)
+                .role(role != null ? role : CommunityFollower.Role.MEMBER)
+                .build();
+
+        follower = communityFollowerRepository.save(follower);
+        communityRepository.incrementMemberCount(communityId);
+        log.info("Admin/Moderator {} added user {} to community {}", requesterId, targetUserId, communityId);
+        return follower;
+    }
+
+    /**
      * Unfollow a community.
      */
     @Transactional

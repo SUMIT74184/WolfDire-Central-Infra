@@ -13,6 +13,7 @@ public class CommunityDto {
     private String slug;
     private String description;
     private String imageUrl;
+    private String backgroundImageUrl;
     private String ownerId;
     private Long memberCount;
     private Long shareCount;
@@ -27,5 +28,16 @@ public class CommunityDto {
         private String description;
         /** Optional HTTPS image URL for banner / avatar */
         private String imageUrl;
+        private String backgroundImageUrl;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateRequest {
+        private String description;
+        private String imageUrl;
+        private String backgroundImageUrl;
     }
 }

@@ -42,4 +42,8 @@ public class CreatePostRequest {
     private String seoDescription;
 
     private String seoSlug;
+
+    private String mediaUrl;
+
+    private String thumbnailUrl;
 }
