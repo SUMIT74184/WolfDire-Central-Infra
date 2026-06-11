@@ -1,12 +1,12 @@
 # Graph Report - project-root2  (2026-06-03)
 
 ## Corpus Check
-- 292 files · ~704,228 words
+- 294 files · ~705,241 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1195 nodes · 1499 edges · 99 communities detected
-- Extraction: 78% EXTRACTED · 22% INFERRED · 0% AMBIGUOUS · INFERRED: 329 edges (avg confidence: 0.8)
+- 1205 nodes · 1513 edges · 99 communities detected
+- Extraction: 78% EXTRACTED · 22% INFERRED · 0% AMBIGUOUS · INFERRED: 332 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -26,8 +26,8 @@
 - [[_COMMUNITY_Community 13|Community 13]]
 - [[_COMMUNITY_Community 14|Community 14]]
 - [[_COMMUNITY_Community 15|Community 15]]
-- [[_COMMUNITY_Community 17|Community 17]]
-- [[_COMMUNITY_Community 19|Community 19]]
+- [[_COMMUNITY_Community 16|Community 16]]
+- [[_COMMUNITY_Community 18|Community 18]]
 - [[_COMMUNITY_Community 20|Community 20]]
 - [[_COMMUNITY_Community 21|Community 21]]
 - [[_COMMUNITY_Community 23|Community 23]]
@@ -46,9 +46,9 @@
 - [[_COMMUNITY_Community 52|Community 52]]
 - [[_COMMUNITY_Community 53|Community 53]]
 - [[_COMMUNITY_Community 54|Community 54]]
-- [[_COMMUNITY_Community 59|Community 59]]
-- [[_COMMUNITY_Community 68|Community 68]]
-- [[_COMMUNITY_Community 70|Community 70]]
+- [[_COMMUNITY_Community 55|Community 55]]
+- [[_COMMUNITY_Community 60|Community 60]]
+- [[_COMMUNITY_Community 69|Community 69]]
 - [[_COMMUNITY_Community 71|Community 71]]
 - [[_COMMUNITY_Community 72|Community 72]]
 - [[_COMMUNITY_Community 73|Community 73]]
@@ -77,8 +77,6 @@
 - [[_COMMUNITY_Community 96|Community 96]]
 - [[_COMMUNITY_Community 97|Community 97]]
 - [[_COMMUNITY_Community 98|Community 98]]
-- [[_COMMUNITY_Community 148|Community 148]]
-- [[_COMMUNITY_Community 149|Community 149]]
 - [[_COMMUNITY_Community 150|Community 150]]
 - [[_COMMUNITY_Community 151|Community 151]]
 - [[_COMMUNITY_Community 152|Community 152]]
@@ -109,6 +107,8 @@
 - [[_COMMUNITY_Community 177|Community 177]]
 - [[_COMMUNITY_Community 178|Community 178]]
 - [[_COMMUNITY_Community 179|Community 179]]
+- [[_COMMUNITY_Community 180|Community 180]]
+- [[_COMMUNITY_Community 181|Community 181]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `PostService` - 26 edges
@@ -138,11 +138,11 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.04
-Nodes (11): CommentService, ConnectionController, EmailNotificationService, FeedController, MigrationController, NotificationBatchProcessor, Post, PostRepository (+3 more)
+Nodes (10): AuthController, AuthService, CustomOAuth2User, CustomOAuth2UserService, FeignClientInterceptor, JwtAuthenticationFilter, JwtUtil, OAuth2LoginSuccessHandler (+2 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.04
-Nodes (10): AuthController, AuthService, CustomOAuth2User, CustomOAuth2UserService, FeignClientInterceptor, JwtAuthenticationFilter, JwtUtil, OAuth2LoginSuccessHandler (+2 more)
+Cohesion: 0.05
+Nodes (10): CommentService, ConnectionController, EmailNotificationService, FeedController, MigrationController, NotificationBatchProcessor, Post, PostService (+2 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.07
@@ -165,16 +165,16 @@ Cohesion: 0.1
 Nodes (5): AIService, ContentModerationService, ModerationResultRepository, ModerationService, ReputationService
 
 ### Community 7 - "Community 7"
-Cohesion: 0.09
-Nodes (2): CommunityController, PostController
+Cohesion: 0.07
+Nodes (4): CommentController, PostRepository, VoteRepository, VoteService
 
 ### Community 8 - "Community 8"
 Cohesion: 0.09
-Nodes (4): NotificationPreferenceRepository, NotificationQueryService, NotificationRepository, WebSocketNotificationService
+Nodes (2): CommunityController, PostController
 
 ### Community 9 - "Community 9"
-Cohesion: 0.11
-Nodes (3): CommentController, VoteRepository, VoteService
+Cohesion: 0.09
+Nodes (4): NotificationPreferenceRepository, NotificationQueryService, NotificationRepository, WebSocketNotificationService
 
 ### Community 10 - "Community 10"
 Cohesion: 0.08
@@ -200,17 +200,17 @@ Nodes (2): CommunityFollowController, InternalConnectionController
 Cohesion: 0.14
 Nodes (1): CommentRepository
 
-### Community 17 - "Community 17"
+### Community 16 - "Community 16"
+Cohesion: 0.18
+Nodes (10): AddMemberRequest, BlockedUserResponse, CommunityInfo, ConnectionActionRequest, ConnectionDTO, ConnectionRequest, ConnectionResponse, ConnectionStats (+2 more)
+
+### Community 18 - "Community 18"
 Cohesion: 0.22
 Nodes (2): SidebarMenuButton(), useSidebar()
 
-### Community 19 - "Community 19"
-Cohesion: 0.2
-Nodes (1): RedisConfig
-
 ### Community 20 - "Community 20"
 Cohesion: 0.2
-Nodes (9): BlockedUserResponse, CommunityInfo, ConnectionActionRequest, ConnectionDTO, ConnectionRequest, ConnectionResponse, ConnectionStats, FollowCommunityRequest (+1 more)
+Nodes (1): RedisConfig
 
 ### Community 21 - "Community 21"
 Cohesion: 0.2
@@ -270,71 +270,71 @@ Nodes (4): FeedDTO, FeedItemDTO, InteractionRequest, Response
 
 ### Community 52 - "Community 52"
 Cohesion: 0.5
-Nodes (1): WebSocketConfig
+Nodes (3): CommunityDto, CreateRequest, UpdateRequest
 
 ### Community 53 - "Community 53"
-Cohesion: 0.67
-Nodes (1): ApiGatewayApplication
+Cohesion: 0.5
+Nodes (1): WebSocketConfig
 
 ### Community 54 - "Community 54"
 Cohesion: 0.67
+Nodes (1): ApiGatewayApplication
+
+### Community 55 - "Community 55"
+Cohesion: 0.67
 Nodes (1): ApiGatewayApplicationTests
 
-### Community 59 - "Community 59"
+### Community 60 - "Community 60"
 Cohesion: 0.67
 Nodes (1): useIsMobile()
 
-### Community 68 - "Community 68"
+### Community 69 - "Community 69"
 Cohesion: 0.67
 Nodes (1): Loading()
 
-### Community 70 - "Community 70"
+### Community 71 - "Community 71"
 Cohesion: 0.67
 Nodes (1): ModerationSvcApplication
 
-### Community 71 - "Community 71"
+### Community 72 - "Community 72"
 Cohesion: 0.67
 Nodes (1): ModerationResult
 
-### Community 72 - "Community 72"
+### Community 73 - "Community 73"
 Cohesion: 0.67
 Nodes (1): UserReputationRepository
 
-### Community 73 - "Community 73"
+### Community 74 - "Community 74"
 Cohesion: 0.67
 Nodes (1): ModerationSvcApplicationTests
 
-### Community 74 - "Community 74"
+### Community 75 - "Community 75"
 Cohesion: 0.67
 Nodes (1): AnalyticsSvcApplication
 
-### Community 75 - "Community 75"
+### Community 76 - "Community 76"
 Cohesion: 0.67
 Nodes (1): CommentEvent
 
-### Community 76 - "Community 76"
+### Community 77 - "Community 77"
 Cohesion: 0.67
 Nodes (1): VoteEvent
 
-### Community 77 - "Community 77"
+### Community 78 - "Community 78"
 Cohesion: 0.67
 Nodes (1): PostEvent
 
-### Community 78 - "Community 78"
+### Community 79 - "Community 79"
 Cohesion: 0.67
 Nodes (1): ModerationEvent
 
-### Community 79 - "Community 79"
+### Community 80 - "Community 80"
 Cohesion: 0.67
 Nodes (1): AnalyticsSvcApplicationTests
 
-### Community 80 - "Community 80"
-Cohesion: 0.67
-Nodes (1): SocialConnectionApplication
-
 ### Community 81 - "Community 81"
 Cohesion: 0.67
-Nodes (2): CommunityDto, CreateRequest
+Nodes (1): SocialConnectionApplication
 
 ### Community 82 - "Community 82"
 Cohesion: 0.67
@@ -404,148 +404,148 @@ Nodes (1): FeedSvcApplication
 Cohesion: 0.67
 Nodes (1): FeedSvcApplicationTests
 
-### Community 148 - "Community 148"
+### Community 150 - "Community 150"
 Cohesion: 1.0
 Nodes (1): ModerationResponse
 
-### Community 149 - "Community 149"
+### Community 151 - "Community 151"
 Cohesion: 1.0
 Nodes (1): ModerationScores
 
-### Community 150 - "Community 150"
+### Community 152 - "Community 152"
 Cohesion: 1.0
 Nodes (1): ModerationRequest
 
-### Community 151 - "Community 151"
+### Community 153 - "Community 153"
 Cohesion: 1.0
 Nodes (1): SentimentResult
 
-### Community 152 - "Community 152"
+### Community 154 - "Community 154"
 Cohesion: 1.0
 Nodes (1): UserReputation
 
-### Community 153 - "Community 153"
+### Community 155 - "Community 155"
 Cohesion: 1.0
 Nodes (1): AnalyticsResponse
 
-### Community 154 - "Community 154"
+### Community 156 - "Community 156"
 Cohesion: 1.0
 Nodes (1): EventLog
 
-### Community 155 - "Community 155"
+### Community 157 - "Community 157"
 Cohesion: 1.0
 Nodes (1): TrendingTopic
 
-### Community 156 - "Community 156"
+### Community 158 - "Community 158"
 Cohesion: 1.0
 Nodes (1): CommunityAnalytics
 
-### Community 157 - "Community 157"
+### Community 159 - "Community 159"
 Cohesion: 1.0
 Nodes (1): UserAnalytics
 
-### Community 158 - "Community 158"
+### Community 160 - "Community 160"
 Cohesion: 1.0
 Nodes (1): ContentAnalytics
 
-### Community 159 - "Community 159"
+### Community 161 - "Community 161"
 Cohesion: 1.0
 Nodes (1): UserEvent
 
-### Community 160 - "Community 160"
+### Community 162 - "Community 162"
 Cohesion: 1.0
 Nodes (1): ConnectionRequestEvent
 
-### Community 161 - "Community 161"
+### Community 163 - "Community 163"
 Cohesion: 1.0
 Nodes (1): Community
 
-### Community 162 - "Community 162"
+### Community 164 - "Community 164"
 Cohesion: 1.0
 Nodes (1): CreateCommentRequest
 
-### Community 163 - "Community 163"
+### Community 165 - "Community 165"
 Cohesion: 1.0
 Nodes (1): CreatePostRequest
 
-### Community 164 - "Community 164"
+### Community 166 - "Community 166"
 Cohesion: 1.0
 Nodes (1): UpdatePostRequest
 
-### Community 165 - "Community 165"
+### Community 167 - "Community 167"
 Cohesion: 1.0
 Nodes (1): CommentResponse
 
-### Community 166 - "Community 166"
+### Community 168 - "Community 168"
 Cohesion: 1.0
 Nodes (1): PostResponse
 
-### Community 167 - "Community 167"
+### Community 169 - "Community 169"
 Cohesion: 1.0
 Nodes (1): Media
 
-### Community 168 - "Community 168"
+### Community 170 - "Community 170"
 Cohesion: 1.0
 Nodes (1): Comment
 
-### Community 169 - "Community 169"
+### Community 171 - "Community 171"
 Cohesion: 1.0
 Nodes (1): Vote
 
-### Community 170 - "Community 170"
+### Community 172 - "Community 172"
 Cohesion: 1.0
 Nodes (1): SavedPost
 
-### Community 171 - "Community 171"
+### Community 173 - "Community 173"
 Cohesion: 1.0
 Nodes (1): MentionEvent
 
-### Community 172 - "Community 172"
+### Community 174 - "Community 174"
 Cohesion: 1.0
 Nodes (1): MarkReadRequest
 
-### Community 173 - "Community 173"
+### Community 175 - "Community 175"
 Cohesion: 1.0
 Nodes (1): UnreadCountResponse
 
-### Community 174 - "Community 174"
+### Community 176 - "Community 176"
 Cohesion: 1.0
 Nodes (1): NotificationAggregation
 
-### Community 175 - "Community 175"
+### Community 177 - "Community 177"
 Cohesion: 1.0
 Nodes (1): Notification
 
-### Community 176 - "Community 176"
+### Community 178 - "Community 178"
 Cohesion: 1.0
 Nodes (1): NotificationPreference
 
-### Community 177 - "Community 177"
+### Community 179 - "Community 179"
 Cohesion: 1.0
 Nodes (1): PostDTO
 
-### Community 178 - "Community 178"
+### Community 180 - "Community 180"
 Cohesion: 1.0
 Nodes (1): FeedItem
 
-### Community 179 - "Community 179"
+### Community 181 - "Community 181"
 Cohesion: 1.0
 Nodes (1): UserInteraction
 
 ## Knowledge Gaps
-- **56 isolated node(s):** `ModerationResponse`, `ModerationScores`, `ModerationRequest`, `SentimentResult`, `UserReputation` (+51 more)
+- **58 isolated node(s):** `ModerationResponse`, `ModerationScores`, `ModerationRequest`, `SentimentResult`, `UserReputation` (+53 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 7`** (33 nodes): `CommunityController`, `.archiveCommunity()`, `.createCommunity()`, `.deleteCommunity()`, `.getAllCommunities()`, `.getCommunityById()`, `.getCommunityBySlug()`, `.getUserId()`, `.shareCommunity()`, `PostController.java`, `CommunityController.java`, `PostController`, `.createPost()`, `.deletePost()`, `.getCommunityPosts()`, `.getHotPosts()`, `.getOptionalUserId()`, `.getPost()`, `.getPostsByIds()`, `.getRelatedPosts()`, `.getRequiredUserId()`, `.getSavedPosts()`, `.getTrendingPosts()`, `.getUserPosts()`, `.listPosts()`, `.repost()`, `.savePost()`, `.searchPosts()`, `.searchSemantically()`, `.sharePost()`, `.unsavePost()`, `.updatePost()`, `.incrementShareCount()`
+- **Thin community `Community 8`** (34 nodes): `CommunityController`, `.archiveCommunity()`, `.createCommunity()`, `.deleteCommunity()`, `.getAllCommunities()`, `.getCommunityById()`, `.getCommunityBySlug()`, `.getUserId()`, `.shareCommunity()`, `.updateCommunity()`, `PostController.java`, `CommunityController.java`, `PostController`, `.createPost()`, `.deletePost()`, `.getCommunityPosts()`, `.getHotPosts()`, `.getOptionalUserId()`, `.getPost()`, `.getPostsByIds()`, `.getRelatedPosts()`, `.getRequiredUserId()`, `.getSavedPosts()`, `.getTrendingPosts()`, `.getUserPosts()`, `.listPosts()`, `.repost()`, `.savePost()`, `.searchPosts()`, `.searchSemantically()`, `.sharePost()`, `.unsavePost()`, `.updatePost()`, `.incrementShareCount()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 13`** (21 nodes): `KafkaConfig.java`, `KafkaConfig.java`, `KafkaConfig.java`, `KafkaConfig.java`, `KafkaConfig.java`, `KafkaConfig`, `.blockEventsTopic()`, `.commentAddedTopic()`, `.connectionEventsTopic()`, `.consumerFactory()`, `.feedInteractionTopic()`, `.feedUpdateTopic()`, `.kafkaListenerContainerFactory()`, `.kafkaTemplate()`, `.mediaUploadedTopic()`, `.objectMapper()`, `.postCreatedTopic()`, `.postFlaggedTopic()`, `.producerFactory()`, `.userMentionedTopic()`, `.voteChangedTopic()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 14`** (16 nodes): `CommunityFollowController`, `.followCommunity()`, `.getCommunityFollowers()`, `.getCommunityMemberCount()`, `.getUserCommunities()`, `.getUserId()`, `.isFollowing()`, `.toggleNotifications()`, `.unfollowCommunity()`, `CommunityFollowController.java`, `InternalConnectionController.java`, `InternalConnectionController`, `.getFollowerIds()`, `.getFollowingIds()`, `.getUserId()`, `.isFollowingCommunity()`
+- **Thin community `Community 14`** (17 nodes): `CommunityFollowController`, `.addMember()`, `.followCommunity()`, `.getCommunityFollowers()`, `.getCommunityMemberCount()`, `.getUserCommunities()`, `.getUserId()`, `.isFollowing()`, `.toggleNotifications()`, `.unfollowCommunity()`, `CommunityFollowController.java`, `InternalConnectionController.java`, `InternalConnectionController`, `.getFollowerIds()`, `.getFollowingIds()`, `.getUserId()`, `.isFollowingCommunity()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 15`** (14 nodes): `CommentRepository`, `.countByPost()`, `.decrementDownvotes()`, `.decrementUpvotes()`, `.findActive()`, `.findByUser()`, `.findReplies()`, `.findTopLevel()`, `.findTopLevelSorted()`, `.incrementDownvotes()`, `.incrementReplyCount()`, `.incrementUpvotes()`, `.getCommentSummary()`, `CommentRepository.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 17`** (10 nodes): `sidebar.tsx`, `cn()`, `handleKeyDown()`, `SidebarFooter()`, `SidebarHeader()`, `SidebarMenu()`, `SidebarMenuButton()`, `SidebarMenuItem()`, `SidebarSeparator()`, `useSidebar()`
+- **Thin community `Community 18`** (10 nodes): `sidebar.tsx`, `cn()`, `handleKeyDown()`, `SidebarFooter()`, `SidebarHeader()`, `SidebarMenu()`, `SidebarMenuButton()`, `SidebarMenuItem()`, `SidebarSeparator()`, `useSidebar()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 19`** (10 nodes): `RedisConfig.java`, `RedisConfig.java`, `RedisConfig.java`, `RedisConfig.java`, `RedisConfig.java`, `RedisConfig.java`, `RedisConfig.java`, `RedisConfig`, `.cacheManager()`, `.redisTemplate()`
+- **Thin community `Community 20`** (10 nodes): `RedisConfig.java`, `RedisConfig.java`, `RedisConfig.java`, `RedisConfig.java`, `RedisConfig.java`, `RedisConfig.java`, `RedisConfig.java`, `RedisConfig`, `.cacheManager()`, `.redisTemplate()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 23`** (9 nodes): `NotificationController.java`, `NotificationController`, `.deleteNotification()`, `.getPreferences()`, `.getUnreadCount()`, `.getUserNotifications()`, `.markAllAsRead()`, `.markAsRead()`, `.updatePreferences()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -567,39 +567,37 @@ Nodes (1): UserInteraction
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 42`** (5 nodes): `UserServiceClient.java`, `UserServiceClient.java`, `UserServiceClient`, `.getUserById()`, `.getUserEmail()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 52`** (4 nodes): `WebSocketConfig.java`, `WebSocketConfig`, `.configureMessageBroker()`, `.registerStompEndpoints()`
+- **Thin community `Community 53`** (4 nodes): `WebSocketConfig.java`, `WebSocketConfig`, `.configureMessageBroker()`, `.registerStompEndpoints()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 53`** (3 nodes): `ApiGatewayApplication`, `.main()`, `ApiGatewayApplication.java`
+- **Thin community `Community 54`** (3 nodes): `ApiGatewayApplication`, `.main()`, `ApiGatewayApplication.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 54`** (3 nodes): `ApiGatewayApplicationTests`, `.contextLoads()`, `ApiGatewayApplicationTests.java`
+- **Thin community `Community 55`** (3 nodes): `ApiGatewayApplicationTests`, `.contextLoads()`, `ApiGatewayApplicationTests.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 59`** (3 nodes): `use-mobile.tsx`, `use-mobile.ts`, `useIsMobile()`
+- **Thin community `Community 60`** (3 nodes): `use-mobile.tsx`, `use-mobile.ts`, `useIsMobile()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 68`** (3 nodes): `loading.jsx`, `loading.jsx`, `Loading()`
+- **Thin community `Community 69`** (3 nodes): `loading.jsx`, `loading.jsx`, `Loading()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 70`** (3 nodes): `ModerationSvcApplication.java`, `ModerationSvcApplication`, `.main()`
+- **Thin community `Community 71`** (3 nodes): `ModerationSvcApplication.java`, `ModerationSvcApplication`, `.main()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 71`** (3 nodes): `ModerationResult.java`, `ModerationResult`, `.onCreate()`
+- **Thin community `Community 72`** (3 nodes): `ModerationResult.java`, `ModerationResult`, `.onCreate()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (3 nodes): `UserReputationRepository.java`, `UserReputationRepository`, `.findByUserId()`
+- **Thin community `Community 73`** (3 nodes): `UserReputationRepository.java`, `UserReputationRepository`, `.findByUserId()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 73`** (3 nodes): `ModerationSvcApplicationTests.java`, `ModerationSvcApplicationTests`, `.contextLoads()`
+- **Thin community `Community 74`** (3 nodes): `ModerationSvcApplicationTests.java`, `ModerationSvcApplicationTests`, `.contextLoads()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 74`** (3 nodes): `AnalyticsSvcApplication`, `.main()`, `AnalyticsSvcApplication.java`
+- **Thin community `Community 75`** (3 nodes): `AnalyticsSvcApplication`, `.main()`, `AnalyticsSvcApplication.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 75`** (3 nodes): `CommentEvent`, `CommentEvent.java`, `CommentEvent.java`
+- **Thin community `Community 76`** (3 nodes): `CommentEvent`, `CommentEvent.java`, `CommentEvent.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 76`** (3 nodes): `VoteEvent.java`, `VoteEvent.java`, `VoteEvent`
+- **Thin community `Community 77`** (3 nodes): `VoteEvent.java`, `VoteEvent.java`, `VoteEvent`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 77`** (3 nodes): `PostEvent.java`, `PostEvent.java`, `PostEvent`
+- **Thin community `Community 78`** (3 nodes): `PostEvent.java`, `PostEvent.java`, `PostEvent`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 78`** (3 nodes): `ModerationEvent.java`, `ModerationEvent.java`, `ModerationEvent`
+- **Thin community `Community 79`** (3 nodes): `ModerationEvent.java`, `ModerationEvent.java`, `ModerationEvent`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 79`** (3 nodes): `AnalyticsSvcApplicationTests`, `.contextLoads()`, `AnalyticsSvcApplicationTests.java`
+- **Thin community `Community 80`** (3 nodes): `AnalyticsSvcApplicationTests`, `.contextLoads()`, `AnalyticsSvcApplicationTests.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 80`** (3 nodes): `SocialConnectionApplication.java`, `SocialConnectionApplication`, `.main()`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 81`** (3 nodes): `CommunityDto`, `CreateRequest`, `CommunityDto.java`
+- **Thin community `Community 81`** (3 nodes): `SocialConnectionApplication.java`, `SocialConnectionApplication`, `.main()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 82`** (3 nodes): `BlockedUser`, `.onCreate()`, `BlockedUser.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -635,82 +633,82 @@ Nodes (1): UserInteraction
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 98`** (3 nodes): `FeedSvcApplicationTests`, `.contextLoads()`, `FeedSvcApplicationTests.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 148`** (2 nodes): `ModerationResponse.java`, `ModerationResponse`
+- **Thin community `Community 150`** (2 nodes): `ModerationResponse.java`, `ModerationResponse`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 149`** (2 nodes): `ModerationScores.java`, `ModerationScores`
+- **Thin community `Community 151`** (2 nodes): `ModerationScores.java`, `ModerationScores`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 150`** (2 nodes): `ModerationRequest.java`, `ModerationRequest`
+- **Thin community `Community 152`** (2 nodes): `ModerationRequest.java`, `ModerationRequest`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 151`** (2 nodes): `SentimentResult.java`, `SentimentResult`
+- **Thin community `Community 153`** (2 nodes): `SentimentResult.java`, `SentimentResult`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 152`** (2 nodes): `UserReputation.java`, `UserReputation`
+- **Thin community `Community 154`** (2 nodes): `UserReputation.java`, `UserReputation`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 153`** (2 nodes): `AnalyticsResponse`, `AnalyticsResponse.java`
+- **Thin community `Community 155`** (2 nodes): `AnalyticsResponse`, `AnalyticsResponse.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 154`** (2 nodes): `EventLog`, `EventLog.java`
+- **Thin community `Community 156`** (2 nodes): `EventLog`, `EventLog.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 155`** (2 nodes): `TrendingTopic.java`, `TrendingTopic`
+- **Thin community `Community 157`** (2 nodes): `TrendingTopic.java`, `TrendingTopic`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 156`** (2 nodes): `CommunityAnalytics`, `CommunityAnalytics.java`
+- **Thin community `Community 158`** (2 nodes): `CommunityAnalytics`, `CommunityAnalytics.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 157`** (2 nodes): `UserAnalytics.java`, `UserAnalytics`
+- **Thin community `Community 159`** (2 nodes): `UserAnalytics.java`, `UserAnalytics`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 158`** (2 nodes): `ContentAnalytics`, `ContentAnalytics.java`
+- **Thin community `Community 160`** (2 nodes): `ContentAnalytics`, `ContentAnalytics.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 159`** (2 nodes): `UserEvent.java`, `UserEvent`
+- **Thin community `Community 161`** (2 nodes): `UserEvent.java`, `UserEvent`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 160`** (2 nodes): `ConnectionRequestEvent`, `ConnectionRequestEvent.java`
+- **Thin community `Community 162`** (2 nodes): `ConnectionRequestEvent`, `ConnectionRequestEvent.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 161`** (2 nodes): `Community`, `Community.java`
+- **Thin community `Community 163`** (2 nodes): `Community`, `Community.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 162`** (2 nodes): `CreateCommentRequest`, `CreateCommentRequest.java`
+- **Thin community `Community 164`** (2 nodes): `CreateCommentRequest`, `CreateCommentRequest.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 163`** (2 nodes): `CreatePostRequest`, `CreatePostRequest.java`
+- **Thin community `Community 165`** (2 nodes): `CreatePostRequest`, `CreatePostRequest.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 164`** (2 nodes): `UpdatePostRequest.java`, `UpdatePostRequest`
+- **Thin community `Community 166`** (2 nodes): `UpdatePostRequest.java`, `UpdatePostRequest`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 165`** (2 nodes): `CommentResponse`, `CommentResponse.java`
+- **Thin community `Community 167`** (2 nodes): `CommentResponse`, `CommentResponse.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 166`** (2 nodes): `PostResponse.java`, `PostResponse`
+- **Thin community `Community 168`** (2 nodes): `PostResponse.java`, `PostResponse`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 167`** (2 nodes): `Media.java`, `Media`
+- **Thin community `Community 169`** (2 nodes): `Media.java`, `Media`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 168`** (2 nodes): `Comment`, `Comment.java`
+- **Thin community `Community 170`** (2 nodes): `Comment`, `Comment.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 169`** (2 nodes): `Vote.java`, `Vote`
+- **Thin community `Community 171`** (2 nodes): `Vote.java`, `Vote`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 170`** (2 nodes): `SavedPost.java`, `SavedPost`
+- **Thin community `Community 172`** (2 nodes): `SavedPost.java`, `SavedPost`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 171`** (2 nodes): `MentionEvent.java`, `MentionEvent`
+- **Thin community `Community 173`** (2 nodes): `MentionEvent.java`, `MentionEvent`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 172`** (2 nodes): `MarkReadRequest.java`, `MarkReadRequest`
+- **Thin community `Community 174`** (2 nodes): `MarkReadRequest.java`, `MarkReadRequest`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 173`** (2 nodes): `UnreadCountResponse.java`, `UnreadCountResponse`
+- **Thin community `Community 175`** (2 nodes): `UnreadCountResponse.java`, `UnreadCountResponse`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 174`** (2 nodes): `NotificationAggregation.java`, `NotificationAggregation`
+- **Thin community `Community 176`** (2 nodes): `NotificationAggregation.java`, `NotificationAggregation`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 175`** (2 nodes): `Notification.java`, `Notification`
+- **Thin community `Community 177`** (2 nodes): `Notification.java`, `Notification`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 176`** (2 nodes): `NotificationPreference.java`, `NotificationPreference`
+- **Thin community `Community 178`** (2 nodes): `NotificationPreference.java`, `NotificationPreference`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 177`** (2 nodes): `PostDTO.java`, `PostDTO`
+- **Thin community `Community 179`** (2 nodes): `PostDTO.java`, `PostDTO`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 178`** (2 nodes): `FeedItem`, `FeedItem.java`
+- **Thin community `Community 180`** (2 nodes): `FeedItem`, `FeedItem.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 179`** (2 nodes): `UserInteraction.java`, `UserInteraction`
+- **Thin community `Community 181`** (2 nodes): `UserInteraction.java`, `UserInteraction`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `PostController` connect `Community 7` to `Community 0`?**
-  _High betweenness centrality (0.018) - this node is a cross-community bridge._
+- **Why does `CustomOAuth2User` connect `Community 0` to `Community 4`?**
+  _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **What connects `ModerationResponse`, `ModerationScores`, `ModerationRequest` to the rest of the system?**
-  _56 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _58 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.04 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.04 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.07 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**

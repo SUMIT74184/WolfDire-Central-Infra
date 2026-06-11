@@ -623,3 +623,6 @@ Users were seeing broken links on the profile page and incorrect "Follow" button
 - **Fix**: Added `profile/[id]/page.jsx` for viewing other users' profiles.
 
 **Status**: 🟢 **Staged**. Feed generation is now stable and performant. 500 errors on `/api/feed` and `/api/posts/community/.../hot` are resolved.
+
+
+

@@ -1,18 +1,40 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
 import { useAuth } from "@/lib/auth-context"
-import { Sun, Moon, Menu, X, Search, PenSquare, ChevronDown, User, Settings, LogOut, LayoutDashboard } from "lucide-react"
+import { Sun, Moon, Menu, X, Search, PenSquare, ChevronDown, User, Settings, LogOut, LayoutDashboard, FileText, Users } from "lucide-react"
 import NotificationDropdown from "./NotificationDropdown"
 
 export function Navbar() {
   const { theme, setTheme } = useTheme()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [openSearch, setOpenSearch] = useState(false)
   const { user, logout, isAuthenticated, isAdmin } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    const down = (e) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setOpenSearch((open) => !open)
+      }
+    }
+    document.addEventListener("keydown", down)
+    return () => document.removeEventListener("keydown", down)
+  }, [])
 
   const guestNavigation = [
     { name: "Home", href: "/" },
@@ -75,9 +97,52 @@ export function Navbar() {
           {/* Right side */}
           <div className="flex items-center gap-2">
             {/* Search */}
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <Search className="h-5 w-5" />
+            <Button 
+              variant="outline" 
+              className="hidden sm:flex items-center gap-2 text-muted-foreground w-48 justify-between px-3"
+              onClick={() => setOpenSearch(true)}
+            >
+              <span className="flex items-center gap-2">
+                <Search className="h-4 w-4" />
+                <span className="text-sm font-normal">Search...</span>
+              </span>
+              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <span className="text-xs">⌘</span>K
+              </kbd>
             </Button>
+
+            <CommandDialog open={openSearch} onOpenChange={setOpenSearch}>
+              <CommandInput placeholder="Type a command or search..." />
+              <CommandList>
+                <CommandEmpty>No results found.</CommandEmpty>
+                <CommandGroup heading="Suggestions">
+                  <CommandItem onSelect={() => { setOpenSearch(false); router.push("/explore"); }}>
+                    <Search className="mr-2 h-4 w-4" />
+                    <span>Explore Posts</span>
+                  </CommandItem>
+                  <CommandItem onSelect={() => { setOpenSearch(false); router.push("/communities"); }}>
+                    <Users className="mr-2 h-4 w-4" />
+                    <span>Browse Communities</span>
+                  </CommandItem>
+                </CommandGroup>
+                {isAuthenticated && (
+                  <CommandGroup heading="Quick Actions">
+                    <CommandItem onSelect={() => { setOpenSearch(false); router.push("/write"); }}>
+                      <PenSquare className="mr-2 h-4 w-4" />
+                      <span>Write a Post</span>
+                    </CommandItem>
+                    <CommandItem onSelect={() => { setOpenSearch(false); router.push("/profile"); }}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>My Profile</span>
+                    </CommandItem>
+                    <CommandItem onSelect={() => { setOpenSearch(false); router.push("/settings"); }}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </CommandItem>
+                  </CommandGroup>
+                )}
+              </CommandList>
+            </CommandDialog>
 
             {isAuthenticated && <NotificationDropdown />}
             
