@@ -25,4 +25,4 @@ COPY --from=build /app/extracted/application/ ./
 USER appuser
 EXPOSE 8082
 
-ENTRYPOINT ["java", "-Xms128m", "-Xmx256m", "org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["java", "-Xms64m", "-Xmx128m", "org.springframework.boot.loader.launch.JarLauncher"]

@@ -27,4 +27,4 @@ USER appuser
 EXPOSE 8090
 
 # Enforce 256MB memory limit and use Spring Boot launcher
-ENTRYPOINT ["java", "-Xms128m", "-Xmx256m", "org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["java", "-Xms64m", "-Xmx128m", "org.springframework.boot.loader.launch.JarLauncher"]
