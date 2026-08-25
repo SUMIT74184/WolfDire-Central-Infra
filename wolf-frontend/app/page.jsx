@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { postApi, communityApi, analyticsApi } from "@/lib/api-client"
+import { postApi, communityApi, analyticsApi, authApi } from "@/lib/api-client"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -14,6 +14,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 export const dynamic = "force-dynamic"
 
 export default function HomePage() {
+  const { data: me } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => authApi.me(),
+    retry: false,
+  })
+
   const { data: postsData, isLoading: postsLoading } = useQuery({
     queryKey: ["trending-posts"],
     queryFn: () => postApi.trending(0, 3),
@@ -97,9 +103,15 @@ export default function HomePage() {
             A clean, distraction-free space to share ideas, discuss topics, and build communities. No algorithms, just pure community-driven content.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button asChild size="lg" className="w-full sm:w-auto font-semibold">
-              <Link href="/signup">Join WolfDire</Link>
-            </Button>
+            {me ? (
+              <Button asChild size="lg" className="w-full sm:w-auto font-semibold">
+                <Link href="/feed">Go to Feed</Link>
+              </Button>
+            ) : (
+              <Button asChild size="lg" className="w-full sm:w-auto font-semibold">
+                <Link href="/signup">Join WolfDire</Link>
+              </Button>
+            )}
             <Button asChild variant="outline" size="lg" className="w-full sm:w-auto font-semibold">
               <Link href="/explore">Explore Communities</Link>
             </Button>

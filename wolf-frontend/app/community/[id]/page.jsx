@@ -16,13 +16,6 @@ import { ShareModal } from "@/components/ShareModal"
 import { EditCommunityModal } from "@/components/EditCommunityModal"
 import { AddMemberModal } from "@/components/AddMemberModal"
 
-const members = [
-  { name: "Sarah Chen", avatar: "/woman-developer.png", role: "Admin", posts: 47 },
-  { name: "David Park", avatar: "/asian-male-data-scientist.jpg", role: "Admin", posts: 38 },
-  { name: "Marcus Johnson", avatar: "/professional-man.png", role: "Moderator", posts: 29 },
-  { name: "Emma Williams", avatar: "/woman-designer.png", role: "Member", posts: 23 },
-]
-
 export default function CommunityPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -88,8 +81,24 @@ export default function CommunityPage() {
     }
   })
 
+  const { data: rawFollowers, isLoading: isMembersLoading } = useQuery({
+    queryKey: ["community-followers", id],
+    queryFn: () => communityApi.getFollowers(id).then((res) => res.content || res),
+    enabled: !!id,
+  })
+  const members = Array.isArray(rawFollowers) ? rawFollowers.map(f => ({
+    name: f.userName || f.targetUserId || "Unknown User",
+    avatar: "/placeholder.svg",
+    role: f.role || "MEMBER",
+    posts: 0,
+    userId: f.targetUserId
+  })) : []
+  
   const rules = cData.rules || ["Be respectful and constructive", "No spam or self-promotion", "Stay on topic", "Credit original sources", "No NSFW content"]
-  const admins = cData.admins || [{ name: "Sarah Chen", avatar: "/woman-developer.png" }]
+  const admins = members.filter(m => m.role === "ADMIN" || m.role === "CREATOR")
+  if (admins.length === 0) {
+    admins.push({ name: cData.creatorName || "Admin", avatar: "/placeholder.svg", role: "ADMIN" })
+  }
 
   const handleShareClick = () => {
     const url = `${window.location.origin}/community/${cData.id || id}`
@@ -243,7 +252,7 @@ export default function CommunityPage() {
                           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                             <Link href={`/post/${post.id}`}>{post.title}</Link>
                           </h3>
-                          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{post.content || post.excerpt}</p>
+                          <div className="mt-1 line-clamp-2 text-sm text-muted-foreground prose dark:prose-invert" dangerouslySetInnerHTML={{ __html: post.content || post.excerpt }} />
                           <div className="mt-4 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Link href={`/profile/${post.userId}`} className="flex items-center gap-2 hover:text-primary transition-colors">

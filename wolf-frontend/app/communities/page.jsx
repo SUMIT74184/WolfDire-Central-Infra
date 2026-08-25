@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { communityApi } from "@/lib/api-client"
@@ -15,6 +15,88 @@ import { Search, Users, TrendingUp, Plus, CheckCircle, Loader2 } from "lucide-re
 import { toast } from "sonner"
 
 const categories = ["All", "Technology", "Design", "Productivity", "Business", "Lifestyle", "Science", "Health", "Finance"]
+
+const CommunityCard = ({ community, isJoined, onUpdateJoinStatus }) => {
+  const followMutation = useMutation({
+    mutationFn: communityApi.follow,
+    onSuccess: () => {
+      toast.success("Joined community successfully!")
+      onUpdateJoinStatus(community.id, true)
+    },
+    onError: (err) => toast.error(err?.message || "Could not join community")
+  })
+
+  const unfollowMutation = useMutation({
+    mutationFn: communityApi.unfollow,
+    onSuccess: () => {
+      toast.success("Left community successfully!")
+      onUpdateJoinStatus(community.id, false)
+    },
+    onError: (err) => toast.error(err?.message || "Could not leave community")
+  })
+
+  const handleJoinToggle = () => {
+    if (isJoined) {
+      unfollowMutation.mutate(community.id)
+    } else {
+      followMutation.mutate(community.id)
+    }
+  }
+
+  const isPending = followMutation.isPending || unfollowMutation.isPending
+
+  return (
+    <Card className="flex flex-col border-border overflow-hidden">
+      <div className="relative h-32 overflow-hidden">
+        <img
+          src={community.image || "/placeholder.svg"}
+          alt={community.name}
+          className="h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
+        {community.trending && (
+          <Badge className="absolute right-3 top-3 gap-1">
+            <TrendingUp className="h-3 w-3" /> Trending
+          </Badge>
+        )}
+      </div>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2">
+          <Link href={`/community/${community.id}`} className="hover:text-primary transition-colors">
+            {community.name}
+          </Link>
+        </CardTitle>
+        <CardDescription className="line-clamp-2">{community.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1 pb-4">
+        <div className="flex flex-wrap gap-1">
+          {community.tags.map((tag) => (
+            <Badge key={tag} variant="secondary" className="text-xs">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      </CardContent>
+      <CardFooter className="flex items-center justify-between border-t border-border pt-4">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Users className="h-4 w-4" />
+            {community.members.toLocaleString()}
+          </span>
+          <span>{community.posts.toLocaleString()} posts</span>
+        </div>
+        <Button
+          variant={isJoined ? "secondary" : "default"}
+          size="sm"
+          onClick={handleJoinToggle}
+          disabled={isPending}
+        >
+          {isJoined ? "Joined" : "Join"}
+        </Button>
+      </CardFooter>
+    </Card>
+  )
+}
 
 export default function CommunitiesPage() {
   const queryClient = useQueryClient()
@@ -52,6 +134,18 @@ export default function CommunitiesPage() {
   }))
 
   const [joinedCommunities, setJoinedCommunities] = useState([])
+  const { data: myCommunitiesData } = useQuery({
+    queryKey: ["my-communities"],
+    queryFn: () => communityApi.myCommunities(0, 50).then((res) => res.content || []),
+    staleTime: 2 * 60 * 1000,
+  })
+
+  // Synchronize joined communities on load
+  useEffect(() => {
+    if (myCommunitiesData) {
+      setJoinedCommunities(myCommunitiesData.map(c => c.communityId || c.id))
+    }
+  }, [myCommunitiesData])
 
   const createMutation = useMutation({
     mutationFn: communityApi.create,
@@ -66,22 +160,6 @@ export default function CommunitiesPage() {
     },
   })
 
-  const followMutation = useMutation({
-    mutationFn: communityApi.follow,
-    onSuccess: (_, communityId) => {
-      setJoinedCommunities((prev) => 
-        prev.includes(communityId) ? prev.filter((id) => id !== communityId) : [...prev, communityId]
-      )
-      toast.success("Follow updated successfully!")
-      // optionally trigger refetch: queryClient.invalidateQueries({ queryKey: ["communities"] })
-    },
-    onError: (err) => toast.error(err?.message || "Could not join community")
-  })
-
-  const handleJoinToggle = (communityId) => {
-    followMutation.mutate(communityId)
-  }
-
   const filteredCommunities = communities.filter((community) => {
     const matchesSearch =
       community.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -92,6 +170,15 @@ export default function CommunitiesPage() {
       (filter === "trending" && community.trending)
     return matchesSearch && matchesFilter
   })
+
+  const handleUpdateJoinStatus = (communityId, isJoined) => {
+    setJoinedCommunities((prev) => 
+      isJoined 
+        ? [...new Set([...prev, communityId])] 
+        : prev.filter((id) => id !== communityId)
+    )
+  }
+
 
   return (
     <div className="min-h-screen">
@@ -214,57 +301,14 @@ export default function CommunitiesPage() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredCommunities.map((community) => (
-            <Card key={community.id} className="flex flex-col border-border overflow-hidden">
-              <div className="relative h-32 overflow-hidden">
-                <img
-                  src={community.image || "/placeholder.svg"}
-                  alt={community.name}
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
-                {community.trending && (
-                  <Badge className="absolute right-3 top-3 gap-1">
-                    <TrendingUp className="h-3 w-3" /> Trending
-                  </Badge>
-                )}
-              </div>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Link href={`/community/${community.id}`} className="hover:text-primary transition-colors">
-                    {community.name}
-                  </Link>
-                </CardTitle>
-                <CardDescription className="line-clamp-2">{community.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 pb-4">
-                <div className="flex flex-wrap gap-1">
-                  {community.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-              <CardFooter className="flex items-center justify-between border-t border-border pt-4">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    {community.members.toLocaleString()}
-                  </span>
-                  <span>{community.posts.toLocaleString()} posts</span>
-                </div>
-                <Button
-                  variant={joinedCommunities.includes(community.id) ? "secondary" : "default"}
-                  size="sm"
-                  onClick={() => handleJoinToggle(community.id)}
-                  disabled={followMutation.isPending}
-                >
-                  {joinedCommunities.includes(community.id) ? "Joined" : "Join"}
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+              <CommunityCard
+                key={community.id}
+                community={community}
+                isJoined={joinedCommunities.includes(community.id)}
+                onUpdateJoinStatus={handleUpdateJoinStatus}
+              />
+            ))}
+          </div>
         )}
 
         {!isLoading && filteredCommunities.length === 0 && (

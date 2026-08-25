@@ -120,7 +120,7 @@ export default function CommentSection({ postId }) {
     enabled: !!postId,
   })
 
-  const comments = data ? data.pages.flatMap(page => page.content) : []
+  const comments = data ? data.pages.flatMap(page => page.content || (Array.isArray(page) ? page : [])) : []
   const totalElements = data?.pages[0]?.totalElements || 0
 
   const createCommentMutation = useMutation({

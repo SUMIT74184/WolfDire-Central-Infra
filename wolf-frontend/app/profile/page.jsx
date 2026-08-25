@@ -121,7 +121,7 @@ export default function ProfilePage() {
   const userProfile = {
     name: me ? (`${me.firstName || ""} ${me.lastName || ""}`.trim() || me.email) : "",
     username: me ? (me.email?.split("@")[0] || "user") : "user",
-    avatar: me?.avatar || "/diverse-user-avatars.png",
+    avatar: me?.profilePictureUrl || "/diverse-user-avatars.png",
     bio: me?.bio || "WolfDire member",
     location: me?.location || "",
     website: me?.website || "",
@@ -416,7 +416,7 @@ export default function ProfilePage() {
               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                 {myCommunities.length > 0 ? (
                   myCommunities.map((community) => (
-                    <Link key={community.id} href={`/c/${community.name || community.id}`}>
+                    <Link key={community.id} href={`/community/${community.id}`}>
                       <Card className="h-full border-border hover:bg-secondary cursor-pointer transition-colors">
                         <CardContent className="p-4 text-center">
                           <Avatar className="mx-auto mb-3 h-12 w-12 text-lg font-bold">

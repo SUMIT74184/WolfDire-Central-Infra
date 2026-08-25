@@ -143,7 +143,7 @@ public class PostController {
             @RequestBody org.app.postsvcwolf.dto.UpdatePostRequest request,
             HttpServletRequest httpRequest) {
         String userId = getRequiredUserId(httpRequest);
-        return ResponseEntity.ok(postService.updatePost(postId, userId, request.getTitle(), request.getContent()));
+        return ResponseEntity.ok(postService.updatePost(postId, userId, request));
     }
 
     @DeleteMapping("/{postId}")
@@ -189,6 +189,22 @@ public class PostController {
         String userId = getRequiredUserId(httpRequest);
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(postService.getSavedPosts(userId, pageable));
+    }
+
+    @PostMapping("/{postId}/upvote")
+    public ResponseEntity<PostResponse> upvotePost(
+            @PathVariable String postId,
+            HttpServletRequest httpRequest) {
+        String userId = getRequiredUserId(httpRequest);
+        return ResponseEntity.ok(postService.upvotePost(postId, userId));
+    }
+
+    @PostMapping("/{postId}/downvote")
+    public ResponseEntity<PostResponse> downvotePost(
+            @PathVariable String postId,
+            HttpServletRequest httpRequest) {
+        String userId = getRequiredUserId(httpRequest);
+        return ResponseEntity.ok(postService.downvotePost(postId, userId));
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────────

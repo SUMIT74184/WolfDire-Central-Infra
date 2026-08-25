@@ -43,4 +43,5 @@ public class PostResponse {
     private LocalDateTime scheduledPublishAt;
     private String seoDescription;
     private String seoSlug;
+    private String category;
 }

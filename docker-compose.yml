@@ -32,7 +32,7 @@ services:
 
   mongodb:
     image: mongo:7.0
-    command: mongod --wiredTigerCacheSizeGB 0.1
+    command: mongod --wiredTigerCacheSizeGB 0.25
     mem_limit: 256m
     logging:
       driver: "json-file"

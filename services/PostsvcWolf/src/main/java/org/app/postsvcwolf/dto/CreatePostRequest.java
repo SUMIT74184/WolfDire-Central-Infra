@@ -46,4 +46,6 @@ public class CreatePostRequest {
     private String mediaUrl;
 
     private String thumbnailUrl;
+    
+    private String category;
 }

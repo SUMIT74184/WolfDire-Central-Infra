@@ -84,6 +84,7 @@ public class PostService {
                 .seoSlug(request.getSeoSlug())
                 .mediaUrl(request.getMediaUrl())
                 .thumbnailUrl(request.getThumbnailUrl())
+                .category(request.getCategory())
                 .build();
 
         // Embedding is generated asynchronously via Kafka (AIService)
@@ -243,8 +244,7 @@ public class PostService {
 
     @Transactional
     @CacheEvict(value = { "posts", "feed" }, allEntries = true)
-    public PostResponse updatePost(String postId, String userId, String title,
-            String content) {
+    public PostResponse updatePost(String postId, String userId, org.app.postsvcwolf.dto.UpdatePostRequest request) {
         Post post = postRepository.findActive(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
@@ -256,13 +256,21 @@ public class PostService {
             throw new RuntimeException("Post is locked");
         }
 
-        if (title != null) {
-            post.setTitle(title);
+        if (request.getTitle() != null) {
+            post.setTitle(request.getTitle());
         }
 
-        if (content != null) {
-            post.setContent(content);
-            post.setMentions(extractMentions(content));
+        if (request.getContent() != null) {
+            post.setContent(request.getContent());
+            post.setMentions(extractMentions(request.getContent()));
+        }
+
+        if (request.getCategory() != null) {
+            post.setCategory(request.getCategory());
+        }
+
+        if (request.getMediaUrl() != null) {
+            post.setMediaUrl(request.getMediaUrl());
         }
 
         // Embedding will be regenerated asynchronously via Kafka
@@ -315,6 +323,59 @@ public class PostService {
                 .map(savedPost -> mapToResponse(savedPost.getPost(), userId))
                 .toList();
         return new PageImpl<>(postResponses, pageable, savedPostsPage.getTotalElements());
+    }
+
+    @Transactional
+    public PostResponse upvotePost(String postId, String userId) {
+        return votePost(postId, userId, Vote.VoteType.UPVOTE);
+    }
+
+    @Transactional
+    public PostResponse downvotePost(String postId, String userId) {
+        return votePost(postId, userId, Vote.VoteType.DOWNVOTE);
+    }
+
+    private PostResponse votePost(String postId, String userId, Vote.VoteType voteType) {
+        Post post = postRepository.findActive(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+        
+        Optional<Vote> existingVoteOpt = voteRepository.findByUserAndTarget(userId, postId, Vote.TargetType.POST);
+        if (existingVoteOpt.isPresent()) {
+            Vote existingVote = existingVoteOpt.get();
+            if (existingVote.getVoteType() == voteType) {
+                // Remove vote if clicking the same button
+                voteRepository.delete(existingVote);
+                if (voteType == Vote.VoteType.UPVOTE) post.setUpVotes(post.getUpVotes() - 1);
+                else post.setDownVotes(post.getDownVotes() - 1);
+            } else {
+                // Switch vote
+                existingVote.setVoteType(voteType);
+                voteRepository.save(existingVote);
+                if (voteType == Vote.VoteType.UPVOTE) {
+                    post.setUpVotes(post.getUpVotes() + 1);
+                    post.setDownVotes(post.getDownVotes() - 1);
+                } else {
+                    post.setDownVotes(post.getDownVotes() + 1);
+                    post.setUpVotes(post.getUpVotes() - 1);
+                }
+            }
+        } else {
+            // New vote
+            Vote newVote = Vote.builder()
+                .userId(userId)
+                .targetId(postId)
+                .targetType(Vote.TargetType.POST)
+                .voteType(voteType)
+                .build();
+            voteRepository.save(newVote);
+            if (voteType == Vote.VoteType.UPVOTE) post.setUpVotes(post.getUpVotes() + 1);
+            else post.setDownVotes(post.getDownVotes() + 1);
+        }
+        
+        // update score
+        post.setScore(post.getUpVotes() - post.getDownVotes());
+        post = postRepository.save(post);
+        return mapToResponse(post, userId);
     }
 
     private void publishPostDeletedEvent(Post post) {
@@ -447,6 +508,7 @@ public class PostService {
                 .scheduledPublishAt(post.getScheduledPublishAt())
                 .seoDescription(post.getSeoDescription())
                 .seoSlug(post.getSeoSlug())
+                .category(post.getCategory())
                 .build();
 
     }

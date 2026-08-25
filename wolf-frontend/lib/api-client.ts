@@ -201,6 +201,8 @@ export const postApi = {
     apiClient.get(`/api/posts/community/${communityId}/hot?page=${page}&size=${size}`),
 
   sharePost: (postId: string) => apiClient.post(`/api/posts/${postId}/share`),
+  upvote: (postId: string) => apiClient.post(`/api/posts/${postId}/upvote`),
+  downvote: (postId: string) => apiClient.post(`/api/posts/${postId}/downvote`),
 };
 
 // ── Comment Service helpers ───────────────────────────────────────────────────
@@ -338,6 +340,9 @@ export const communityApi = {
 
   unfollow: (communityId: string) =>
     apiClient.delete(`/api/communities/follow/${communityId}`),
+
+  getFollowers: (communityId: string, page = 0, size = 50) =>
+    apiClient.get(`/api/communities/${communityId}/followers?page=${page}&size=${size}`),
 
   isFollowing: (communityId: string) =>
     apiClient.get(`/api/communities/${communityId}/is-joined`),

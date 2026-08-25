@@ -6,4 +6,6 @@ import lombok.Data;
 public class UpdatePostRequest {
     private String title;
     private String content;
+    private String category;
+    private String mediaUrl;
 }

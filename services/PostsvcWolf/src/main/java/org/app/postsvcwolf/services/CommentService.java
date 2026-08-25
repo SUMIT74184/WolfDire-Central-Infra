@@ -97,7 +97,7 @@ public class CommentService {
         return mapToResponse(comment, userId);
     }
 
-    @Cacheable(value = "comments", key = "#postId + '_' + #pageable.pageNumber", unless = "#result == null")
+    // @Cacheable(value = "comments", key = "#postId + '_' + #pageable.pageNumber", unless = "#result == null")
     public Page<CommentResponse> getPostComments(String postId, Pageable pageable, String userId){
         Page<Comment> comments = commentRepository.findTopLevel(postId,pageable);
         return comments.map(comment -> mapToResponseWithReplies(comment,userId));

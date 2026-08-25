@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { ImageUpload } from "@/components/ImageUpload"
+
+import { useState, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -43,10 +45,10 @@ export default function PostPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const [isFollowing, setIsFollowing] = useState(false)
-  const [isLiked, setIsLiked] = useState(false)
+  // const [isLiked, setIsLiked] = useState(false)
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editData, setEditData] = useState({ title: "", content: "" })
+  const [editData, setEditData] = useState({ title: "", content: "", category: "", mediaUrl: "" })
   const [showSummary, setShowSummary] = useState(false)
 
   const { data: summaryData, isLoading: isSummaryLoading, refetch: fetchSummary } = useQuery({
@@ -68,6 +70,32 @@ export default function PostPage() {
     retry: 2,
   })
 
+  const [localLikes, setLocalLikes] = useState(0)
+  const [isLiked, setIsLiked] = useState(false)
+
+  // Sync like state when post loads
+  // import { useEffect } from "react"
+  useEffect(() => {
+    if (post) {
+      setIsLiked(post.userVote === 'UPVOTE')
+      setLocalLikes(post.score !== undefined ? post.score : (post.upvotes || 0) - (post.downvotes || 0))
+    }
+  }, [post])
+
+  const upvoteMutation = useMutation({
+    mutationFn: () => postApi.upvote(postId),
+    onSuccess: (updatedPost) => {
+      queryClient.setQueryData(['post', postId], updatedPost)
+    }
+  })
+
+  const handleLike = () => {
+    if (isLiked) return // Already liked (or could toggle, but typically we want simple logic or downvote to remove)
+    setIsLiked(true)
+    setLocalLikes(prev => prev + 1)
+    upvoteMutation.mutate()
+  }
+
   const deleteMutation = useMutation({
     mutationFn: () => postApi.delete(postId),
     onSuccess: () => {
@@ -86,7 +114,12 @@ export default function PostPage() {
   const isAuthor = me && post && (me.userId === post.userId || me.id === post.userId)
 
   const handleEditOpen = () => {
-    setEditData({ title: post.title, content: post.content })
+    setEditData({
+      title: post.title,
+      content: post.content,
+      category: post.category || "",
+      mediaUrl: post.mediaUrl || ""
+    })
     setIsEditDialogOpen(true)
   }
 
@@ -152,7 +185,7 @@ export default function PostPage() {
     <div className="min-h-screen">
       {/* Hero Image */}
       <div className="relative h-[40vh] min-h-[300px] w-full overflow-hidden bg-muted sm:h-[50vh]">
-        <img src={post.image || "/placeholder.svg"} alt={post.title} className="h-full w-full object-cover" />
+        <img src={post.mediaUrl || "/placeholder.svg"} alt={post.title} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
       </div>
 
@@ -174,7 +207,7 @@ export default function PostPage() {
               </Avatar>
               <div>
                 <Link href={`/profile/${post.userId}`} className="font-medium text-foreground hover:text-primary">
-                  {post.username || 'Unknown Author'}
+                  {post.username ? post.username.split('@')[0] : 'Unknown Author'}
                 </Link>
                 <p className="text-sm text-muted-foreground">
                   {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Recently'} · {post.readTime || '5 min read'}
@@ -217,10 +250,10 @@ export default function PostPage() {
               variant="ghost"
               size="sm"
               className={`gap-2 ${isLiked ? "text-red-500" : ""}`}
-              onClick={() => setIsLiked(!isLiked)}
+              onClick={handleLike}
             >
               <Heart className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />
-              {(post.likes || 0) + (isLiked ? 1 : 0)}
+              {localLikes}
             </Button>
             <Button variant="ghost" size="sm" className="gap-2">
               <MessageCircle className="h-5 w-5" />
@@ -296,6 +329,23 @@ export default function PostPage() {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Input
+                      id="category"
+                      value={editData.category}
+                      onChange={(e) => setEditData({ ...editData, category: e.target.value })}
+                      placeholder="e.g. Technology, Lifestyle"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Background Image</Label>
+                    <ImageUpload
+                      endpoint="postImage"
+                      value={editData.mediaUrl}
+                      onChange={(url) => setEditData({ ...editData, mediaUrl: url })}
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="content">Content</Label>
                     <Textarea
                       id="content"
@@ -327,7 +377,7 @@ export default function PostPage() {
               <AvatarFallback>{post.username?.[0] || '?'}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-foreground">{post.username || 'Unknown Author'}</h3>
+              <h3 className="text-lg font-semibold text-foreground">{post.username ? post.username.split('@')[0] : 'Unknown Author'}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{post.userBio || ''}</p>
               <div className="mt-2 flex gap-4 text-sm text-muted-foreground">
                 <span>{(post.author?.followers || 0).toLocaleString()} followers</span>
@@ -352,9 +402,9 @@ export default function PostPage() {
                   <h3 className="text-lg font-semibold text-foreground">AI Discussion Summary</h3>
                 </div>
                 {!showSummary && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => { setShowSummary(true); fetchSummary(); }}
                     disabled={isSummaryLoading}
                   >
@@ -363,7 +413,7 @@ export default function PostPage() {
                   </Button>
                 )}
               </div>
-              
+
               {showSummary && (
                 <div className="text-sm text-foreground leading-relaxed">
                   {isSummaryLoading ? (

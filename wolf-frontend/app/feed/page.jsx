@@ -29,10 +29,10 @@ export default function FeedPage() {
   const [sortBy, setSortBy] = useState("latest")
   const [shareModal, setShareModal] = useState({ isOpen: false, url: "", title: "", postId: "" })
 
-  // Try personalized feed first
-  const { data: feedData, isLoading: feedLoading } = useQuery({
-    queryKey: ['feed'],
-    queryFn: () => feedApi.getFeed(),
+  // Use global feed as requested (like X, Reddit, Instagram)
+  const { data: globalPostsData, isLoading: globalLoading } = useQuery({
+    queryKey: ['global-feed'],
+    queryFn: () => postApi.list(0, 50),
     staleTime: 30 * 1000, // 30 seconds
     retry: 1,
   })
@@ -45,9 +45,9 @@ export default function FeedPage() {
     retry: 1,
   })
 
-  // Personalized feed items (from FeedSvc)
-  const feedItems = feedData
-    ? (Array.isArray(feedData) ? feedData : feedData.items || feedData.content || [])
+  // Global feed items
+  const feedItems = globalPostsData
+    ? (Array.isArray(globalPostsData) ? globalPostsData : globalPostsData.content || [])
     : []
 
   // Trending posts (from PostSvc) — used as fallback
@@ -57,21 +57,22 @@ export default function FeedPage() {
 
   // Decide which data to show
   const hasFeedItems = feedItems.length > 0
-  const isLoading = feedLoading || (feedItems.length === 0 && trendingLoading)
+  const isLoading = globalLoading || (feedItems.length === 0 && trendingLoading)
 
-  // Normalize feed items from FeedSvc format
-  const normalizedFeedItems = feedItems.map(item => ({
-    id: item.postId || item.id,
-    title: item.title || "Untitled",
-    excerpt: item.content ? item.content.substring(0, 150) + "..." : "",
-    community: item.communityId || "General",
-    author: { name: item.authorId || "Unknown", avatar: null },
-    likes: Math.round((item.popularityScore || 0) * 100),
-    comments: 0,
-    image: item.mediaUrl || "/placeholder.svg",
-    date: item.createdAt ? new Date(item.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
+  // Normalize feed items from PostSvc format
+  const normalizedFeedItems = feedItems.map(p => ({
+    id: p.id,
+    title: p.title || "Untitled",
+    excerpt: p.content ? p.content.substring(0, 150) + "..." : "",
+    content: p.content || "",
+    community: p.communityName || p.communityId || "General",
+    author: { name: p.username || p.authorId || "Unknown", avatar: null },
+    likes: (p.upvotes || p.upVotes || 0) - (p.downvotes || p.downVotes || 0),
+    comments: p.commentCount || 0,
+    image: p.mediaUrl || p.thumbnailUrl || "/placeholder.svg",
+    date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
     isFeed: true,
-    isSaved: item.isSaved || false,
+    isSaved: p.isSaved || false,
   }))
 
   // Normalize trending posts from PostSvc format
@@ -125,7 +126,7 @@ export default function FeedPage() {
               ? "Personalized posts from communities you follow"
               : "Discover trending posts — follow people and communities to personalize your feed"}
           </p>
-          {!hasFeedItems && !feedLoading && (
+          {!hasFeedItems && !isLoading && (
             <div className="mt-3 flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
               <Compass className="h-4 w-4 text-primary shrink-0" />
               <p className="text-sm text-muted-foreground">
@@ -245,9 +246,10 @@ export default function FeedPage() {
                         </Link>
 
                         {post.excerpt && (
-                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                            {post.excerpt}
-                          </p>
+                          <div 
+                            className="text-sm text-muted-foreground mb-3 line-clamp-2 prose dark:prose-invert"
+                            dangerouslySetInnerHTML={{ __html: post.excerpt }}
+                          />
                         )}
 
                         {/* Actions */}
