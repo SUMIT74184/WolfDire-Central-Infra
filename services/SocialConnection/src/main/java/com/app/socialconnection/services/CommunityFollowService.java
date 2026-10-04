@@ -2,6 +2,10 @@ package com.app.socialconnection.services;
 
 import com.app.socialconnection.dto.ConnectionDTO;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import com.app.socialconnection.entity.Community;
 import com.app.socialconnection.entity.CommunityFollower;
 import com.app.socialconnection.repository.CommunityFollowerRepository;
 import com.app.socialconnection.repository.CommunityRepository;
@@ -117,8 +121,30 @@ public class CommunityFollowService {
      * Get paginated list of communities a user follows.
      */
     @Transactional(readOnly = true)
-    public Page<CommunityFollower> getUserCommunities(String userId, Pageable pageable) {
-        return communityFollowerRepository.findByUserId(userId, pageable);
+    public Page<ConnectionDTO.MyCommunity> getUserCommunities(String userId, Pageable pageable) {
+        Page<CommunityFollower> memberships = communityFollowerRepository.findByUserId(userId, pageable);
+        List<String> communityIds = memberships.stream().map(CommunityFollower::getCommunityId).toList();
+        Map<String, Community> communities = communityRepository.findAllById(communityIds).stream()
+                .collect(Collectors.toMap(Community::getId, Function.identity()));
+
+        return memberships.map(m -> {
+            Community c = communities.get(m.getCommunityId());
+            ConnectionDTO.MyCommunity.MyCommunityBuilder dto = ConnectionDTO.MyCommunity.builder()
+                    .id(m.getId())
+                    .communityId(m.getCommunityId())
+                    .role(m.getRole())
+                    .notificationsEnabled(m.isNotificationsEnabled())
+                    .followedAt(m.getFollowedAt());
+            if (c != null) {
+                dto.name(c.getName())
+                        .slug(c.getSlug())
+                        .description(c.getDescription())
+                        .imageUrl(c.getImageUrl())
+                        .backgroundImageUrl(c.getBackgroundImageUrl())
+                        .memberCount(c.getMemberCount());
+            }
+            return dto.build();
+        });
     }
 
     /**

@@ -24,6 +24,17 @@ public interface PostRepository extends JpaRepository<Post,String> {
     Page<Post> findByCommunity(@Param("communityId") String communityId, Pageable pageable);
 
 
+    // Latest posts across all communities (global feed)
+    @Query("SELECT p FROM Post p WHERE p.isRemoved = false AND p.isSpam = false " +
+            "ORDER BY p.createdAt DESC")
+    Page<Post> findLatest(Pageable pageable);
+
+    // Highest scored posts of all time across all communities
+    @Query("SELECT p FROM Post p WHERE p.isRemoved = false AND p.isSpam = false " +
+            "ORDER BY p.score DESC, p.createdAt DESC")
+    Page<Post> findTop(Pageable pageable);
+
+
     //finding the users
     @Query("SELECT p FROM Post p WHERE p.userId = :userId " +
             "AND p.isRemoved = false ORDER BY p.createdAt DESC")

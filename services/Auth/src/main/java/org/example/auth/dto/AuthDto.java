@@ -124,5 +124,6 @@ public class AuthDto {
         private String location;
         private String website;
         private String profilePictureUrl;
+        private String bannerUrl;
     }
 }

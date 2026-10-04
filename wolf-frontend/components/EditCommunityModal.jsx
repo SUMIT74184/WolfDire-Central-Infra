@@ -59,7 +59,7 @@ export function EditCommunityModal({ isOpen, onClose, community }) {
               <UploadDropzone
                 endpoint="imageUploader"
                 onClientUploadComplete={(res) => {
-                  if (res?.[0]) setBackgroundImageUrl(res[0].url)
+                  if (res?.[0]) setBackgroundImageUrl(res[0].ufsUrl || res[0].url)
                 }}
                 onUploadError={(error) => alert(`ERROR! ${error.message}`)}
               />
@@ -85,7 +85,7 @@ export function EditCommunityModal({ isOpen, onClose, community }) {
               <UploadDropzone
                 endpoint="imageUploader"
                 onClientUploadComplete={(res) => {
-                  if (res?.[0]) setImageUrl(res[0].url)
+                  if (res?.[0]) setImageUrl(res[0].ufsUrl || res[0].url)
                 }}
                 onUploadError={(error) => alert(`ERROR! ${error.message}`)}
               />

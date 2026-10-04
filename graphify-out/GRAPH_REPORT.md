@@ -1,12 +1,12 @@
-# Graph Report - project-root2  (2026-08-03)
+# Graph Report - project-root2  (2026-08-25)
 
 ## Corpus Check
-- 294 files · ~705,070 words
+- 295 files · ~705,827 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1206 nodes · 1515 edges · 99 communities detected
-- Extraction: 78% EXTRACTED · 22% INFERRED · 0% AMBIGUOUS · INFERRED: 332 edges (avg confidence: 0.8)
+- 1214 nodes · 1529 edges · 98 communities detected
+- Extraction: 78% EXTRACTED · 22% INFERRED · 0% AMBIGUOUS · INFERRED: 334 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -32,23 +32,22 @@
 - [[_COMMUNITY_Community 22|Community 22]]
 - [[_COMMUNITY_Community 23|Community 23]]
 - [[_COMMUNITY_Community 24|Community 24]]
-- [[_COMMUNITY_Community 25|Community 25]]
-- [[_COMMUNITY_Community 28|Community 28]]
+- [[_COMMUNITY_Community 27|Community 27]]
+- [[_COMMUNITY_Community 30|Community 30]]
 - [[_COMMUNITY_Community 31|Community 31]]
-- [[_COMMUNITY_Community 32|Community 32]]
+- [[_COMMUNITY_Community 36|Community 36]]
 - [[_COMMUNITY_Community 37|Community 37]]
 - [[_COMMUNITY_Community 38|Community 38]]
 - [[_COMMUNITY_Community 39|Community 39]]
 - [[_COMMUNITY_Community 40|Community 40]]
 - [[_COMMUNITY_Community 41|Community 41]]
-- [[_COMMUNITY_Community 42|Community 42]]
+- [[_COMMUNITY_Community 50|Community 50]]
 - [[_COMMUNITY_Community 51|Community 51]]
 - [[_COMMUNITY_Community 52|Community 52]]
 - [[_COMMUNITY_Community 53|Community 53]]
-- [[_COMMUNITY_Community 54|Community 54]]
-- [[_COMMUNITY_Community 59|Community 59]]
-- [[_COMMUNITY_Community 65|Community 65]]
-- [[_COMMUNITY_Community 69|Community 69]]
+- [[_COMMUNITY_Community 58|Community 58]]
+- [[_COMMUNITY_Community 64|Community 64]]
+- [[_COMMUNITY_Community 68|Community 68]]
 - [[_COMMUNITY_Community 71|Community 71]]
 - [[_COMMUNITY_Community 72|Community 72]]
 - [[_COMMUNITY_Community 73|Community 73]]
@@ -111,8 +110,8 @@
 - [[_COMMUNITY_Community 180|Community 180]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `PostService` - 26 edges
-2. `PostController` - 22 edges
+1. `PostService` - 29 edges
+2. `PostController` - 24 edges
 3. `KafkaConfig` - 20 edges
 4. `ConnectionService` - 18 edges
 5. `AuthService` - 18 edges
@@ -138,11 +137,11 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.04
-Nodes (11): CommentService, ConnectionController, EmailNotificationService, FeedController, MigrationController, NotificationBatchProcessor, Post, PostRepository (+3 more)
+Nodes (11): AuthController, AuthService, CustomOAuth2User, CustomOAuth2UserService, FeignClientInterceptor, JwtAuthenticationFilter, JwtUtil, OAuth2LoginSuccessHandler (+3 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.04
-Nodes (10): AuthController, AuthService, CustomOAuth2User, CustomOAuth2UserService, FeignClientInterceptor, JwtAuthenticationFilter, JwtUtil, OAuth2LoginSuccessHandler (+2 more)
+Cohesion: 0.05
+Nodes (10): CommentService, ConnectionController, EmailNotificationService, FeedController, MigrationController, NotificationBatchProcessor, Post, PostService (+2 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.06
@@ -169,12 +168,12 @@ Cohesion: 0.1
 Nodes (5): AIService, ContentModerationService, ModerationResultRepository, ModerationService, ReputationService
 
 ### Community 8 - "Community 8"
-Cohesion: 0.09
-Nodes (2): CommunityController, PostController
+Cohesion: 0.07
+Nodes (4): CommentController, PostRepository, VoteRepository, VoteService
 
 ### Community 9 - "Community 9"
-Cohesion: 0.11
-Nodes (3): CommentController, VoteRepository, VoteService
+Cohesion: 0.09
+Nodes (2): CommunityController, PostController
 
 ### Community 10 - "Community 10"
 Cohesion: 0.08
@@ -217,78 +216,74 @@ Cohesion: 0.22
 Nodes (1): NotificationController
 
 ### Community 23 - "Community 23"
-Cohesion: 0.22
-Nodes (1): User
-
-### Community 24 - "Community 24"
 Cohesion: 0.57
 Nodes (6): addToRemoveQueue(), dispatch(), genId(), reducer(), toast(), useToast()
 
-### Community 25 - "Community 25"
+### Community 24 - "Community 24"
 Cohesion: 0.29
 Nodes (1): SecurityConfig
 
-### Community 28 - "Community 28"
+### Community 27 - "Community 27"
 Cohesion: 0.29
 Nodes (1): UserInteractionRepository
 
-### Community 31 - "Community 31"
+### Community 30 - "Community 30"
 Cohesion: 0.33
 Nodes (1): PostSvcWolfApplication
 
-### Community 32 - "Community 32"
+### Community 31 - "Community 31"
 Cohesion: 0.33
 Nodes (1): MediaRepository
 
-### Community 37 - "Community 37"
+### Community 36 - "Community 36"
 Cohesion: 0.5
 Nodes (2): CarouselNext(), useCarousel()
 
-### Community 38 - "Community 38"
+### Community 37 - "Community 37"
 Cohesion: 0.5
 Nodes (3): ApiError, getAuthHeader(), request()
 
-### Community 39 - "Community 39"
+### Community 38 - "Community 38"
 Cohesion: 0.4
 Nodes (1): KafkaTopics
 
-### Community 40 - "Community 40"
+### Community 39 - "Community 39"
 Cohesion: 0.4
 Nodes (1): EventLogRepository
 
-### Community 41 - "Community 41"
+### Community 40 - "Community 40"
 Cohesion: 0.4
 Nodes (1): UserServiceClient
 
-### Community 42 - "Community 42"
+### Community 41 - "Community 41"
 Cohesion: 0.4
 Nodes (4): FeedDTO, FeedItemDTO, InteractionRequest, Response
 
-### Community 51 - "Community 51"
+### Community 50 - "Community 50"
 Cohesion: 0.5
 Nodes (3): CommunityDto, CreateRequest, UpdateRequest
 
-### Community 52 - "Community 52"
+### Community 51 - "Community 51"
 Cohesion: 0.5
 Nodes (1): WebSocketConfig
 
-### Community 53 - "Community 53"
+### Community 52 - "Community 52"
 Cohesion: 0.67
 Nodes (1): ApiGatewayApplication
 
-### Community 54 - "Community 54"
+### Community 53 - "Community 53"
 Cohesion: 0.67
 Nodes (1): ApiGatewayApplicationTests
 
-### Community 59 - "Community 59"
+### Community 58 - "Community 58"
 Cohesion: 0.67
 Nodes (1): useIsMobile()
 
-### Community 65 - "Community 65"
+### Community 64 - "Community 64"
 Cohesion: 1.0
 Nodes (2): handleClick(), playClickSound()
 
-### Community 69 - "Community 69"
+### Community 68 - "Community 68"
 Cohesion: 0.67
 Nodes (1): Loading()
 
@@ -535,7 +530,7 @@ Nodes (1): UserInteraction
 ## Knowledge Gaps
 - **58 isolated node(s):** `ModerationResponse`, `ModerationScores`, `ModerationRequest`, `SentimentResult`, `UserReputation` (+53 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 8`** (34 nodes): `CommunityController`, `.archiveCommunity()`, `.createCommunity()`, `.deleteCommunity()`, `.getAllCommunities()`, `.getCommunityById()`, `.getCommunityBySlug()`, `.getUserId()`, `.shareCommunity()`, `.updateCommunity()`, `PostController.java`, `CommunityController.java`, `PostController`, `.createPost()`, `.deletePost()`, `.getCommunityPosts()`, `.getHotPosts()`, `.getOptionalUserId()`, `.getPost()`, `.getPostsByIds()`, `.getRelatedPosts()`, `.getRequiredUserId()`, `.getSavedPosts()`, `.getTrendingPosts()`, `.getUserPosts()`, `.listPosts()`, `.repost()`, `.savePost()`, `.searchPosts()`, `.searchSemantically()`, `.sharePost()`, `.unsavePost()`, `.updatePost()`, `.incrementShareCount()`
+- **Thin community `Community 9`** (36 nodes): `CommunityController`, `.archiveCommunity()`, `.createCommunity()`, `.deleteCommunity()`, `.getAllCommunities()`, `.getCommunityById()`, `.getCommunityBySlug()`, `.getUserId()`, `.shareCommunity()`, `.updateCommunity()`, `PostController.java`, `CommunityController.java`, `PostController`, `.createPost()`, `.deletePost()`, `.downvotePost()`, `.getCommunityPosts()`, `.getHotPosts()`, `.getOptionalUserId()`, `.getPost()`, `.getPostsByIds()`, `.getRelatedPosts()`, `.getRequiredUserId()`, `.getSavedPosts()`, `.getTrendingPosts()`, `.getUserPosts()`, `.listPosts()`, `.repost()`, `.savePost()`, `.searchPosts()`, `.searchSemantically()`, `.sharePost()`, `.unsavePost()`, `.updatePost()`, `.upvotePost()`, `.incrementShareCount()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 12`** (21 nodes): `KafkaConfig.java`, `KafkaConfig.java`, `KafkaConfig.java`, `KafkaConfig.java`, `KafkaConfig.java`, `KafkaConfig`, `.blockEventsTopic()`, `.commentAddedTopic()`, `.connectionEventsTopic()`, `.consumerFactory()`, `.feedInteractionTopic()`, `.feedUpdateTopic()`, `.kafkaListenerContainerFactory()`, `.kafkaTemplate()`, `.mediaUploadedTopic()`, `.objectMapper()`, `.postCreatedTopic()`, `.postFlaggedTopic()`, `.producerFactory()`, `.userMentionedTopic()`, `.voteChangedTopic()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -549,35 +544,33 @@ Nodes (1): UserInteraction
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 22`** (9 nodes): `NotificationController.java`, `NotificationController`, `.deleteNotification()`, `.getPreferences()`, `.getUnreadCount()`, `.getUserNotifications()`, `.markAllAsRead()`, `.markAsRead()`, `.updatePreferences()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 23`** (9 nodes): `.toUserSummary()`, `User.java`, `User`, `.getAuthorities()`, `.isAccountNonExpired()`, `.isCredentialsNonExpired()`, `.isEnabled()`, `.onCreate()`, `.onUpdate()`
+- **Thin community `Community 24`** (8 nodes): `SecurityConfig.java`, `SecurityConfig.java`, `SecurityConfig.java`, `SecurityConfig`, `.authenticationManager()`, `.authenticationProvider()`, `.corsConfigurationSource()`, `.securityFilterChain()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 25`** (8 nodes): `SecurityConfig.java`, `SecurityConfig.java`, `SecurityConfig.java`, `SecurityConfig`, `.authenticationManager()`, `.authenticationProvider()`, `.corsConfigurationSource()`, `.securityFilterChain()`
+- **Thin community `Community 27`** (7 nodes): `UserInteractionRepository.java`, `UserInteractionRepository`, `.countByPostIdAndType()`, `.existsByUserIdAndPostIdAndInteractionType()`, `.findByUserIdAndCreatedAtAfter()`, `.findByUserIdAndInteractionTypeIn()`, `.findEngagedPostIds()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 28`** (7 nodes): `UserInteractionRepository.java`, `UserInteractionRepository`, `.countByPostIdAndType()`, `.existsByUserIdAndPostIdAndInteractionType()`, `.findByUserIdAndCreatedAtAfter()`, `.findByUserIdAndInteractionTypeIn()`, `.findEngagedPostIds()`
+- **Thin community `Community 30`** (6 nodes): `PostSvcWolfApplication.java`, `PostSvcWolfApplication`, `.chatModel()`, `.embeddingModel()`, `.main()`, `.restTemplate()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 31`** (6 nodes): `PostSvcWolfApplication.java`, `PostSvcWolfApplication`, `.chatModel()`, `.embeddingModel()`, `.main()`, `.restTemplate()`
+- **Thin community `Community 31`** (6 nodes): `MediaRepository.java`, `MediaRepository`, `.deleteByPostId()`, `.findByPostId()`, `.findByProcessingStatus()`, `.findByUserId()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 32`** (6 nodes): `MediaRepository.java`, `MediaRepository`, `.deleteByPostId()`, `.findByPostId()`, `.findByProcessingStatus()`, `.findByUserId()`
+- **Thin community `Community 36`** (5 nodes): `Carousel()`, `CarouselNext()`, `cn()`, `useCarousel()`, `carousel.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 37`** (5 nodes): `Carousel()`, `CarouselNext()`, `cn()`, `useCarousel()`, `carousel.tsx`
+- **Thin community `Community 38`** (5 nodes): `KafkaTopics.java`, `KafkaTopics`, `.contentEnrichedTopic()`, `.contentModeratedTopic()`, `.reputationUpdatedTopic()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 39`** (5 nodes): `KafkaTopics.java`, `KafkaTopics`, `.contentEnrichedTopic()`, `.contentModeratedTopic()`, `.reputationUpdatedTopic()`
+- **Thin community `Community 39`** (5 nodes): `EventLogRepository`, `.findByEventTypeAndTimestampAfter()`, `.findByUserIdAndTimestampBetween()`, `.findOldEvents()`, `EventLogRepository.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 40`** (5 nodes): `EventLogRepository`, `.findByEventTypeAndTimestampAfter()`, `.findByUserIdAndTimestampBetween()`, `.findOldEvents()`, `EventLogRepository.java`
+- **Thin community `Community 40`** (5 nodes): `UserServiceClient.java`, `UserServiceClient.java`, `UserServiceClient`, `.getUserById()`, `.getUserEmail()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 41`** (5 nodes): `UserServiceClient.java`, `UserServiceClient.java`, `UserServiceClient`, `.getUserById()`, `.getUserEmail()`
+- **Thin community `Community 51`** (4 nodes): `WebSocketConfig.java`, `WebSocketConfig`, `.configureMessageBroker()`, `.registerStompEndpoints()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 52`** (4 nodes): `WebSocketConfig.java`, `WebSocketConfig`, `.configureMessageBroker()`, `.registerStompEndpoints()`
+- **Thin community `Community 52`** (3 nodes): `ApiGatewayApplication`, `.main()`, `ApiGatewayApplication.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 53`** (3 nodes): `ApiGatewayApplication`, `.main()`, `ApiGatewayApplication.java`
+- **Thin community `Community 53`** (3 nodes): `ApiGatewayApplicationTests`, `.contextLoads()`, `ApiGatewayApplicationTests.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 54`** (3 nodes): `ApiGatewayApplicationTests`, `.contextLoads()`, `ApiGatewayApplicationTests.java`
+- **Thin community `Community 58`** (3 nodes): `use-mobile.tsx`, `use-mobile.ts`, `useIsMobile()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 59`** (3 nodes): `use-mobile.tsx`, `use-mobile.ts`, `useIsMobile()`
+- **Thin community `Community 64`** (3 nodes): `handleClick()`, `playClickSound()`, `button.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 65`** (3 nodes): `handleClick()`, `playClickSound()`, `button.tsx`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 69`** (3 nodes): `loading.jsx`, `loading.jsx`, `Loading()`
+- **Thin community `Community 68`** (3 nodes): `loading.jsx`, `loading.jsx`, `Loading()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 71`** (3 nodes): `ModerationSvcApplication.java`, `ModerationSvcApplication`, `.main()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -703,16 +696,16 @@ Nodes (1): UserInteraction
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `PostController` connect `Community 8` to `Community 0`?**
+- **Why does `CustomOAuth2User` connect `Community 0` to `Community 3`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **Why does `CustomOAuth2User` connect `Community 1` to `Community 3`?**
-  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+- **Why does `PostController` connect `Community 9` to `Community 1`?**
+  _High betweenness centrality (0.011) - this node is a cross-community bridge._
 - **What connects `ModerationResponse`, `ModerationScores`, `ModerationRequest` to the rest of the system?**
   _58 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.04 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.04 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.06 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**

@@ -22,6 +22,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { feedApi, postApi } from "@/lib/api-client"
 import { ShareModal } from "@/components/ShareModal"
+import { excerpt } from "@/lib/utils"
 import { useQueryClient, useMutation } from "@tanstack/react-query"
 
 export default function FeedPage() {
@@ -29,75 +30,49 @@ export default function FeedPage() {
   const [sortBy, setSortBy] = useState("latest")
   const [shareModal, setShareModal] = useState({ isOpen: false, url: "", title: "", postId: "" })
 
-  // Use global feed as requested (like X, Reddit, Instagram)
-  const { data: globalPostsData, isLoading: globalLoading } = useQuery({
-    queryKey: ['global-feed'],
-    queryFn: () => postApi.list(0, 50),
+  // Global feed (like X, Reddit, Instagram): all communities, sorted by the selected tab
+  const feedFetchers = {
+    latest: () => postApi.list(0, 50),
+    trending: () => postApi.trending(0, 50),
+    top: () => postApi.top(0, 50),
+  }
+
+  const { data: feedData, isLoading } = useQuery({
+    queryKey: ['feed-posts', sortBy],
+    queryFn: feedFetchers[sortBy],
     staleTime: 30 * 1000, // 30 seconds
     retry: 1,
   })
 
-  // Fallback: trending posts (always loaded in background)
-  const { data: trendingData, isLoading: trendingLoading } = useQuery({
-    queryKey: ['trending-fallback'],
-    queryFn: () => postApi.trending(0, 20),
-    staleTime: 60 * 1000, // 1 minute
-    retry: 1,
-  })
-
-  // Global feed items
-  const feedItems = globalPostsData
-    ? (Array.isArray(globalPostsData) ? globalPostsData : globalPostsData.content || [])
+  const feedItems = feedData
+    ? (Array.isArray(feedData) ? feedData : feedData.content || [])
     : []
-
-  // Trending posts (from PostSvc) — used as fallback
-  const trendingPosts = trendingData
-    ? (Array.isArray(trendingData) ? trendingData : trendingData.content || [])
-    : []
-
-  // Decide which data to show
-  const hasFeedItems = feedItems.length > 0
-  const isLoading = globalLoading || (feedItems.length === 0 && trendingLoading)
 
   // Normalize feed items from PostSvc format
-  const normalizedFeedItems = feedItems.map(p => ({
+  const posts = feedItems.map(p => ({
     id: p.id,
     title: p.title || "Untitled",
-    excerpt: p.content ? p.content.substring(0, 150) + "..." : "",
-    content: p.content || "",
+    excerpt: excerpt(p.content),
     community: p.communityName || p.communityId || "General",
     author: { name: p.username || p.authorId || "Unknown", avatar: null },
     likes: (p.upvotes || p.upVotes || 0) - (p.downvotes || p.downVotes || 0),
     comments: p.commentCount || 0,
     image: p.mediaUrl || p.thumbnailUrl || "/placeholder.svg",
     date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
-    isFeed: true,
     isSaved: p.isSaved || false,
   }))
 
-  // Normalize trending posts from PostSvc format
-  const normalizedTrending = trendingPosts.map(p => ({
-    id: p.id,
-    title: p.title || "Untitled",
-    excerpt: p.content ? p.content.substring(0, 150) + "..." : "",
-    community: p.communityName || p.communityId || "General",
-    author: { name: p.username || p.authorId || "Unknown", avatar: null },
-    likes: (p.upvotes || p.upVotes || 0) - (p.downvotes || p.downVotes || 0),
-    comments: p.commentCount || 0,
-    image: p.mediaUrl || p.thumbnailUrl || "/placeholder.svg",
-    date: p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "",
-    isFeed: false,
-    isSaved: p.isSaved || false,
-  }))
-
-  const posts = hasFeedItems ? normalizedFeedItems : normalizedTrending
+  const feedSubtitles = {
+    latest: "The newest posts from every community",
+    trending: "The most popular posts from the past week",
+    top: "The highest rated posts of all time",
+  }
 
   const saveMutation = useMutation({
     mutationFn: ({ postId, isSaved }) => 
       isSaved ? postApi.unsavePost(postId) : postApi.savePost(postId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['feed'] })
-      queryClient.invalidateQueries({ queryKey: ['trending-fallback'] })
+      queryClient.invalidateQueries({ queryKey: ['feed-posts'] })
     }
   })
 
@@ -116,28 +91,12 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-3xl px-4 py-6">
         {/* Feed Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">Your Feed</h1>
-          <p className="mt-2 text-muted-foreground">
-            {hasFeedItems
-              ? "Personalized posts from communities you follow"
-              : "Discover trending posts — follow people and communities to personalize your feed"}
-          </p>
-          {!hasFeedItems && !isLoading && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
-              <Compass className="h-4 w-4 text-primary shrink-0" />
-              <p className="text-sm text-muted-foreground">
-                Showing trending posts while your feed is being built.{" "}
-                <Link href="/communities" className="text-primary underline underline-offset-2">
-                  Join communities
-                </Link>{" "}
-                to see personalized content here.
-              </p>
-            </div>
-          )}
+          <p className="mt-2 text-muted-foreground">{feedSubtitles[sortBy]}</p>
         </div>
 
         {/* Sort Bar */}
@@ -176,7 +135,9 @@ export default function FeedPage() {
                 <Compass className="h-8 w-8 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-lg font-medium text-foreground">Nothing to show yet</p>
+                <p className="text-lg font-medium text-foreground">
+                  {sortBy === "trending" ? "No trending posts this week" : "Nothing to show yet"}
+                </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Join communities and follow users to build your feed.
                 </p>
@@ -246,10 +207,7 @@ export default function FeedPage() {
                         </Link>
 
                         {post.excerpt && (
-                          <div 
-                            className="text-sm text-muted-foreground mb-3 line-clamp-2 prose dark:prose-invert"
-                            dangerouslySetInnerHTML={{ __html: post.excerpt }}
-                          />
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{post.excerpt}</p>
                         )}
 
                         {/* Actions */}

@@ -58,7 +58,7 @@ export function ImageUpload({ endpoint = "imageUploader", value, onChange }) {
         }}
         onClientUploadComplete={(res) => {
           setIsUploading(false);
-          onChange(res?.[0]?.url);
+          onChange(res?.[0]?.ufsUrl || res?.[0]?.url);
         }}
         onUploadError={(error) => {
           setIsUploading(false);

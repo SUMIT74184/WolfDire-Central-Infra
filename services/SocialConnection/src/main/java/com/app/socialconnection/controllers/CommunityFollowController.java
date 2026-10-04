@@ -66,7 +66,7 @@ public class CommunityFollowController {
     }
 
     @GetMapping("/my-communities")
-    public ResponseEntity<Page<CommunityFollower>> getUserCommunities(
+    public ResponseEntity<Page<ConnectionDTO.MyCommunity>> getUserCommunities(
             HttpServletRequest request,
             @PageableDefault(size = 20) Pageable pageable) {
         String userId = getUserId(request);

@@ -135,6 +135,9 @@ public class SecurityConfig {
                                         "/api/auth/forgot-password/**", "/api/auth/reset-password/**", "/api/auth/verify-email/**",
                                         "/api/auth/oauth2/**", "/api/auth/health").permitAll()
                         .requestMatchers("/actuator/**", "/oauth2/**", "/login/oauth2/**").permitAll()
+                        // Public profiles (non-sensitive fields only) so community pages work for visitors
+                        .requestMatchers(HttpMethod.GET, "/api/auth/users/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/users/batch").permitAll()
 
                         // All Other endpoints - require authentication
                         .anyRequest().authenticated())

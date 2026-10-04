@@ -31,6 +31,11 @@ export default function RootLayout({ children }) {
         <ThemeProvider defaultTheme="dark" storageKey="wolfdire-theme">
           <Providers>
             <AuthProvider>
+              <div className="ambient-bg" aria-hidden="true">
+                <div className="ambient-bg__mesh" />
+                <div className="ambient-bg__grid" />
+                <div className="ambient-bg__grain" />
+              </div>
               <div className="flex min-h-screen flex-col">
                 <Navbar />
                 <main className="flex-1">{children}</main>

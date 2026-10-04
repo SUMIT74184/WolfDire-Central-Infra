@@ -1,5 +1,6 @@
 package com.app.socialconnection.dto;
 
+import com.app.socialconnection.entity.CommunityFollower;
 import com.app.socialconnection.entity.Connection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -88,6 +89,24 @@ public class ConnectionDTO {
         private String iconUrl;
         private long memberCount;
         private boolean active;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MyCommunity {
+        private String id;
+        private String communityId;
+        private String name;
+        private String slug;
+        private String description;
+        private String imageUrl;
+        private String backgroundImageUrl;
+        private Long memberCount;
+        private CommunityFollower.Role role;
+        private boolean notificationsEnabled;
+        private LocalDateTime followedAt;
     }
 
     @Data

@@ -34,6 +34,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useParams } from "next/navigation"
 import { postApi, authApi, commentApi } from "@/lib/api-client"
 import CommentSection from "@/components/CommentSection"
+import { sanitizeHtml } from "@/lib/sanitize"
 // Mock data removed in favor of dynamic API fetch
 
 
@@ -240,7 +241,7 @@ export default function PostPage() {
         {/* Article Content */}
         <article
           className="prose-blog mt-12 max-w-none text-foreground"
-          dangerouslySetInnerHTML={{ __html: post.content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
         />
 
         {/* Article Actions */}
@@ -342,7 +343,7 @@ export default function PostPage() {
                     <ImageUpload
                       endpoint="postImage"
                       value={editData.mediaUrl}
-                      onChange={(url) => setEditData({ ...editData, mediaUrl: url })}
+                      onChange={(url) => setEditData(prev => ({ ...prev, mediaUrl: url || "" }))}
                     />
                   </div>
                   <div className="space-y-2">

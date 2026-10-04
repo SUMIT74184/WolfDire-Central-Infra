@@ -53,6 +53,8 @@ public class User implements UserDetails {
 
     private String profilePictureUrl;
 
+    private String bannerUrl;
+
     @Column(length = 500)
     private String bio;
 

@@ -1,5 +1,5 @@
 "use client"
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
@@ -7,19 +7,34 @@ import Image from '@tiptap/extension-image'
 import Underline from '@tiptap/extension-underline'
 import {
   Bold, Italic, Underline as UnderlineIcon,
-  List, ListOrdered, Quote, Code, LinkIcon, Heading1, Heading2, ImagePlus
+  List, ListOrdered, Quote, Code, LinkIcon, Heading1, Heading2, ImagePlus, Loader2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useUploadThing } from "@/utils/uploadthing"
 
 const MenuBar = ({ editor }) => {
+  const fileInputRef = useRef(null)
+  const { startUpload, isUploading } = useUploadThing("postImage", {
+    onClientUploadComplete: (res) => {
+      const url = res?.[0]?.ufsUrl || res?.[0]?.url
+      if (url) {
+        editor?.chain().focus().setImage({ src: url }).run()
+      }
+    },
+    onUploadError: (error) => {
+      alert(`Image upload failed: ${error.message}`)
+    },
+  })
+
   if (!editor) {
     return null
   }
 
-  const addImage = () => {
-    const url = window.prompt('Image URL')
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run()
+  const handleImageSelected = (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (file) {
+      startUpload([file])
     }
   }
 
@@ -111,9 +126,20 @@ const MenuBar = ({ editor }) => {
       <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => { e.preventDefault(); setLink(); }}>
         <LinkIcon className={`h-4 w-4 ${editor.isActive('link') ? 'text-primary' : ''}`} />
       </Button>
-      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => { e.preventDefault(); addImage(); }}>
-        <ImagePlus className="h-4 w-4" />
+      <Button
+        variant="ghost" size="sm" className="h-8 w-8 p-0"
+        disabled={isUploading}
+        onClick={(e) => { e.preventDefault(); fileInputRef.current?.click(); }}
+      >
+        {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
       </Button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleImageSelected}
+      />
     </div>
   )
 }

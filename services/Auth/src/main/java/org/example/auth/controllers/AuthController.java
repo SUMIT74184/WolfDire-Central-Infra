@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -152,6 +153,7 @@ public class AuthController {
         profile.put("location", user.getLocation());
         profile.put("website", user.getWebsite());
         profile.put("profilePictureUrl", user.getProfilePictureUrl());
+        profile.put("bannerUrl", user.getBannerUrl());
         profile.put("tenantId", user.getTenantId());
         profile.put("roles", user.getRoles());
         profile.put("createdAt", user.getCreatedAt());
@@ -184,6 +186,7 @@ public class AuthController {
         profile.put("location", user.getLocation());
         profile.put("website", user.getWebsite());
         profile.put("profilePictureUrl", user.getProfilePictureUrl());
+        profile.put("bannerUrl", user.getBannerUrl());
         profile.put("tenantId", user.getTenantId());
         profile.put("roles", user.getRoles());
         profile.put("createdAt", user.getCreatedAt());
@@ -228,6 +231,60 @@ public class AuthController {
         response.put("users", users.stream().map(this::toUserSummary).toList());
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Public profile of any user, for viewing other people's profile pages.
+     * Only exposes non-sensitive fields (no email, roles or account state).
+     */
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<Map<String, Object>> getPublicProfile(@PathVariable String userId) {
+        User user;
+        try {
+            user = authService.getUserById(userId);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+
+        return ResponseEntity.ok(toPublicProfile(user));
+    }
+
+    /**
+     * Public profiles for a batch of user IDs (max 100), e.g. to render community member lists.
+     * Unknown IDs are skipped.
+     */
+    @PostMapping("/users/batch")
+    public ResponseEntity<List<Map<String, Object>>> getPublicProfiles(@RequestBody List<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+        if (userIds.size() > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At most 100 user IDs per request");
+        }
+        List<Map<String, Object>> profiles = authService.getUsersByIds(userIds).stream()
+                .map(this::toPublicProfile)
+                .toList();
+        return ResponseEntity.ok(profiles);
+    }
+
+    /**
+     * Non-sensitive profile fields that any logged-in user may see (no email, roles or account state).
+     */
+    private Map<String, Object> toPublicProfile(User user) {
+        String email = user.getEmail();
+        Map<String, Object> profile = new HashMap<>();
+        profile.put("userId", user.getId());
+        profile.put("username", email != null ? email.split("@")[0] : null);
+        profile.put("firstName", user.getFirstName());
+        profile.put("lastName", user.getLastName());
+        profile.put("bio", user.getBio());
+        profile.put("location", user.getLocation());
+        profile.put("website", user.getWebsite());
+        profile.put("profilePictureUrl", user.getProfilePictureUrl());
+        profile.put("bannerUrl", user.getBannerUrl());
+        profile.put("createdAt", user.getCreatedAt());
+        profile.put("postCount", user.getPostCount());
+        return profile;
     }
 
     /**

@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { postApi, communityApi, analyticsApi, authApi } from "@/lib/api-client"
+import { excerpt } from "@/lib/utils"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -20,14 +21,37 @@ export default function HomePage() {
     retry: false,
   })
 
+  const queryClient = useQueryClient()
+
+  // Trending only covers the past week — fall back to all-time top posts when it's empty
   const { data: postsData, isLoading: postsLoading } = useQuery({
-    queryKey: ["trending-posts"],
-    queryFn: () => postApi.trending(0, 3),
+    queryKey: ["home-trending-posts"],
+    queryFn: async () => {
+      const trending = await postApi.trending(0, 3)
+      if (trending?.content?.length > 0) return trending
+      return postApi.top(0, 3)
+    },
   })
 
   const { data: communitiesData, isLoading: communitiesLoading } = useQuery({
     queryKey: ["top-communities"],
-    queryFn: () => communityApi.list(0, 4),
+    queryFn: () => communityApi.list(0, 4, "memberCount,desc"),
+  })
+
+  const { data: myCommunitiesData } = useQuery({
+    queryKey: ["my-communities"],
+    queryFn: () => communityApi.myCommunities(0, 50).then((res) => res.content || []),
+    enabled: !!me,
+  })
+  const joinedIds = new Set((myCommunitiesData || []).map(c => c.communityId || c.id))
+
+  const joinMutation = useMutation({
+    mutationFn: (communityId) => communityApi.follow(communityId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-communities"] })
+      queryClient.invalidateQueries({ queryKey: ["myCommunities"] })
+      queryClient.invalidateQueries({ queryKey: ["top-communities"] })
+    },
   })
 
   const { data: trendingTopicsData } = useQuery({
@@ -36,38 +60,16 @@ export default function HomePage() {
     retry: false,
   })
 
-  const trendingPosts = (Array.isArray(postsData?.content) && postsData.content.length > 0) ? postsData.content : [
-    {
-      id: 1,
-      title: "The Future of Web Development: What to Expect in 2025",
-      excerpt: "Explore the upcoming trends in web development, from AI-powered tools to new frameworks.",
-      authorName: "Sarah Chen",
-      communityName: "Technology",
-      voteCount: 2453,
-      commentCount: 189,
-      mediaUrl: "/futuristic-web-development.png",
-    },
-    {
-      id: 2,
-      title: "Building Sustainable Habits for Long-term Success",
-      excerpt: "Learn the science-backed strategies for creating habits that stick.",
-      authorName: "Marcus Johnson",
-      communityName: "Productivity",
-      voteCount: 1876,
-      commentCount: 95,
-      mediaUrl: "/productivity-habits.png",
-    },
-    {
-      id: 3,
-      title: "The Art of Minimalist Design in Modern Applications",
-      excerpt: "Discover how less can be more when it comes to creating beautiful interfaces.",
-      authorName: "Emma Williams",
-      communityName: "Design",
-      voteCount: 1543,
-      commentCount: 67,
-      mediaUrl: "/minimalist-design.png",
-    },
-  ]
+  const trendingPosts = (postsData?.content || []).map(p => ({
+    id: p.id,
+    title: p.title || "Untitled",
+    excerpt: excerpt(p.content),
+    authorName: p.username ? p.username.split("@")[0] : "unknown",
+    communityName: p.communityName || "General",
+    voteCount: (p.upvotes || 0) - (p.downvotes || 0),
+    commentCount: p.commentCount || 0,
+    mediaUrl: p.mediaUrl || p.thumbnailUrl,
+  }))
 
   const trendingTopics = (Array.isArray(trendingTopicsData?.data?.topics) && trendingTopicsData.data.topics.length > 0)
     ? trendingTopicsData.data.topics.slice(0, 6).map(t => ({
@@ -82,16 +84,11 @@ export default function HomePage() {
       { name: "Career Growth", posts: 4321 },
     ]
 
-  const communities = (Array.isArray(communitiesData?.content) && communitiesData.content.length > 0) ? communitiesData.content : [
-    { name: "Tech Enthusiasts", memberCount: 45200, image: "/vibrant-tech-community.png" },
-    { name: "Creative Writers", memberCount: 32100, image: "/writing-community.jpg" },
-    { name: "Startup Founders", memberCount: 28900, image: "/vibrant-startup-community.png" },
-    { name: "Design Hub", memberCount: 25600, image: "/vibrant-design-community.png" },
-  ]
+  const communities = communitiesData?.content || []
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
+    <div className="flex flex-col min-h-screen text-foreground">
       {/* Clean, Professional Hero Section */}
-      <section className="border-b border-border bg-card/50 py-16 sm:py-24">
+      <section className="border-b border-border py-16 sm:py-24">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center">
           <Badge variant="secondary" className="mb-6 rounded-full px-4 py-1 text-sm font-medium">
             Over 50,000 active members
@@ -113,14 +110,14 @@ export default function HomePage() {
               </Button>
             )}
             <Button asChild variant="outline" size="lg" className="w-full sm:w-auto font-semibold">
-              <Link href="/explore">Explore Communities</Link>
+              <Link href="/communities">Explore Communities</Link>
             </Button>
           </div>
         </div>
       </section>
 
       {/* Main Content Layout - Social Media Style (Feed + Sidebar) */}
-      <section className="py-12 bg-background">
+      <section className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row gap-8">
 
@@ -134,7 +131,16 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-4">
-                {trendingPosts.map((post) => (
+                {postsLoading ? (
+                  <div className="py-12 flex justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : trendingPosts.length === 0 ? (
+                  <Card className="border border-border p-8 text-center text-sm text-muted-foreground">
+                    No posts yet.{" "}
+                    <Link href="/write" className="text-primary underline underline-offset-2">Write the first one</Link>
+                  </Card>
+                ) : trendingPosts.map((post) => (
                   <Card key={post.id} className="overflow-hidden border border-border shadow-sm hover:shadow transition-shadow">
                     <div className="p-4 sm:p-5">
                       {/* Post Header */}
@@ -195,26 +201,51 @@ export default function HomePage() {
                   </h3>
                 </div>
                 <div className="p-0">
-                  {communities.map((community, idx) => (
-                    <div key={community.name} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors border-b border-border last:border-0">
+                  {communitiesLoading ? (
+                    <div className="py-6 flex justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : communities.length === 0 ? (
+                    <p className="p-4 text-sm text-muted-foreground">No communities yet.</p>
+                  ) : communities.map((community, idx) => (
+                    <div key={community.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors border-b border-border last:border-0">
                       <div className="flex items-center gap-3 min-w-0">
                         <span className="text-sm font-medium text-muted-foreground w-4">{idx + 1}</span>
                         <Avatar className="h-8 w-8 shrink-0">
+                          <AvatarImage src={community.imageUrl} />
                           <AvatarFallback className="bg-primary/10 text-primary text-xs">{community.name[0]}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col min-w-0">
-                          <Link href={`/community/${community.name.toLowerCase().replace(/\s+/g, "-")}`} className="text-sm font-semibold text-foreground hover:underline truncate">
+                          <Link href={`/community/${community.id}`} className="text-sm font-semibold text-foreground hover:underline truncate">
                             c/{community.name}
                           </Link>
                           <span className="text-xs text-muted-foreground">{(community.memberCount || 0).toLocaleString()} members</span>
                         </div>
                       </div>
-                      <Button variant="secondary" size="sm" className="h-7 px-3 text-xs rounded-full">Join</Button>
+                      {joinedIds.has(community.id) ? (
+                        <Button asChild variant="outline" size="sm" className="h-7 px-3 text-xs rounded-full bg-transparent">
+                          <Link href={`/community/${community.id}`}>Joined</Link>
+                        </Button>
+                      ) : me ? (
+                        <Button
+                          variant="secondary" size="sm" className="h-7 px-3 text-xs rounded-full"
+                          disabled={joinMutation.isPending && joinMutation.variables === community.id}
+                          onClick={() => joinMutation.mutate(community.id)}
+                        >
+                          Join
+                        </Button>
+                      ) : (
+                        <Button asChild variant="secondary" size="sm" className="h-7 px-3 text-xs rounded-full">
+                          <Link href="/login">Join</Link>
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>
                 <div className="p-4 bg-muted/20 border-t border-border">
-                  <Button variant="ghost" className="w-full text-sm font-medium text-primary hover:bg-primary/10">View All Communities</Button>
+                  <Button asChild variant="ghost" className="w-full text-sm font-medium text-primary hover:bg-primary/10">
+                    <Link href="/communities">View All Communities</Link>
+                  </Button>
                 </div>
               </Card>
 

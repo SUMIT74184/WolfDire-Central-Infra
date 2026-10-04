@@ -22,7 +22,8 @@ import {
   MessageCircle,
   Bookmark,
   TrendingUp,
-  Activity
+  Activity,
+  X
 } from "lucide-react"
 import { UploadButton } from "@/utils/uploadthing"
 
@@ -42,7 +43,8 @@ export default function ProfilePage() {
     bio: "",
     location: "",
     website: "",
-    profilePictureUrl: ""
+    profilePictureUrl: "",
+    bannerUrl: ""
   })
 
   // Initialize form when data loads
@@ -53,7 +55,8 @@ export default function ProfilePage() {
       bio: me.bio || "",
       location: me.location || "",
       website: me.website || "",
-      profilePictureUrl: me.profilePictureUrl || ""
+      profilePictureUrl: me.profilePictureUrl || "",
+      bannerUrl: me.bannerUrl || ""
     })
   }
 
@@ -122,6 +125,7 @@ export default function ProfilePage() {
     name: me ? (`${me.firstName || ""} ${me.lastName || ""}`.trim() || me.email) : "",
     username: me ? (me.email?.split("@")[0] || "user") : "user",
     avatar: me?.profilePictureUrl || "/diverse-user-avatars.png",
+    banner: me?.bannerUrl || "",
     bio: me?.bio || "WolfDire member",
     location: me?.location || "",
     website: me?.website || "",
@@ -157,7 +161,7 @@ export default function ProfilePage() {
   const error = meError ? meError.message || "Failed to load profile" : null
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-4xl px-4 py-6">
         {loading ? (
           <div className="py-20 text-center text-muted-foreground">Loading profile...</div>
@@ -166,7 +170,11 @@ export default function ProfilePage() {
         ) : (
           <>
         {/* Header Banner */}
-        <div className="mb-6 h-32 rounded-lg bg-gradient-to-r from-primary to-accent" />
+        <div className="mb-6 h-32 overflow-hidden rounded-lg bg-gradient-to-r from-primary to-accent sm:h-40">
+          {userProfile.banner && (
+            <img src={userProfile.banner} alt="Profile banner" className="h-full w-full object-cover" />
+          )}
+        </div>
 
         {/* Profile Card */}
         <div className="mb-6 -mt-16 flex flex-col sm:flex-row sm:items-end sm:justify-between">
@@ -189,7 +197,7 @@ export default function ProfilePage() {
                   Edit Profile
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Edit Profile</DialogTitle>
                 </DialogHeader>
@@ -250,7 +258,7 @@ export default function ProfilePage() {
                         endpoint="imageUploader"
                         onClientUploadComplete={(res) => {
                           if (res && res[0]) {
-                            setEditFormData({...editFormData, profilePictureUrl: res[0].url})
+                            setEditFormData(prev => ({...prev, profilePictureUrl: res[0].ufsUrl || res[0].url}))
                           }
                         }}
                         onUploadError={(error) => {
@@ -258,6 +266,32 @@ export default function ProfilePage() {
                         }}
                       />
                     </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Background Image</Label>
+                    {editFormData.bannerUrl && (
+                      <div className="relative h-20 w-full overflow-hidden rounded-md border border-border">
+                        <img src={editFormData.bannerUrl} alt="Banner preview" className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setEditFormData(prev => ({...prev, bannerUrl: ""}))}
+                          className="absolute top-1 right-1 rounded-full bg-destructive p-1 text-destructive-foreground shadow-sm hover:bg-destructive/90"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                    <UploadButton
+                      endpoint="imageUploader"
+                      onClientUploadComplete={(res) => {
+                        if (res && res[0]) {
+                          setEditFormData(prev => ({...prev, bannerUrl: res[0].ufsUrl || res[0].url}))
+                        }
+                      }}
+                      onUploadError={(error) => {
+                        alert(`Upload failed: ${error.message}`)
+                      }}
+                    />
                   </div>
                   <Button type="submit" className="w-full" disabled={updateProfileMutation.isPending}>
                     {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
@@ -416,16 +450,19 @@ export default function ProfilePage() {
               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                 {myCommunities.length > 0 ? (
                   myCommunities.map((community) => (
-                    <Link key={community.id} href={`/community/${community.id}`}>
+                    <Link key={community.id} href={`/community/${community.communityId || community.id}`}>
                       <Card className="h-full border-border hover:bg-secondary cursor-pointer transition-colors">
                         <CardContent className="p-4 text-center">
                           <Avatar className="mx-auto mb-3 h-12 w-12 text-lg font-bold">
+                            <AvatarImage src={community.imageUrl} />
                             <AvatarFallback>
                               {(community.name || "C")[0].toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <h3 className="font-semibold">{community.name || "Community"}</h3>
-                          <Badge variant="secondary" className="mt-2">Member</Badge>
+                          <Badge variant="secondary" className="mt-2 capitalize">
+                            {(community.role || "MEMBER").toLowerCase()}
+                          </Badge>
                         </CardContent>
                       </Card>
                     </Link>

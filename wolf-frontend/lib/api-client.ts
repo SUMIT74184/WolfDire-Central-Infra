@@ -153,6 +153,12 @@ export const authApi = {
   updateProfile: (data: unknown) =>
     apiClient.put<Record<string, unknown>>("/api/auth/me", data),
 
+  getPublicProfile: (userId: string) =>
+    apiClient.get<Record<string, unknown>>(`/api/auth/users/${userId}`),
+
+  getPublicProfiles: (userIds: string[]) =>
+    apiClient.post<Record<string, unknown>[]>("/api/auth/users/batch", userIds),
+
   verifyEmail: (token: string) =>
     apiClient.post<{ message: string }>(`/api/auth/verify-email?token=${encodeURIComponent(token)}`),
 
@@ -196,6 +202,9 @@ export const postApi = {
 
   trending: (page = 0, size = 20) =>
     apiClient.get(`/api/posts/trending?page=${page}&size=${size}`),
+
+  top: (page = 0, size = 20) =>
+    apiClient.get(`/api/posts/top?page=${page}&size=${size}`),
 
   hot: (communityId: string, page = 0, size = 20) =>
     apiClient.get(`/api/posts/community/${communityId}/hot?page=${page}&size=${size}`),
@@ -314,8 +323,8 @@ export const authAdminApi = {
 // ── Community Service helpers ─────────────────────────────────────────────────
 
 export const communityApi = {
-  list: (page = 0, size = 20) =>
-    apiClient.get(`/api/communities?page=${page}&size=${size}`),
+  list: (page = 0, size = 20, sort?: string) =>
+    apiClient.get(`/api/communities?page=${page}&size=${size}${sort ? `&sort=${encodeURIComponent(sort)}` : ""}`),
 
   getAll: (page = 0, size = 50) =>
     apiClient.get(`/api/communities?page=${page}&size=${size}`),

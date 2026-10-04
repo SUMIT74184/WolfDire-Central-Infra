@@ -6,31 +6,6 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-const playClickSound = () => {
-  try {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(600, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
-
-    gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-
-    osc.connect(gainNode);
-    gainNode.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.1);
-  } catch (e) {
-    // Ignore audio context errors
-  }
-}
-
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
@@ -77,8 +52,6 @@ function Button({
   const Comp = asChild ? Slot : 'button'
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    playClickSound();
-
     // Check if it's a navigational link click that shouldn't show a generic toast
     // Otherwise, show the subtle generic toast
     toast.success("Hold up", {

@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Heart, MessageCircle, BookmarkPlus, TrendingUp, Clock, Filter } from "lucide-react"
+import { excerpt } from "@/lib/utils"
 
 // Standard categories removed - fetching from communityApi instead
 
@@ -64,7 +65,7 @@ export default function ExplorePage() {
   const posts = data ? data.pages.flatMap(page => Array.isArray(page) ? page : page?.content || []).map((p, i) => ({
     id: p.id || i,
     title: p.title || "Untitled",
-    excerpt: p.content ? p.content.substring(0, 150) + "..." : "",
+    excerpt: excerpt(p.content),
     author: {
       name: p.username || "Unknown",
       avatar: "/diverse-user-avatars.png",
@@ -103,7 +104,7 @@ export default function ExplorePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-4xl px-4 py-6">
         {/* Header */}
         <div className="mb-6">

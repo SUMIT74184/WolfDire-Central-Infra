@@ -188,6 +188,18 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
+    public Page<PostResponse> getLatestPosts(Pageable pageable, String userId) {
+        Page<Post> posts = postRepository.findLatest(pageable);
+        return posts.map(post -> mapToResponse(post, userId));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PostResponse> getTopPosts(Pageable pageable, String userId) {
+        Page<Post> posts = postRepository.findTop(pageable);
+        return posts.map(post -> mapToResponse(post, userId));
+    }
+
+    @Transactional(readOnly = true)
     public Page<PostResponse> getTrendingPosts(Pageable pageable, String userId) {
         LocalDateTime since = LocalDateTime.now().minusDays(7);
         Page<Post> posts = postRepository.findTrending(since, pageable);

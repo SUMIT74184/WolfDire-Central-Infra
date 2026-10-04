@@ -73,7 +73,9 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             HttpServletRequest httpRequest) {
-        return getTrendingPosts(page, size, httpRequest);
+        String userId = getOptionalUserId(httpRequest);
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(postService.getLatestPosts(pageable, userId));
     }
 
     @GetMapping("/trending")
@@ -84,6 +86,16 @@ public class PostController {
         String userId = getOptionalUserId(httpRequest);
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(postService.getTrendingPosts(pageable, userId));
+    }
+
+    @GetMapping("/top")
+    public ResponseEntity<Page<PostResponse>> getTopPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest httpRequest) {
+        String userId = getOptionalUserId(httpRequest);
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(postService.getTopPosts(pageable, userId));
     }
 
     @GetMapping("/community/{communityId}/hot")

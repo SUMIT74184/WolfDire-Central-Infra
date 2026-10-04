@@ -38,11 +38,13 @@ export default function PublicProfilePage() {
     router.push('/profile')
   }
 
-  // Get target user info - since there's no direct "getPublicProfile", 
-  // we'll try to infer it from their posts or use a generic fetch if it exists.
-  // Actually, let's check if ConnectionController has something.
-  // Based on previous analysis, we'll use postApi.getUserPosts to at least get some context.
-  
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ['publicProfile', userId],
+    queryFn: () => authApi.getPublicProfile(userId),
+    enabled: !!userId,
+    retry: false,
+  })
+
   const { data: postsData, isLoading: postsLoading } = useQuery({
     queryKey: ['userPosts', userId],
     queryFn: () => postApi.getUserPosts(userId, 0, 20),
@@ -73,14 +75,17 @@ export default function PublicProfilePage() {
     bio: posts[0].userBio
   } : null
 
+  const fullName = profile ? `${profile.firstName || ""} ${profile.lastName || ""}`.trim() : ""
+
   const userProfile = {
-    name: userFromPost?.username || "User",
-    username: userFromPost?.username || "user",
-    avatar: userFromPost?.avatar || "/diverse-user-avatars.png",
-    bio: userFromPost?.bio || "WolfDire member",
+    name: fullName || profile?.username || userFromPost?.username || "User",
+    username: profile?.username || userFromPost?.username || "user",
+    avatar: profile?.profilePictureUrl || userFromPost?.avatar || "/diverse-user-avatars.png",
+    banner: profile?.bannerUrl || "",
+    bio: profile?.bio || userFromPost?.bio || "WolfDire member",
     followers: 0,
     following: 0,
-    posts: posts.length,
+    posts: profile?.postCount ?? posts.length,
   }
 
   const followMutation = useMutation({
@@ -90,7 +95,7 @@ export default function PublicProfilePage() {
     }
   })
 
-  if (postsLoading) {
+  if (postsLoading || profileLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -99,10 +104,14 @@ export default function PublicProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-4xl px-4 py-6">
         {/* Header Banner */}
-        <div className="mb-6 h-32 rounded-lg bg-gradient-to-r from-primary/50 to-accent/50" />
+        <div className="mb-6 h-32 overflow-hidden rounded-lg bg-gradient-to-r from-primary/50 to-accent/50 sm:h-40">
+          {userProfile.banner && (
+            <img src={userProfile.banner} alt="Profile banner" className="h-full w-full object-cover" />
+          )}
+        </div>
 
         {/* Profile Card */}
         <div className="mb-6 -mt-16 flex flex-col sm:flex-row sm:items-end sm:justify-between">

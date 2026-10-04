@@ -273,6 +273,13 @@ public class AuthService {
     }
 
     /**
+     * Get several users by ID — used for public profile lookups (e.g. community member lists).
+     */
+    public List<User> getUsersByIds(List<String> userIds) {
+        return userRepository.findAllById(userIds);
+    }
+
+    /**
      * Update user profile fields (partial update — only non-null fields are applied).
      */
     @Transactional
@@ -297,6 +304,9 @@ public class AuthService {
         }
         if (request.getProfilePictureUrl() != null) {
             user.setProfilePictureUrl(request.getProfilePictureUrl());
+        }
+        if (request.getBannerUrl() != null) {
+            user.setBannerUrl(request.getBannerUrl());
         }
 
         User saved = userRepository.save(user);

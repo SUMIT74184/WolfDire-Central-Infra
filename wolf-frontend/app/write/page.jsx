@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react"
 import { toast } from "sonner"
+import { sanitizeHtml } from "@/lib/sanitize"
 
 const DRAFT_STORAGE_KEY = "wolfdire_draft"
 
@@ -139,7 +140,7 @@ export default function WritePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Top Bar */}
       <div className="sticky top-16 z-40 border-b border-border bg-background/80 backdrop-blur-lg">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
@@ -191,7 +192,7 @@ export default function WritePage() {
               endpoint="postImage"
               onClientUploadComplete={(res) => {
                 if (res && res[0]) {
-                  setCoverImage(res[0].url)
+                  setCoverImage(res[0].ufsUrl || res[0].url)
                   toast?.success?.("Cover image uploaded!")
                 }
               }}
@@ -279,7 +280,7 @@ export default function WritePage() {
         {/* Content Editor / Preview */}
         {isPreview ? (
           <div className="mt-4 min-h-[400px] prose prose-invert max-w-none text-lg leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: content }} />
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
         ) : (
           <RichTextEditor content={content} onChange={setContent} />
         )}

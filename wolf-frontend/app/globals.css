@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "uploadthing/tw/v4";
+@source "../node_modules/@uploadthing/react/dist";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -167,4 +169,68 @@
 
 .prose-blog p {
   margin-bottom: 1.25em;
+}
+/* ── Ambient background: drifting ML-style mesh gradient + film grain + faint dot grid ── */
+:root {
+  --ambient-1: oklch(0.80 0.10 270 / 0.30); /* violet (primary) */
+  --ambient-2: oklch(0.85 0.09 220 / 0.25); /* cyan */
+  --ambient-3: oklch(0.82 0.11 320 / 0.20); /* magenta */
+  --ambient-dot: oklch(0.45 0.05 270 / 0.10);
+  --ambient-grain-opacity: 0.035;
+}
+
+.dark {
+  --ambient-1: oklch(0.45 0.20 275 / 0.35);
+  --ambient-2: oklch(0.50 0.14 220 / 0.22);
+  --ambient-3: oklch(0.45 0.20 320 / 0.20);
+  --ambient-dot: oklch(0.85 0.05 270 / 0.07);
+  --ambient-grain-opacity: 0.06;
+}
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Soft mesh of colour blobs that slowly drift, like a latent space */
+.ambient-bg__mesh {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(40% 35% at 20% 25%, var(--ambient-1), transparent 70%),
+    radial-gradient(35% 30% at 80% 20%, var(--ambient-2), transparent 70%),
+    radial-gradient(45% 40% at 70% 80%, var(--ambient-3), transparent 70%),
+    radial-gradient(30% 30% at 15% 85%, var(--ambient-2), transparent 70%);
+  filter: blur(40px);
+  animation: ambient-drift 40s ease-in-out infinite alternate;
+}
+
+/* Neural-network dot grid, fading out toward the edges */
+.ambient-bg__grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--ambient-dot) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 30%, transparent 100%);
+}
+
+/* Film grain via SVG fractal noise */
+.ambient-bg__grain {
+  position: absolute;
+  inset: 0;
+  opacity: var(--ambient-grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes ambient-drift {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(4%, -3%, 0) rotate(8deg) scale(1.08); }
+  100% { transform: translate3d(-3%, 4%, 0) rotate(-6deg) scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-bg__mesh { animation: none; }
 }

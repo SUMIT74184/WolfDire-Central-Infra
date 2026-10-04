@@ -15,6 +15,7 @@ import { Users, Bell, Share2, Heart, MessageCircle, PenSquare, Calendar, Globe, 
 import { ShareModal } from "@/components/ShareModal"
 import { EditCommunityModal } from "@/components/EditCommunityModal"
 import { AddMemberModal } from "@/components/AddMemberModal"
+import { sanitizeHtml } from "@/lib/sanitize"
 
 export default function CommunityPage() {
   const { id } = useParams()
@@ -86,18 +87,40 @@ export default function CommunityPage() {
     queryFn: () => communityApi.getFollowers(id).then((res) => res.content || res),
     enabled: !!id,
   })
-  const members = Array.isArray(rawFollowers) ? rawFollowers.map(f => ({
-    name: f.userName || f.targetUserId || "Unknown User",
-    avatar: "/placeholder.svg",
-    role: f.role || "MEMBER",
-    posts: 0,
-    userId: f.targetUserId
-  })) : []
+  // Followers only carry a userId — look up names/avatars from the auth service in one batch
+  // Include the owner so the admin card has a real name even if they have no membership row
+  const memberIds = [...new Set([
+    ...(Array.isArray(rawFollowers) ? rawFollowers.map(f => f.userId) : []),
+    cData.ownerId,
+  ].filter(Boolean))]
+  const { data: memberProfiles } = useQuery({
+    queryKey: ["community-member-profiles", id, memberIds],
+    queryFn: () => authApi.getPublicProfiles(memberIds),
+    enabled: memberIds.length > 0,
+  })
+  const profilesById = Object.fromEntries((memberProfiles || []).map(p => [p.userId, p]))
+
+  const toMember = (userId, role) => {
+    const p = profilesById[userId]
+    const fullName = p ? `${p.firstName || ""} ${p.lastName || ""}`.trim() : ""
+    return {
+      name: fullName || p?.username || (memberProfiles ? "Unknown User" : "Loading..."),
+      username: p?.username,
+      avatar: p?.profilePictureUrl || "/placeholder.svg",
+      role,
+      posts: p?.postCount ?? 0,
+      userId
+    }
+  }
+
+  const members = Array.isArray(rawFollowers) ? rawFollowers.map(f => toMember(f.userId, f.role || "MEMBER")) : []
   
   const rules = cData.rules || ["Be respectful and constructive", "No spam or self-promotion", "Stay on topic", "Credit original sources", "No NSFW content"]
-  const admins = members.filter(m => m.role === "ADMIN" || m.role === "CREATOR")
+  const admins = members.filter(m => m.role === "ADMIN" || m.role === "MODERATOR")
   if (admins.length === 0) {
-    admins.push({ name: cData.creatorName || "Admin", avatar: "/placeholder.svg", role: "ADMIN" })
+    admins.push(cData.ownerId
+      ? toMember(cData.ownerId, "ADMIN")
+      : { name: "Admin", avatar: "/placeholder.svg", role: "ADMIN" })
   }
 
   const handleShareClick = () => {
@@ -252,7 +275,7 @@ export default function CommunityPage() {
                           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                             <Link href={`/post/${post.id}`}>{post.title}</Link>
                           </h3>
-                          <div className="mt-1 line-clamp-2 text-sm text-muted-foreground prose dark:prose-invert" dangerouslySetInnerHTML={{ __html: post.content || post.excerpt }} />
+                          <div className="mt-1 line-clamp-2 text-sm text-muted-foreground prose dark:prose-invert" dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content || post.excerpt) }} />
                           <div className="mt-4 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Link href={`/profile/${post.userId}`} className="flex items-center gap-2 hover:text-primary transition-colors">
@@ -322,7 +345,7 @@ export default function CommunityPage() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {admins.map((admin) => (
-                      <div key={admin.name} className="flex items-center gap-3">
+                      <div key={admin.userId || admin.name} className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={admin.avatar || "/placeholder.svg"} />
                           <AvatarFallback>{admin.name[0]}</AvatarFallback>
@@ -347,16 +370,19 @@ export default function CommunityPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {members.map((member) => (
-                <Card key={member.name} className="border-border">
+                <Card key={member.userId} className="border-border">
                   <CardContent className="flex items-center gap-4 p-4">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={member.avatar || "/placeholder.svg"} />
                       <AvatarFallback>{member.name[0]}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="font-medium text-foreground">{member.name}</p>
+                      <Link href={`/profile/${member.userId}`} className="font-medium text-foreground hover:text-primary">
+                        {member.name}
+                      </Link>
                       <p className="text-sm text-muted-foreground">
-                        {member.role} · {member.posts} posts
+                        {member.username && <>u/{member.username} · </>}
+                        <span className="capitalize">{member.role.toLowerCase()}</span> · {member.posts} posts
                       </p>
                     </div>
                     <Button variant="outline" size="sm" className="bg-transparent">
